@@ -57,6 +57,19 @@ defmodule InterfazWeb.PaginasTest do
     assert html =~ "register_need agua 30 critica centro"
   end
 
+  test "registrar una zona solo pide nombre y nivel", %{conn: conn} do
+    {:ok, view, _} = live(conectado(conn, :coordinador), ~p"/zonas")
+    view |> element("#nueva-zona") |> render_click()
+    refute has_element?(view, "#form-zona input[name='zona[codigo]']")
+
+    html =
+      view
+      |> form("#form-zona", zona: %{nombre: "Norte", nivel: "alto"})
+      |> render_submit()
+
+    assert html =~ "register_zone Norte alto"
+  end
+
   test "los filtros de necesidades reducen la lista", %{conn: conn} do
     {:ok, view, _} = live(conectado(conn, :coordinador), ~p"/necesidades")
     view |> form("#filtros-necesidades", filtro: %{prioridad: "critica"}) |> render_change()

@@ -29,7 +29,7 @@ defmodule InterfazWeb.ZonasLive do
   def handle_event("cerrar_modal", _, socket), do: {:noreply, assign(socket, :modal, nil)}
 
   def handle_event("guardar", %{"zona" => p}, socket),
-    do: {:noreply, Accion.enviar(socket, "register_zone", [p["codigo"], p["nombre"], p["nivel"]])}
+    do: {:noreply, Accion.enviar(socket, "register_zone", [p["nombre"], p["nivel"]])}
 
   def handle_event("guardar", %{"sector" => p}, socket) do
     {:noreply,
@@ -168,16 +168,15 @@ defmodule InterfazWeb.ZonasLive do
       
       <.modal id="modal-zona" titulo="Registrar zona" abierto={@modal == :zona}>
         <.form for={@form} id="form-zona" phx-submit="guardar">
-          <div class="grid grid-cols-2 gap-3">
-            <.input field={@form[:codigo]} label="Código" placeholder="zona_norte" required />
-            <.input
-              field={@form[:nivel]}
-              type="select"
-              label="Nivel de afectación"
-              options={opciones(Fuente.niveles())}
-            />
-          </div>
-           <.input field={@form[:nombre]} label="Nombre" required /> <.botones_form />
+          <.input field={@form[:nombre]} label="Nombre" placeholder="Norte" required />
+          <.input
+            field={@form[:nivel]}
+            type="select"
+            label="Nivel de afectación"
+            options={opciones(Fuente.niveles())}
+          />
+          <p class="text-xs text-base-content/60">El código de la zona lo genera el sistema.</p>
+           <.botones_form texto="Registrar" />
         </.form>
       </.modal>
       
