@@ -1,24 +1,52 @@
 defmodule Epicenter.Persistencia do
-  @path "epicenter/lib/Datos/Usuario.txt"
+  @path_usuarios Path.join(__DIR__, "Usuario.json")
+  @moduledoc """
+    Modulo para la persistencia de datos, que incluye la carga de usuarios desde archivos y la conversión de mapas a structs.
 
-  def cargar_usuarios do
-    File.read!(@path)
-    |> String.split("\n")
-    |> Enum.filter(fn linea -> String.trim(linea) end)
-    |> Enum.reject(fn linea -> linea == "" end)
-    |> Enum.map(fn linea ->
-      [nombre_usuario, contraseña, nombre_completo, zona_principal, rol] = String.split(linea, ";")
-      {:ok, usuario} = Epicenter.Usuario.nuevo(nombre_usuario, contraseña, nombre_completo, zona_principal, String.to_atom(rol))
-      usuario
-    end)
+    ##Funciones
+    - carga_usuarios/0: Carga los usuarios desde un archivo y devuelve una lista
+    - map_a_struct/1: Convierte un mapa de usuario a struct de usuario
+
+  """
+  def carga_usuarios do
+    case File.read(@path_usuarios) do
+      {:ok, contenido} ->
+        mapa = JSON.decode!(contenido)
+        # Conversion de struct
+        Enum.map(mapa, fn usuario -> map_a_struct(usuario) end)
+
+      {:error, razon} ->
+        IO.puts("Error al cargar usuarios: #{razon}")
+        []
+    end
   end
 
-  def guardar_usuarios(usuarios) do
-    contenido = Enum.map(usuarios, fn usuario ->
-      "#{usuario.nombre_usuario};#{usuario.contraseña};#{usuario.nombre_completo};#{usuario.zona_principal};#{Enum.join(usuario.rol, ",")}"
-    end)
-    |> Enum.join("\n")
+  def map_a_struct(usuario) do
+    %Epicenter.Usuario{
+      nombre_usuario: usuario["nombre_usuario"],
+      contrasena: usuario["contrasena"],
+      rol: rol_a_atomos(usuario["rol"])
+    }
+  end
 
-    File.write!(@path, contenido)
+  defp rol_a_atomos(roles) when is_list(roles), do: Enum.map(roles, &rol_a_atomo/1)
+  defp rol_a_atomos(rol), do: rol_a_atomo(rol)
+
+  defp rol_a_atomo("ciudadano"), do: :ciudadano
+  defp rol_a_atomo("voluntario"), do: :voluntario
+  defp rol_a_atomo("coordinar"), do: :coordinar
+  defp rol_a_atomo("administrador"), do: :administrador
+  defp rol_a_atomo(rol) when rol in [:ciudadano, :voluntario, :coordinar, :administrador], do: rol
+  defp rol_a_atomo(_rol), do: :ciudadano
+
+  def guardar_usuarios(usuarios) do
+    list =
+      Enum.map(usuarios, fn u ->
+        Map.from_struct(u) |> Map.put(:contrasena, to_string(u.contrasena))
+      end)
+
+    {:ok, data} = Jason.encode(list, pretty: true)
+    File.write!(@path_usuarios, data)
+    usuarios
   end
 end

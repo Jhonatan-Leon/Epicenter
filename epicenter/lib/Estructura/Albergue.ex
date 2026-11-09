@@ -4,8 +4,8 @@ defmodule Epicenter.Albergue do
   @enforce_keys [:codigo, :nombre, :codigo_zona, :capacidad]
   defstruct [:codigo, :nombre, :codigo_zona, :capacidad, :ocupantes, :recursos, :necesidades ]
 
-  def nuevo(codigo, nombre, codigo_zona, capacidad) do
-    {:Ok, %__MODULE__{codigo: Utilidad.generar_codigo_unico(), nombre: nombre, codigo_zona: codigo_zona, capacidad: capacidad, ocupantes: 0, recursos: [], necesidades: []}}
+  def nuevo(nombre, codigo_zona, capacidad) do
+    {:ok, %__MODULE__{codigo: Utilidad.generar_codigo_unico(), nombre: nombre, codigo_zona: codigo_zona, capacidad: capacidad, ocupantes: 0, recursos: [], necesidades: []}}
   end
 
 
@@ -17,11 +17,7 @@ defmodule Epicenter.Albergue do
     ocupantes
   end
 
-  def ocupacion_disponible(%__MODULE__{capacidad: capacidad, ocupantes: ocupantes}) do
-    capacidad - ocupantes
-  end
-
   def ocupacion_disponible?(%__MODULE__{capacidad: capacidad, ocupantes: ocupantes}) do
-    ocupacion_disponible(%__MODULE__{capacidad: capacidad, ocupantes: ocupantes}) > 0
+    ocupantes < capacidad
   end
 end

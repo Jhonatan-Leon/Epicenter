@@ -21,7 +21,7 @@ defmodule Epicenter.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-
+      {:jason, "~> 1.4"},
       {:ecto, "~> 3.0"},
       {:plug, github: "elixir-plug/plug"}
       # {:dep_from_hexpm, "~> 0.3.0"},

@@ -7,7 +7,7 @@ defmodule Epicenter.Zona do
   defstruct [ :codigo, :nombre_zona, :nivel_afectacion, persona_afectadas: 0, sectores: []]
 
   def nueva(nombre_zona) do
-    {:Ok, %__MODULE__{codigo: Utilidad.generar_codigo_unico(), nombre_zona: nombre_zona, nivel_afectacion: nivel_afectacion_valido?(:bajo), persona_afectadas: 0, sectores: []}}
+    {:osk, %__MODULE__{codigo: Utilidad.generar_codigo_unico(), nombre_zona: nombre_zona, nivel_afectacion: nivel_afectacion_valido?(:bajo), persona_afectadas: 0, sectores: []}}
   end
 
   def listar_zonas(zonas) do
