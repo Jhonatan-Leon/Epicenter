@@ -149,9 +149,11 @@ defmodule InterfazWeb.UI do
     <div class="rounded-box border border-base-300 bg-base-100 p-4">
       <div class="flex items-center justify-between gap-2">
         <p class="text-sm text-base-content/70">{@titulo}</p>
-        <.icon name={@icono} class={["size-5", @tono]} />
+         <.icon name={@icono} class={["size-5", @tono]} />
       </div>
+      
       <p class="mt-2 text-3xl font-semibold tabular-nums">{@valor}</p>
+      
       <p :if={@detalle} class="mt-1 text-xs text-base-content/60">{@detalle}</p>
     </div>
     """
@@ -196,8 +198,10 @@ defmodule InterfazWeb.UI do
     <section class={["rounded-box border border-base-300 bg-base-100", @class]}>
       <header class="flex flex-wrap items-center justify-between gap-2 border-b border-base-300 px-4 py-3">
         <h2 class="font-semibold">{@titulo}</h2>
+        
         <div :if={@acciones != []} class="flex flex-wrap gap-2">{render_slot(@acciones)}</div>
       </header>
+      
       <div class="p-4">{render_slot(@inner_block)}</div>
     </section>
     """
@@ -212,8 +216,10 @@ defmodule InterfazWeb.UI do
     <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
         <h1 class="text-2xl font-semibold tracking-tight">{@titulo}</h1>
+        
         <p :if={@subtitulo} class="mt-1 text-sm text-base-content/70">{@subtitulo}</p>
       </div>
+      
       <div :if={@acciones != []} class="flex flex-wrap gap-2">{render_slot(@acciones)}</div>
     </div>
     """
@@ -238,6 +244,7 @@ defmodule InterfazWeb.UI do
       <div class="modal-box max-w-lg">
         <div class="mb-4 flex items-center justify-between">
           <h3 class="text-lg font-semibold">{@titulo}</h3>
+          
           <button
             type="button"
             class="btn btn-ghost btn-sm btn-square"
@@ -247,8 +254,9 @@ defmodule InterfazWeb.UI do
             <.icon name="hero-x-mark" class="size-5" />
           </button>
         </div>
-        {render_slot(@inner_block)}
+         {render_slot(@inner_block)}
       </div>
+      
       <div class="modal-backdrop" phx-click={@al_cerrar}></div>
     </div>
     """

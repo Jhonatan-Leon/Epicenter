@@ -59,7 +59,7 @@ defmodule InterfazWeb.AlberguesLive do
           </button>
         </:acciones>
       </.encabezado>
-
+      
       <div class="grid gap-6 xl:grid-cols-[1fr_20rem]">
         <div id="lista-albergues" class="grid gap-4 sm:grid-cols-2">
           <article
@@ -70,16 +70,21 @@ defmodule InterfazWeb.AlberguesLive do
             <div class="flex items-start justify-between gap-2">
               <div>
                 <p class="text-xs text-base-content/60">{a.codigo} · {zona(a.zona)}</p>
+                
                 <h3 class="text-lg font-semibold">{a.nombre}</h3>
               </div>
+              
               <span :if={a.ocupacion >= a.capacidad} class="badge badge-error badge-soft badge-sm">Lleno</span>
             </div>
+            
             <div class="mt-4 flex items-end justify-between">
               <p class="text-3xl font-semibold tabular-nums">{a.capacidad - a.ocupacion}</p>
+              
               <p class="text-sm text-base-content/60">{a.ocupacion} / {a.capacidad} ocupados</p>
             </div>
+            
             <p class="text-xs text-base-content/60">cupos disponibles</p>
-            <.barra valor={a.ocupacion} maximo={a.capacidad} class="mt-3" />
+             <.barra valor={a.ocupacion} maximo={a.capacidad} class="mt-3" />
             <div :if={Sesion.gestiona?(@usuario)} class="mt-4 flex gap-2">
               <button
                 id={"ingreso-#{a.codigo}"}
@@ -91,6 +96,7 @@ defmodule InterfazWeb.AlberguesLive do
               >
                 <.icon name="hero-arrow-down-on-square" class="size-4" /> Ingreso
               </button>
+              
               <button
                 id={"salida-#{a.codigo}"}
                 class="btn btn-sm btn-ghost flex-1"
@@ -104,20 +110,20 @@ defmodule InterfazWeb.AlberguesLive do
             </div>
           </article>
         </div>
-
+        
         <.panel titulo="Mayor nivel de ocupación">
           <ol id="ranking-albergues" class="space-y-4">
             <li :for={{a, i} <- Enum.with_index(@ranking, 1)} class="flex gap-3">
               <span class="grid size-7 shrink-0 place-items-center rounded-full bg-base-200 text-sm font-semibold">{i}</span>
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-medium">{a.nombre}</p>
-                <.barra valor={a.ocupacion} maximo={a.capacidad} />
+                 <.barra valor={a.ocupacion} maximo={a.capacidad} />
               </div>
             </li>
           </ol>
         </.panel>
       </div>
-
+      
       <.modal id="modal-albergue" titulo="Registrar albergue" abierto={@modal == :albergue}>
         <.form for={@form} id="form-albergue" phx-submit="guardar">
           <div class="grid grid-cols-2 gap-3">
@@ -130,17 +136,16 @@ defmodule InterfazWeb.AlberguesLive do
               required
             />
           </div>
-          <.input field={@form[:nombre]} label="Nombre" placeholder="Albergue Norte" required />
+           <.input field={@form[:nombre]} label="Nombre" placeholder="Albergue Norte" required />
           <.input
             field={@form[:zona]}
             type="select"
             label="Zona"
             options={Enum.map(Fuente.zonas(), &{&1.nombre, &1.codigo})}
-          />
-          <.botones_form texto="Registrar" />
+          /> <.botones_form texto="Registrar" />
         </.form>
       </.modal>
-
+      
       <.modal
         :if={@albergue}
         id="modal-movimiento-albergue"
@@ -150,6 +155,7 @@ defmodule InterfazWeb.AlberguesLive do
         <p class="mb-3 text-sm text-base-content/70">
           {@albergue.capacidad - @albergue.ocupacion} cupos disponibles de {@albergue.capacidad}.
         </p>
+        
         <.form for={@form} id="form-movimiento-albergue" phx-submit="guardar">
           <div class="grid grid-cols-2 gap-3">
             <.input
@@ -157,10 +163,9 @@ defmodule InterfazWeb.AlberguesLive do
               type="select"
               label="Tipo"
               options={[{"Ingreso", "ingreso"}, {"Salida", "salida"}]}
-            />
-            <.input field={@form[:documento]} label="Documento de la persona" required />
+            /> <.input field={@form[:documento]} label="Documento de la persona" required />
           </div>
-          <.botones_form texto="Registrar" />
+           <.botones_form texto="Registrar" />
         </.form>
       </.modal>
     </Layouts.app>

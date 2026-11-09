@@ -10,33 +10,39 @@
     >
       <path d="M0 60h160l20-30 20 60 25-90 30 120 25-80 20 40 15-20h265" />
     </svg>
+    
     <div class="relative flex items-center gap-2">
       <Layouts.marca />
     </div>
+    
     <div class="relative max-w-md">
       <h1 class="text-4xl font-semibold leading-tight tracking-tight">
         Coordinación de la emergencia, en un solo lugar.
       </h1>
+      
       <p class="mt-4 text-neutral-content/70">
         Necesidades, recursos, albergues, personas y mascotas de cada zona afectada,
         compartidos en tiempo real entre ciudadanos, voluntarios y coordinadores.
       </p>
     </div>
+    
     <p class="relative text-xs text-neutral-content/50">
       Programación III · Universidad del Quindío · 2026-2
     </p>
   </section>
-
+  
   <section class="flex items-center justify-center bg-base-200 px-4 py-12">
     <div class="w-full max-w-sm">
       <div class="mb-8 flex items-center gap-2 lg:hidden">
         <Layouts.marca />
       </div>
+      
       <h2 class="text-2xl font-semibold tracking-tight">Conectarse</h2>
+      
       <p class="mt-1 text-sm text-base-content/70">
         Si el usuario no existe se registra automáticamente con el rol y la zona elegidos.
       </p>
-
+      
       <.form for={@form} action={~p"/conectar"} class="mt-6 space-y-1">
         <.input field={@form[:usuario]} label="Usuario" autocomplete="username" required />
         <.input
@@ -60,6 +66,7 @@
             options={Enum.map(Interfaz.Fuente.zonas(), &{&1.nombre, &1.codigo})}
           />
         </div>
+        
         <.button variant="primary" class="btn btn-primary mt-4 w-full">
           Conectar <.icon name="hero-arrow-right" class="size-4" />
         </.button>
@@ -67,5 +74,4 @@
     </div>
   </section>
 </div>
-
-<Layouts.flash_group flash={@flash} />
+ <Layouts.flash_group flash={@flash} />

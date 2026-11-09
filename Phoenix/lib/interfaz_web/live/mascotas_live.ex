@@ -78,18 +78,23 @@ defmodule InterfazWeb.MascotasLive do
               class="size-5 text-primary"
             />
           </span>
+          
           <div>
             <p class="font-semibold">{@m.nombre || "Sin nombre"}</p>
+            
             <p class="text-xs text-base-content/60">{@m.id} · {t(@m.especie)} · {zona(@m.zona)}</p>
           </div>
         </div>
-        <.insignia valor={@m.estado} />
+         <.insignia valor={@m.estado} />
       </div>
+      
       <div class="mt-3 flex flex-wrap gap-1.5 text-xs">
         <span class="badge badge-sm badge-outline">Color: {@m.color}</span>
         <span class="badge badge-sm badge-outline">Tamaño: {t(@m.tamano)}</span>
       </div>
+      
       <p class="mt-2 text-sm text-base-content/80">{@m.caracteristicas}</p>
+      
       <p class="mt-2 text-xs text-base-content/60">
         <.icon name="hero-phone" class="size-3.5" /> {@m.contacto}
       </p>
@@ -113,6 +118,7 @@ defmodule InterfazWeb.MascotasLive do
           >
             <.icon name="hero-plus" class="size-4" /> Mascota perdida
           </button>
+          
           <button
             id="reportar-encontrada"
             class="btn btn-sm"
@@ -123,13 +129,14 @@ defmodule InterfazWeb.MascotasLive do
           </button>
         </:acciones>
       </.encabezado>
-
+      
       <.panel titulo="Posibles coincidencias" class="mb-6">
         <:acciones>
           <button id="buscar-coincidencias" class="btn btn-xs" phx-click="buscar_coincidencias">
             <.icon name="hero-arrow-path" class="size-3.5" /> Buscar de nuevo
           </button>
         </:acciones>
+        
         <div id="coincidencias" class="grid gap-4 md:grid-cols-2">
           <div
             :for={c <- @coincidencias}
@@ -143,6 +150,7 @@ defmodule InterfazWeb.MascotasLive do
                 <.icon name="hero-arrows-right-left" class="mx-1 size-4 text-base-content/50" />
                 encontrada {c.encontrada}
               </p>
+              
               <span class={[
                 "text-2xl font-semibold tabular-nums",
                 cond do
@@ -152,6 +160,7 @@ defmodule InterfazWeb.MascotasLive do
                 end
               ]}>{c.puntaje}%</span>
             </div>
+            
             <ul class="mt-3 flex flex-wrap gap-1.5">
               <li
                 :for={{criterio, coincide} <- c.criterios}
@@ -163,6 +172,7 @@ defmodule InterfazWeb.MascotasLive do
                 {t(criterio)}
               </li>
             </ul>
+            
             <div :if={Sesion.gestiona?(@usuario)} class="mt-3 flex justify-end">
               <button
                 id={"confirmar-#{c.perdida}-#{c.encontrada}"}
@@ -178,7 +188,7 @@ defmodule InterfazWeb.MascotasLive do
           </div>
         </div>
       </.panel>
-
+      
       <.form
         for={@filtros}
         id="filtros-mascotas"
@@ -194,6 +204,7 @@ defmodule InterfazWeb.MascotasLive do
             options={opciones(Fuente.especies())}
           />
         </div>
+        
         <div class="w-40">
           <.input
             field={@filtros[:zona]}
@@ -203,6 +214,7 @@ defmodule InterfazWeb.MascotasLive do
             options={Enum.map(Fuente.zonas(), &{&1.nombre, &1.codigo})}
           />
         </div>
+        
         <div class="w-48">
           <.input
             field={@filtros[:estado]}
@@ -213,7 +225,7 @@ defmodule InterfazWeb.MascotasLive do
           />
         </div>
       </.form>
-
+      
       <div class="grid gap-6 lg:grid-cols-2">
         <section id="perdidas">
           <h2 class="mb-3 flex items-center gap-2 font-semibold">
@@ -221,24 +233,27 @@ defmodule InterfazWeb.MascotasLive do
             Perdidas
             <span class="text-sm font-normal text-base-content/60">({length(@perdidas)})</span>
           </h2>
+          
           <div class="space-y-3">
             <.vacio :if={@perdidas == []} mensaje="Sin reportes con esos filtros." />
             <.tarjeta :for={m <- @perdidas} m={m} />
           </div>
         </section>
+        
         <section id="encontradas">
           <h2 class="mb-3 flex items-center gap-2 font-semibold">
             <span class="size-2 rounded-full bg-success"></span>
             Encontradas
             <span class="text-sm font-normal text-base-content/60">({length(@encontradas)})</span>
           </h2>
+          
           <div class="space-y-3">
             <.vacio :if={@encontradas == []} mensaje="Sin reportes con esos filtros." />
             <.tarjeta :for={m <- @encontradas} m={m} />
           </div>
         </section>
       </div>
-
+      
       <.modal id="modal-mascota" titulo="Reportar mascota" abierto={@modal == :mascota}>
         <.form for={@form} id="form-mascota" phx-submit="guardar">
           <div class="grid grid-cols-2 gap-3">
@@ -253,8 +268,7 @@ defmodule InterfazWeb.MascotasLive do
               type="select"
               label="Especie"
               options={opciones(Fuente.especies())}
-            />
-            <.input field={@form[:nombre]} label="Nombre (si se conoce)" placeholder="Luna" />
+            /> <.input field={@form[:nombre]} label="Nombre (si se conoce)" placeholder="Luna" />
             <.input field={@form[:color]} label="Color" required />
             <.input
               field={@form[:tamano]}
@@ -269,6 +283,7 @@ defmodule InterfazWeb.MascotasLive do
               options={Enum.map(Fuente.zonas(), &{&1.nombre, &1.codigo})}
             />
           </div>
+          
           <.input field={@form[:caracteristicas]} type="textarea" rows="2" label="Características" />
           <.input field={@form[:contacto]} label="Contacto" required />
           <.botones_form texto="Reportar" />
