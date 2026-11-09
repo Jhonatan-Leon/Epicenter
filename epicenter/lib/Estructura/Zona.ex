@@ -1,20 +1,20 @@
 defmodule Epicenter.Zona do
-  @moduledoc """
+  @niveles [:critico, :alto, :medio, :bajo]
 
-  """
-  @nivel_afectacion_verificar [:bajo, :medio, :alto, :critica]
-  @enforces_keys [:nombre_zona]
-  defstruct [ :codigo, :nombre_zona, :nivel_afectacion, persona_afectadas: 0, sectores: []]
+  @enforce_keys [:codigo, :nombre, :nivel]
+  defstruct [:codigo, :nombre, :nivel]
 
-  def nueva(nombre_zona) do
-    {:osk, %__MODULE__{codigo: Utilidad.generar_codigo_unico(), nombre_zona: nombre_zona, nivel_afectacion: nivel_afectacion_valido?(:bajo), persona_afectadas: 0, sectores: []}}
+  def nuevo(_codigo, "", _nivel), do: {:error, :nombre_vacio}
+
+  def nuevo(codigo, nombre, nivel) when nivel in @niveles do
+    {:ok, %__MODULE__{codigo: codigo, nombre: nombre, nivel: nivel}}
   end
 
-  def listar_zonas(zonas) do
-    Enum.map(zonas, fn zona -> zona.codigo end)
+  def nuevo(_codigo, _nombre, _nivel), do: {:error, :nivel_invalido}
+
+  def cambiar_nivel(%__MODULE__{} = zona, nivel) when nivel in @niveles do
+    {:ok, %{zona | nivel: nivel}}
   end
 
-  def nivel_afectacion_valido?(nivel_afectacion) do
-    Enum.member?(@nivel_afectacion_verificar, nivel_afectacion)
-  end
+  def cambiar_nivel(_zona, _nivel), do: {:error, :nivel_invalido}
 end
