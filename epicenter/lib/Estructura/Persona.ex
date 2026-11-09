@@ -1,6 +1,3 @@
-Code.require_file("Zona.exs", __DIR__)
-Code.require_file("Albergue.exs", __DIR__)
-
 defmodule Epicenter.Persona do
   @moduledoc """
   """

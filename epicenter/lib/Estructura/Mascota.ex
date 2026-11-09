@@ -1,5 +1,3 @@
-Code.require_file("Zona.exs", __DIR__)
-
 defmodule Epicenter.Mascota do
   @moduledoc """
   """
