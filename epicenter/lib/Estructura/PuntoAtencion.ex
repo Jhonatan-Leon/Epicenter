@@ -1,10 +1,7 @@
 defmodule Epicenter.PuntoAtencion do
-  @moduledoc """
-  """
-  @enforce_keys [:codigo, :codigo_sector]
-  defstruct [:codigo, :codigo_sector, :nombre]
+  @enforce_keys [:codigo, :nombre]
+  defstruct [:codigo, :nombre]
 
-  def nuevo(codigo, codigo_sector, nombre) do
-    {:ok, %__MODULE__{codigo: Utilidad.generar_codigo_unico(), codigo_sector: codigo_sector,  nombre: nombre}}
-  end
+  def nuevo(_codigo, ""), do: {:error, :nombre_vacio}
+  def nuevo(codigo, nombre), do: {:ok, %__MODULE__{codigo: codigo, nombre: nombre}}
 end

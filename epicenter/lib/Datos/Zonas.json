@@ -1,0 +1,169 @@
+[
+    {
+        "codigo": "A1F03C9E7B2D4410",
+        "nombre": "Centro",
+        "nivel": "critico",
+        "sectores": [
+            {
+                "codigo": "C3E19A07F5B26D81",
+                "nombre": "Centro Histórico",
+                "nivel": "critico",
+                "afectadas": 850,
+                "puntos": [
+                    {
+                        "codigo": "E7A2D41C90B3F658",
+                        "nombre": "Plaza de Bolívar"
+                    },
+                    {
+                        "codigo": "F09B36E2A71C4D25",
+                        "nombre": "Parque Sucre"
+                    }
+                ]
+            },
+            {
+                "codigo": "D84C2B71E06A9F33",
+                "nombre": "Barrio Uribe",
+                "nivel": "alto",
+                "afectadas": 420,
+                "puntos": [
+                    {
+                        "codigo": "B52E8D0F3C61A947",
+                        "nombre": "Parque Uribe"
+                    }
+                ]
+            },
+            {
+                "codigo": "9A6F1E44C2D07B58",
+                "nombre": "Barrio Granada",
+                "nivel": "alto",
+                "afectadas": 310,
+                "puntos": []
+            }
+        ]
+    },
+    {
+        "codigo": "B7D24E901FA3C665",
+        "nombre": "Norte",
+        "nivel": "medio",
+        "sectores": [
+            {
+                "codigo": "4E0B9C73A1D6F282",
+                "nombre": "Laureles",
+                "nivel": "medio",
+                "afectadas": 260,
+                "puntos": [
+                    {
+                        "codigo": "7C3A5F18D9E20B46",
+                        "nombre": "Parque de los Fundadores"
+                    }
+                ]
+            },
+            {
+                "codigo": "6D21F8B04E9A3C17",
+                "nombre": "La Castellana",
+                "nivel": "bajo",
+                "afectadas": 90,
+                "puntos": []
+            }
+        ]
+    },
+    {
+        "codigo": "C58E13A6B0F94D72",
+        "nombre": "Sur",
+        "nivel": "alto",
+        "sectores": [
+            {
+                "codigo": "2F7A90D4C1B6E853",
+                "nombre": "La Patria",
+                "nivel": "alto",
+                "afectadas": 540,
+                "puntos": [
+                    {
+                        "codigo": "8B14E6C2F0A93D57",
+                        "nombre": "Polideportivo La Patria"
+                    },
+                    {
+                        "codigo": "A3D9071B5E2C4F86",
+                        "nombre": "Estadio Centenario"
+                    }
+                ]
+            },
+            {
+                "codigo": "5C8B2E17F4A09D61",
+                "nombre": "Brasilia",
+                "nivel": "critico",
+                "afectadas": 690,
+                "puntos": [
+                    {
+                        "codigo": "1E6F4A8C3B0D7295",
+                        "nombre": "Escuela Brasilia"
+                    }
+                ]
+            },
+            {
+                "codigo": "3B90C5E2D17F4A68",
+                "nombre": "Los Quindos",
+                "nivel": "medio",
+                "afectadas": 230,
+                "puntos": []
+            }
+        ]
+    },
+    {
+        "codigo": "D06A7F2C9E31B845",
+        "nombre": "Occidente",
+        "nivel": "alto",
+        "sectores": [
+            {
+                "codigo": "8E5D1A3F07C2B946",
+                "nombre": "La Clarita",
+                "nivel": "alto",
+                "afectadas": 380,
+                "puntos": [
+                    {
+                        "codigo": "0D7C2E9B41F6A538",
+                        "nombre": "Parque La Clarita"
+                    }
+                ]
+            },
+            {
+                "codigo": "F2A47B0E6D93C158",
+                "nombre": "Puerto Espejo",
+                "nivel": "medio",
+                "afectadas": 270,
+                "puntos": [
+                    {
+                        "codigo": "6A0E3D5C82B1F947",
+                        "nombre": "Escuela Puerto Espejo"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "codigo": "E39C5B8D02A6F714",
+        "nombre": "Oriente",
+        "nivel": "bajo",
+        "sectores": [
+            {
+                "codigo": "7F1D6C0A93E5B248",
+                "nombre": "El Bosque",
+                "nivel": "bajo",
+                "afectadas": 120,
+                "puntos": [
+                    {
+                        "codigo": "C9B4F27E1D0A6385",
+                        "nombre": "Salón Comunal El Bosque"
+                    }
+                ]
+            },
+            {
+                "codigo": "0A8E4F6B2C71D953",
+                "nombre": "Corbones",
+                "nivel": "bajo",
+                "afectadas": 75,
+                "puntos": []
+            }
+        ]
+    }
+]
