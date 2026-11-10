@@ -112,7 +112,7 @@ defmodule InterfazWeb.PersonasLive do
             for={@busqueda}
             id="busqueda-personas"
             phx-change="buscar"
-            class="rounded-box border border-base-300 bg-base-100 p-4"
+            class="sx-card sx-foco p-4"
           >
             <.input
               field={@busqueda[:texto]}
@@ -149,7 +149,7 @@ defmodule InterfazWeb.PersonasLive do
                 phx-click="seleccionar"
                 phx-value-documento={p.documento}
                 class={[
-                  "flex w-full items-center gap-3 rounded-box border bg-base-100 px-4 py-3 text-left transition hover:border-primary/60",
+                  "flex w-full items-center gap-3 sx-vidrio rounded-box border px-4 py-3 text-left transition hover:border-primary/60",
                   if(@persona && @persona.documento == p.documento,
                     do: "border-primary ring-1 ring-primary",
                     else: "border-base-300"

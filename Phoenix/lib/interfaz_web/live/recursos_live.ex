@@ -137,7 +137,7 @@ defmodule InterfazWeb.RecursosLive do
           :for={r <- @recursos}
           id={"recurso-#{r.codigo}"}
           class={[
-            "rounded-box border bg-base-100 p-4",
+            "sx-vidrio rounded-box border p-4",
             if(r.cantidad < r.minimo, do: "border-error/50", else: "border-base-300")
           ]}
         >

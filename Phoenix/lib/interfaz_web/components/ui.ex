@@ -76,6 +76,17 @@ defmodule InterfazWeb.UI do
   @doc "Opciones `{etiqueta, valor}` para un `<select>`."
   def opciones(valores), do: Enum.map(valores, &{t(&1), &1})
 
+  @orden_niveles [:critico, :alto, :medio, :bajo]
+
+  @doc """
+  Nivel más grave entre varios elementos con `:nivel`. Solo lo usa el fondo
+  animado para ajustar su intensidad (`data-sx-nivel`); no afecta a los datos.
+  """
+  def nivel_mas_alto(elementos) do
+    presentes = Enum.map(elementos, & &1.nivel)
+    Enum.find(@orden_niveles, &(&1 in presentes))
+  end
+
   @doc "Nombre legible de una zona a partir de su código."
   def zona(codigo) do
     case Enum.find(Interfaz.Fuente.zonas(), &(&1.codigo == codigo)) do
@@ -123,14 +134,27 @@ defmodule InterfazWeb.UI do
     encontrada: "badge-success"
   }
 
+  # Valores cuyo punto de estado parpadea para llamar la atención (solo visual).
+  @urgentes [:critico, :critica, :sin_informacion, :perdida]
+
   attr :valor, :atom, required: true
   attr :class, :string, default: nil
 
   def insignia(assigns) do
-    assigns = assign(assigns, :tono, Map.get(@tonos, assigns.valor, "badge-ghost"))
+    assigns =
+      assigns
+      |> assign(:tono, Map.get(@tonos, assigns.valor, "badge-ghost"))
+      |> assign(:alerta, assigns.valor in @urgentes)
 
     ~H"""
-    <span class={["badge badge-sm badge-soft whitespace-nowrap", @tono, @class]}>{t(@valor)}</span>
+    <span class={[
+      "sx-insignia badge badge-sm badge-soft whitespace-nowrap",
+      @alerta && "sx-insignia-alerta",
+      @tono,
+      @class
+    ]}>
+      {t(@valor)}
+    </span>
     """
   end
 
@@ -146,15 +170,25 @@ defmodule InterfazWeb.UI do
 
   def indicador(assigns) do
     ~H"""
-    <div class="rounded-box border border-base-300 bg-base-100 p-4">
-      <div class="flex items-center justify-between gap-2">
-        <p class="text-sm text-base-content/70">{@titulo}</p>
-         <.icon name={@icono} class={["size-5", @tono]} />
+    <div class="sx-card sx-foco sx-inclinar sx-indicador px-4 pb-10 pt-4 sm:px-5 sm:pt-5">
+      <div class="flex items-start justify-between gap-2">
+        <p class="sx-etiqueta pt-1">{@titulo}</p>
+
+        <span class={["sx-anillo", @tono]}><.icon name={@icono} class="size-4" /></span>
       </div>
-      
-      <p class="mt-2 text-3xl font-semibold tabular-nums">{@valor}</p>
-      
-      <p :if={@detalle} class="mt-1 text-xs text-base-content/60">{@detalle}</p>
+
+      <p class="sx-cifra mt-3" data-conteo={@valor}>{@valor}</p>
+
+      <p :if={@detalle} class="mt-2 text-xs text-base-content/65">{@detalle}</p>
+
+      <svg
+        class={["sx-traza", @tono]}
+        viewBox="0 0 120 26"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path pathLength="1" d="M0 14h30l4-6 5 13 6-19 6 22 5-13 4 6 3-3h57" />
+      </svg>
     </div>
     """
   end
@@ -169,17 +203,26 @@ defmodule InterfazWeb.UI do
 
     tono =
       cond do
-        pct >= 95 -> "progress-error"
-        pct >= 80 -> "progress-warning"
-        true -> "progress-success"
+        pct >= 95 -> "text-error"
+        pct >= 80 -> "text-warning"
+        true -> "text-success"
       end
 
-    assigns = assign(assigns, pct: pct, tono: tono)
+    assigns = assign(assigns, pct: pct, ancho: min(pct, 100), tono: tono)
 
     ~H"""
     <div class={["flex items-center gap-2", @class]}>
-      <progress class={["progress h-2 flex-1", @tono]} value={@valor} max={@maximo}></progress>
-      <span class="w-10 text-right text-xs tabular-nums text-base-content/70">{@pct}%</span>
+      <div
+        class={["sx-barra-pista flex-1", @tono]}
+        role="progressbar"
+        aria-valuenow={@valor}
+        aria-valuemin="0"
+        aria-valuemax={@maximo}
+      >
+        <div class="sx-barra-relleno" style={"width: #{@ancho}%"}></div>
+      </div>
+
+      <span class="w-10 text-right font-mono text-xs tabular-nums text-base-content/70">{@pct}%</span>
     </div>
     """
   end
@@ -195,9 +238,9 @@ defmodule InterfazWeb.UI do
 
   def panel(assigns) do
     ~H"""
-    <section class={["rounded-box border border-base-300 bg-base-100", @class]}>
-      <header class="flex flex-wrap items-center justify-between gap-2 border-b border-base-300 px-4 py-3">
-        <h2 class="font-semibold">{@titulo}</h2>
+    <section class={["sx-card sx-foco", @class]}>
+      <header class="flex flex-wrap items-center justify-between gap-2 border-b border-base-content/10 px-4 py-3">
+        <h2 class="sx-panel-titulo">{@titulo}</h2>
         
         <div :if={@acciones != []} class="flex flex-wrap gap-2">{render_slot(@acciones)}</div>
       </header>
@@ -213,11 +256,15 @@ defmodule InterfazWeb.UI do
 
   def encabezado(assigns) do
     ~H"""
-    <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-semibold tracking-tight">{@titulo}</h1>
-        
-        <p :if={@subtitulo} class="mt-1 text-sm text-base-content/70">{@subtitulo}</p>
+    <div class="sx-encabezado mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div class="min-w-0">
+        <p class="sx-etiqueta mb-2 flex items-center gap-2">
+          <span class="sx-punto"></span> Epicenter · Respuesta ante sismo
+        </p>
+
+        <h1 class="sx-titulo">{@titulo}</h1>
+
+        <p :if={@subtitulo} class="mt-3 max-w-2xl text-sm text-base-content/70">{@subtitulo}</p>
       </div>
       
       <div :if={@acciones != []} class="flex flex-wrap gap-2">{render_slot(@acciones)}</div>
@@ -279,8 +326,8 @@ defmodule InterfazWeb.UI do
 
   def vacio(assigns) do
     ~H"""
-    <div class="flex flex-col items-center gap-2 py-8 text-center text-base-content/60">
-      <.icon name={@icono} class="size-8" />
+    <div class="flex flex-col items-center gap-3 py-8 text-center text-base-content/60">
+      <span class="sx-vacio-icono"><.icon name={@icono} class="size-6" /></span>
       <p class="text-sm">{@mensaje}</p>
     </div>
     """

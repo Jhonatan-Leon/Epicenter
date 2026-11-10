@@ -33,7 +33,11 @@ defmodule InterfazWeb.ResumenLive do
         </:acciones>
       </.encabezado>
       
-      <div id="indicadores" class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div
+        id="indicadores"
+        class="sx-escalonar grid grid-cols-2 gap-4 lg:grid-cols-4"
+        data-sx-nivel={nivel_mas_alto(@zonas)}
+      >
         <.indicador
           titulo="Necesidades abiertas"
           valor={@resumen.necesidades_pendientes}

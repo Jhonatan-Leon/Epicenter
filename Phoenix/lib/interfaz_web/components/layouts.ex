@@ -24,10 +24,10 @@ defmodule InterfazWeb.Layouts do
     assigns = assign(assigns, :menu, InterfazWeb.Sesion.navegacion(assigns.usuario.rol))
 
     ~H"""
-    <div class="drawer lg:drawer-open">
+    <div class="sx-app drawer lg:drawer-open" data-escena="sala">
       <input id="menu-lateral" type="checkbox" class="drawer-toggle" />
-      <div class="drawer-content flex min-h-screen flex-col bg-base-200">
-        <header class="sticky top-0 z-20 flex items-center gap-3 border-b border-base-300 bg-base-100/90 px-4 py-2 backdrop-blur sm:px-6">
+      <div class="drawer-content flex min-h-screen flex-col">
+        <header class="sx-barra sticky top-0 z-20 flex items-center gap-3 px-4 py-2.5 sm:px-6">
           <label
             for="menu-lateral"
             class="btn btn-ghost btn-square btn-sm lg:hidden"
@@ -35,27 +35,39 @@ defmodule InterfazWeb.Layouts do
           >
             <.icon name="hero-bars-3" class="size-5" />
           </label>
-          
-          <div class="flex items-center gap-2 lg:hidden">
+
+          <div class="flex items-center gap-2.5 lg:hidden">
             <.marca />
           </div>
-          
+
+          <div
+            id="sx-pulso"
+            phx-update="ignore"
+            class="sx-pulso hidden items-center gap-3 md:flex"
+            title="Pulso de la interfaz: reacciona a tu actividad"
+          >
+            <span class="sx-etiqueta flex items-center gap-2">
+              <span class="sx-punto"></span> En vivo
+            </span>
+            <canvas id="sx-sismografo" aria-hidden="true"></canvas>
+            <span id="sx-reloj" class="sx-reloj">--:--:--</span>
+          </div>
+
           <div class="ml-auto flex items-center gap-3">
+            <.boton_movimiento />
             <.theme_toggle />
             <div class="hidden text-right sm:block">
-              <p class="text-sm font-medium leading-tight">{@usuario.nombre}</p>
-              
-              <p class="text-xs text-base-content/60">
+              <p class="text-sm font-semibold leading-tight">{@usuario.nombre}</p>
+
+              <p class="sx-etiqueta mt-0.5">
                 {InterfazWeb.UI.t(@usuario.rol)} · {InterfazWeb.UI.zona(@usuario.zona)}
               </p>
             </div>
-            
-            <div class="avatar avatar-placeholder">
-              <div class="w-9 rounded-full bg-primary text-primary-content">
-                <span class="text-sm font-semibold uppercase">{String.first(@usuario.nombre)}</span>
-              </div>
+
+            <div class="sx-marca-icono sx-marca-quieta">
+              <span class="text-sm font-bold uppercase">{String.first(@usuario.nombre)}</span>
             </div>
-            
+
             <.link
               href={~p"/desconectar"}
               method="delete"
@@ -67,47 +79,57 @@ defmodule InterfazWeb.Layouts do
             </.link>
           </div>
         </header>
-        
-        <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <div class="mx-auto max-w-7xl">
+
+        <main class="flex-1 px-4 py-8 sm:px-6 lg:px-10">
+          <div class="sx-contenido mx-auto max-w-7xl">
             {render_slot(@inner_block)}
           </div>
         </main>
       </div>
-      
+
       <div class="drawer-side z-30">
         <label for="menu-lateral" class="drawer-overlay" aria-label="Cerrar menú"></label>
-        <aside class="flex min-h-full w-64 flex-col border-r border-base-300 bg-base-100">
-          <div class="flex items-center gap-2 px-5 py-4">
+        <aside class="sx-lateral flex min-h-full w-64 flex-col">
+          <div class="flex items-center gap-2.5 px-5 py-5">
             <.marca />
           </div>
-          
-          <nav class="flex-1 px-3">
-            <ul class="menu w-full gap-1 p-0">
-              <li :for={item <- @menu}>
-                <.link navigate={item.ruta} class={[item.clave == @activo && "menu-active"]}>
-                  <.icon name={item.icono} class="size-5" /> {item.texto}
+
+          <p class="sx-etiqueta px-5 pb-2 pt-3">Coordinación</p>
+
+          <nav class="flex-1 px-3" aria-label="Secciones">
+            <ul class="sx-escalonar space-y-1">
+              <li :for={{item, i} <- Enum.with_index(@menu, 1)}>
+                <.link
+                  navigate={item.ruta}
+                  class={["sx-nav-item", item.clave == @activo && "sx-nav-activo"]}
+                  aria-current={item.clave == @activo && "page"}
+                >
+                  <span class="sx-nav-num">{String.pad_leading(Integer.to_string(i), 2, "0")}</span>
+                  <.icon name={item.icono} class="size-5 transition-colors" />
+                  <span class="flex-1">{item.texto}</span>
                 </.link>
               </li>
             </ul>
           </nav>
-          
-          <div class="m-3 rounded-box bg-base-200 p-3 text-xs text-base-content/70">
-            <p class="font-medium text-base-content">Sesión activa</p>
-            
-            <p>{@usuario.usuario} · {InterfazWeb.UI.t(@usuario.rol)}</p>
+
+          <div class="sx-card m-3 p-3 text-xs">
+            <p class="sx-etiqueta flex items-center gap-2">
+              <span class="sx-punto"></span> Sesión activa
+            </p>
+
+            <p class="mt-1.5 font-medium">{@usuario.usuario} · {InterfazWeb.UI.t(@usuario.rol)}</p>
           </div>
         </aside>
       </div>
     </div>
-     <.flash_group flash={@flash} />
+    <.flash_group flash={@flash} />
     """
   end
 
   @doc "Logotipo y nombre del sistema."
   def marca(assigns) do
     ~H"""
-    <span class="grid size-8 place-items-center rounded-field bg-primary text-primary-content">
+    <span class="sx-marca-icono">
       <svg
         viewBox="0 0 24 24"
         class="size-5"
@@ -121,7 +143,25 @@ defmodule InterfazWeb.Layouts do
         <path d="M2 12h4l2-5 3 10 3-14 2 9h6" />
       </svg>
     </span>
-     <span class="text-lg font-semibold tracking-tight">Epicenter</span>
+    <span class="sx-marca-texto">Epicenter</span>
+    """
+  end
+
+  @doc """
+  Activa o reduce las animaciones de la interfaz. La preferencia se guarda en
+  el navegador (ver `assets/js/sismo.js`).
+  """
+  def boton_movimiento(assigns) do
+    ~H"""
+    <button
+      type="button"
+      class="sx-movimiento btn btn-ghost btn-square btn-sm"
+      data-sx-movimiento
+      title="Activar o reducir animaciones"
+      aria-label="Activar o reducir animaciones"
+    >
+      <.icon name="hero-sparkles" class="size-5" />
+    </button>
     """
   end
 
@@ -153,7 +193,7 @@ defmodule InterfazWeb.Layouts do
         Intentando reconectar
         <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
       </.flash>
-      
+
       <.flash
         id="server-error"
         kind={:error}
@@ -185,22 +225,25 @@ defmodule InterfazWeb.Layouts do
         class="flex p-2 cursor-pointer w-1/3"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="system"
+        aria-label="Tema del sistema"
       >
         <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
-      
+
       <button
         class="flex p-2 cursor-pointer w-1/3"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="light"
+        aria-label="Tema claro"
       >
         <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
-      
+
       <button
         class="flex p-2 cursor-pointer w-1/3"
         phx-click={JS.dispatch("phx:set-theme")}
         data-phx-theme="dark"
+        aria-label="Tema oscuro"
       >
         <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>

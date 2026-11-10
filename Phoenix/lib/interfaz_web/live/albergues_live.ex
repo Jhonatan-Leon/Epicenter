@@ -65,7 +65,7 @@ defmodule InterfazWeb.AlberguesLive do
           <article
             :for={a <- @albergues}
             id={"albergue-#{a.codigo}"}
-            class="rounded-box border border-base-300 bg-base-100 p-5"
+            class="sx-card sx-foco p-5"
           >
             <div class="flex items-start justify-between gap-2">
               <div>

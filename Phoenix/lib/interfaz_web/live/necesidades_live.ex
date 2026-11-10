@@ -100,7 +100,7 @@ defmodule InterfazWeb.NecesidadesLive do
         for={@filtros}
         id="filtros-necesidades"
         phx-change="filtrar"
-        class="mb-4 grid grid-cols-2 items-end gap-3 rounded-box border border-base-300 bg-base-100 p-4 md:grid-cols-5"
+        class="mb-4 grid grid-cols-2 items-end gap-3 sx-card sx-foco p-4 md:grid-cols-5"
       >
         <.input
           field={@filtros[:zona]}
@@ -136,7 +136,7 @@ defmodule InterfazWeb.NecesidadesLive do
         </div>
       </.form>
       
-      <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100">
+      <div class="sx-card overflow-x-auto">
         <table id="tabla-necesidades" class="table">
           <thead>
             <tr>
@@ -201,7 +201,7 @@ defmodule InterfazWeb.NecesidadesLive do
                     
                     <ul
                       tabindex="0"
-                      class="dropdown-content menu z-10 w-44 rounded-box border border-base-300 bg-base-100 p-1 shadow"
+                      class="dropdown-content menu z-10 w-44 sx-card sx-foco p-1 shadow"
                     >
                       <li :for={e <- [:en_atencion, :atendida, :cancelada] -- [n.estado]}>
                         <button phx-click="cambiar_estado" phx-value-id={n.id} phx-value-estado={e}>

@@ -71,7 +71,7 @@ defmodule InterfazWeb.ZonasLive do
         </:acciones>
       </.encabezado>
       
-      <div class="grid gap-6 lg:grid-cols-[20rem_1fr]">
+      <div class="grid gap-6 lg:grid-cols-[20rem_1fr]" data-sx-nivel={@zona.nivel}>
         <nav id="lista-zonas" class="space-y-2" aria-label="Zonas">
           <button
             :for={z <- @zonas}
@@ -79,7 +79,7 @@ defmodule InterfazWeb.ZonasLive do
             phx-click="seleccionar"
             phx-value-codigo={z.codigo}
             class={[
-              "flex w-full items-center justify-between gap-2 rounded-box border bg-base-100 px-4 py-3 text-left transition hover:border-primary/60",
+              "flex w-full items-center justify-between gap-2 sx-vidrio rounded-box border px-4 py-3 text-left transition hover:border-primary/60",
               if(z.codigo == @seleccion,
                 do: "border-primary ring-1 ring-primary",
                 else: "border-base-300"
@@ -98,7 +98,7 @@ defmodule InterfazWeb.ZonasLive do
         </nav>
         
         <div class="space-y-6">
-          <div id="estadisticas-zona" class="grid grid-cols-2 gap-4 2xl:grid-cols-4">
+          <div id="estadisticas-zona" class="sx-escalonar grid grid-cols-2 gap-4 2xl:grid-cols-4">
             <.indicador titulo="Personas afectadas" valor={@zona.afectadas} icono="hero-users" />
             <.indicador
               titulo="Sectores · puntos"

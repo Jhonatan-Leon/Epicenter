@@ -69,7 +69,7 @@ defmodule InterfazWeb.MascotasLive do
 
   defp tarjeta(assigns) do
     ~H"""
-    <article id={"mascota-#{@m.id}"} class="rounded-box border border-base-300 bg-base-100 p-4">
+    <article id={"mascota-#{@m.id}"} class="sx-card sx-foco p-4">
       <div class="flex items-start justify-between gap-2">
         <div class="flex items-center gap-3">
           <span class="grid size-10 place-items-center rounded-full bg-base-200">
