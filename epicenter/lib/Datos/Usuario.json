@@ -1,5 +1,12 @@
 [
   {
+    "nombre_usuario": "Ruzten",
+    "contrasena": "123456",
+    "rol": "administrador",
+    "nombre_completo": "Steven Sanchez",
+    "zona_principal": "Centro"
+  },
+  {
     "nombre_usuario": "ANA",
     "contrasena": "ClaveSegura",
     "rol": "ciudadano",
