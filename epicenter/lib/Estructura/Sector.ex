@@ -6,6 +6,6 @@ defmodule Epicenter.Sector do
   defstruct [:codigo_zona, :nombre, :nivel_afectacion, personas_afectadas: 0]
 
   def nuevo(codigo_zona, nombre) do
-    {:Ok, %__MODULE__{codigo_zona: codigo_zona, nombre: nombre}}
+    {:ok, %__MODULE__{codigo_zona: codigo_zona, nombre: nombre}}
   end
 end
