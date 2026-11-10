@@ -1,5 +1,5 @@
 defmodule Epicenter.GestorZonas do
-  alias Epicenter.Zona
+  alias Epicenter.{Zona, Sector, PuntoAtencion}
 
   def registrar(zonas, nombre, nivel) do
     codigo = generar_codigo(zonas)
@@ -42,5 +42,35 @@ defmodule Epicenter.GestorZonas do
   defp generar_codigo(zonas) do
     codigo = Utilidad.generar_codigo_unico()
     if Map.has_key?(zonas, codigo), do: generar_codigo(zonas), else: codigo
+  end
+
+  def registrar_sector(zonas, codigo_zona, nombre, nivel, afectadas) do
+    with {:ok, zona} <- obtener(zonas, codigo_zona),
+         {:ok, sector} <- Sector.nuevo(Utilidad.generar_codigo_unico(), nombre, nivel, afectadas),
+         {:ok, zona} <- Zona.agregar_sector(zona, sector) do
+      {:ok, Map.put(zonas, codigo_zona, zona)}
+    end
+  end
+
+  def registrar_punto(zonas, codigo_zona, codigo_sector, nombre) do
+    with {:ok, zona} <- obtener(zonas, codigo_zona),
+         {:ok, sector} <- Zona.buscar_sector(zona, codigo_sector),
+         {:ok, punto} <- PuntoAtencion.nuevo(Utilidad.generar_codigo_unico(), nombre),
+         {:ok, sector} <- Sector.agregar_punto(sector, punto) do
+      {:ok, Map.put(zonas, codigo_zona, Zona.actualizar_sector(zona, sector))}
+    end
+  end
+
+  def estadisticas(zonas, codigo_zona) do
+    with {:ok, zona} <- obtener(zonas, codigo_zona) do
+      {:ok,
+       %{
+         nombre: zona.nombre,
+         nivel: zona.nivel,
+         sectores: length(zona.sectores),
+         puntos: Zona.total_puntos(zona),
+         afectadas: Zona.total_afectadas(zona)
+       }}
+    end
   end
 end
