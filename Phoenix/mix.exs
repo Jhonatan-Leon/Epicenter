@@ -65,7 +65,11 @@ defmodule Interfaz.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      # Lógica del sistema (carpeta vecina). La interfaz solo llama a sus funciones.
+      {:epicenter, path: "../epicenter"},
+      # epicenter pide plug desde GitHub; se usa la versión de Hex que trae Phoenix.
+      {:plug, "~> 1.18", override: true}
     ]
   end
 

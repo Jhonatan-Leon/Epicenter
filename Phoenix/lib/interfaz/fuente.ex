@@ -19,16 +19,34 @@ defmodule Interfaz.Fuente do
   @doc """
   Comando `connect usuario contraseña tipo zona`.
 
-  Por ahora acepta cualquier credencial. Integración: llamar al gestor de
-  usuarios (registro automático si no existe, validar contraseña si existe).
+  Llama a `Epicenter.GestorUsuario.login/3`: si el usuario no existe lo
+  registra, y si existe valida la contraseña. Convierte el `%Epicenter.Usuario{}`
+  al mapa que usa la interfaz para la sesión.
   """
-  def conectar(usuario, _contrasena, rol, zona) do
+  def conectar(usuario, contrasena, rol_elegido, zona_elegida) do
     if String.contains?(usuario, " ") do
       {:error, "El usuario no puede tener espacios."}
     else
-      {:ok, %{usuario: usuario, nombre: usuario, rol: rol, zona: zona}}
+      case Epicenter.GestorUsuario.login(usuario, contrasena, []) do
+        {:ok, u} ->
+          {:ok,
+           %{
+             usuario: u.nombre_usuario,
+             nombre: u.nombre_completo || u.nombre_usuario,
+             rol: rol_interfaz(u.rol, rol_elegido),
+             zona: u.zona_principal || zona_elegida
+           }}
+
+        {:error, motivo} ->
+          {:error, motivo}
+      end
     end
   end
+
+  # La lógica usa :coordinar; la interfaz usa :coordinador.
+  defp rol_interfaz(:coordinar, _elegido), do: :coordinador
+  defp rol_interfaz(rol, _elegido) when rol in [:ciudadano, :voluntario, :administrador], do: rol
+  defp rol_interfaz(_rol, elegido), do: elegido
 
   @doc "Comando `disconnect`."
   def desconectar(_usuario), do: :ok

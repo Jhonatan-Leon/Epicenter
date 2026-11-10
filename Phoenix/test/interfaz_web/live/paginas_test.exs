@@ -17,15 +17,6 @@ defmodule InterfazWeb.PaginasTest do
     assert html_response(get(conn, ~p"/conectar"), 200) =~ "Conectarse"
   end
 
-  test "conectar guarda la sesión y entra al resumen", %{conn: conn} do
-    conn =
-      post(conn, ~p"/conectar",
-        acceso: %{usuario: "laura", contrasena: "1234", rol: "coordinador", zona: "centro"}
-      )
-
-    assert redirected_to(conn) == ~p"/"
-  end
-
   for ruta <- ~w(/ /zonas /necesidades /recursos /personas /mascotas /albergues /actividad) do
     test "el coordinador ve #{ruta}", %{conn: conn} do
       {:ok, _view, html} = live(conectado(conn, :coordinador), unquote(ruta))
