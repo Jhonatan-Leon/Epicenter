@@ -1,8 +1,43 @@
 [
   {
-    "nombre_usuario": "ANA",
-    "contrasena": "ClaveSegura",
     "rol": "ciudadano",
+    "contrasena": "jyfo678f87ii78ug",
+    "nombre_usuario": "iuytdityf678oufo78",
+    "nombre_completo": null,
+    "zona_principal": null
+  },
+  {
+    "rol": "ciudadano",
+    "contrasena": "098765",
+    "nombre_usuario": "Ruztensito",
+    "nombre_completo": null,
+    "zona_principal": null
+  },
+  {
+    "rol": "ciudadano",
+    "contrasena": "123456",
+    "nombre_usuario": "Ruzten",
+    "nombre_completo": null,
+    "zona_principal": null
+  },
+  {
+    "rol": "ciudadano",
+    "contrasena": "1243",
+    "nombre_usuario": "ana",
+    "nombre_completo": null,
+    "zona_principal": null
+  },
+  {
+    "rol": "ciudadano",
+    "contrasena": "137",
+    "nombre_usuario": "hola",
+    "nombre_completo": null,
+    "zona_principal": null
+  },
+  {
+    "rol": "ciudadano",
+    "contrasena": "ClaveSegura",
+    "nombre_usuario": "ANA",
     "nombre_completo": null,
     "zona_principal": null
   }

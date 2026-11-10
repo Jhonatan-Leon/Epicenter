@@ -17,36 +17,127 @@ defmodule Interfaz.Fuente do
   # ---------------------------------------------------------------------------
 
   @doc """
-  Comando `connect usuario contraseña tipo zona`.
+  Comando `connect usuario contraseña`.
 
-  Llama a `Epicenter.GestorUsuario.login/3`: si el usuario no existe lo
-  registra, y si existe valida la contraseña. Convierte el `%Epicenter.Usuario{}`
-  al mapa que usa la interfaz para la sesión.
+  Si el usuario ya existe, valida la contraseña con `Epicenter.GestorUsuario.login/3`
+  y devuelve `{:ok, sesion}`. Si no existe devuelve `:nuevo`, para que la pantalla
+  pida el tipo de usuario y la zona antes de registrarlo con `registrar/4`.
   """
-  def conectar(usuario, contrasena, rol_elegido, zona_elegida) do
-    if String.contains?(usuario, " ") do
-      {:error, "El usuario no puede tener espacios."}
-    else
-      case Epicenter.GestorUsuario.login(usuario, contrasena, []) do
-        {:ok, u} ->
-          {:ok,
-           %{
-             usuario: u.nombre_usuario,
-             nombre: u.nombre_completo || u.nombre_usuario,
-             rol: rol_interfaz(u.rol, rol_elegido),
-             zona: u.zona_principal || zona_elegida
-           }}
+  def conectar(usuario, contrasena) do
+    usuario = limpiar(usuario)
 
-        {:error, motivo} ->
-          {:error, motivo}
+    with :ok <- validar_usuario(usuario),
+         :ok <- validar_contrasena(contrasena) do
+      if usuario_existe?(usuario) do
+        case Epicenter.GestorUsuario.login(usuario, contrasena, []) do
+          {:ok, u} -> {:ok, sesion(u, rol_interfaz(u.rol), u.zona_principal || "centro")}
+          {:error, motivo} -> {:error, motivo}
+        end
+      else
+        :nuevo
       end
     end
   end
 
+  @doc """
+  Registra a un usuario nuevo con el tipo de usuario y la zona que eligió.
+
+  Un usuario nuevo solo puede ser ciudadano o voluntario. Hoy la lógica
+  (`GestorUsuario.registro/3`) guarda a todos como ciudadano y no guarda la zona,
+  así que el rol y la zona elegidos solo se usan en esta sesión. Cuando la lógica
+  los reciba, basta con pasárselos aquí.
+  """
+  def registrar(usuario, contrasena, rol, zona) do
+    usuario = limpiar(usuario)
+
+    with :ok <- validar_usuario(usuario),
+         :ok <- validar_contrasena_nueva(contrasena),
+         {:ok, rol} <- validar_rol_registro(rol),
+         :ok <- validar_zona(zona),
+         :ok <- validar_usuario_libre(usuario) do
+      case Epicenter.GestorUsuario.login(usuario, contrasena, []) do
+        {:ok, u} -> {:ok, sesion(u, rol, zona)}
+        {:error, motivo} -> {:error, motivo}
+      end
+    end
+  end
+
+  @doc "Tipos de usuario que puede elegir alguien que se registra."
+  def roles_registro, do: [:ciudadano, :voluntario]
+
+  defp usuario_existe?(usuario) do
+    Enum.any?(Epicenter.Persistencia.carga_usuarios(), &(&1.nombre_usuario == usuario))
+  end
+
+  defp sesion(u, rol, zona) do
+    %{usuario: u.nombre_usuario, nombre: u.nombre_completo || u.nombre_usuario, rol: rol, zona: zona}
+  end
+
+  defp limpiar(texto), do: texto |> to_string() |> String.trim()
+
+  # ---------------------------------------------------------------------------
+  # Validaciones de lo que el usuario escribe en la pantalla de conexión.
+  # Se revisan antes de llamar a la lógica; cada una devuelve :ok o {:error, mensaje}.
+  # ---------------------------------------------------------------------------
+
+  @usuario_min 3
+  @usuario_max 20
+  @contrasena_min 4
+
+  defp validar_usuario(""), do: {:error, "Escribe tu usuario."}
+
+  defp validar_usuario(usuario) do
+    cond do
+      String.contains?(usuario, " ") ->
+        {:error, "El usuario no puede tener espacios."}
+
+      String.length(usuario) < @usuario_min or String.length(usuario) > @usuario_max ->
+        {:error, "El usuario debe tener entre #{@usuario_min} y #{@usuario_max} caracteres."}
+
+      true ->
+        :ok
+    end
+  end
+
+  # Para entrar solo se pide que no esté vacía (los usuarios viejos pueden tener claves cortas).
+  defp validar_contrasena(contrasena) when contrasena in [nil, ""],
+    do: {:error, "Escribe tu contraseña."}
+
+  defp validar_contrasena(_contrasena), do: :ok
+
+  # Para registrarse se exige el mínimo.
+  defp validar_contrasena_nueva(contrasena) do
+    with :ok <- validar_contrasena(contrasena) do
+      if String.length(contrasena) < @contrasena_min,
+        do: {:error, "La contraseña debe tener al menos #{@contrasena_min} caracteres."},
+        else: :ok
+    end
+  end
+
+  # Acepta el rol como texto del formulario ("voluntario") o como átomo.
+  defp validar_rol_registro(rol) do
+    case Enum.find(roles_registro(), &(to_string(&1) == to_string(rol))) do
+      nil -> {:error, "Al registrarte solo puedes ser ciudadano o voluntario."}
+      rol -> {:ok, rol}
+    end
+  end
+
+  defp validar_zona(zona) do
+    if Enum.any?(zonas(), &(&1.codigo == zona)),
+      do: :ok,
+      else: {:error, "Zona no válida."}
+  end
+
+  defp validar_usuario_libre(usuario) do
+    if usuario_existe?(usuario),
+      do: {:error, "Ese usuario ya existe. Conéctate con tu contraseña."},
+      else: :ok
+  end
+
   # La lógica usa :coordinar; la interfaz usa :coordinador.
-  defp rol_interfaz(:coordinar, _elegido), do: :coordinador
-  defp rol_interfaz(rol, _elegido) when rol in [:ciudadano, :voluntario, :administrador], do: rol
-  defp rol_interfaz(_rol, elegido), do: elegido
+  defp rol_interfaz(:coordinar), do: :coordinador
+  defp rol_interfaz(rol) when rol in [:ciudadano, :voluntario, :administrador], do: rol
+  defp rol_interfaz(_rol), do: :ciudadano
 
   @doc "Comando `disconnect`."
   def desconectar(_usuario), do: :ok

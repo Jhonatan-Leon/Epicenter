@@ -9,28 +9,23 @@
 
   <main class="flex flex-1 items-center justify-center px-6 pb-20">
     <div class="sx-escalonar w-full max-w-sm">
-      <h1 class="sx-portada-titulo">Conectarse</h1>
+<%= if @nuevo do %>
+        <h1 class="sx-portada-titulo">Completa tu registro</h1>
 
-      <p class="mt-2 text-sm text-base-content/65">
-        Coordinación de la emergencia, en un solo lugar.
-      </p>
+        <p class="mt-2 text-sm text-base-content/65">
+          No encontramos a <span class="font-semibold text-base-content">{@form[:usuario].value}</span>.
+          Elige tu tipo de usuario y tu zona principal para crear la cuenta.
+        </p>
 
-      <div class="sx-card mt-8 p-6">
-        <.form for={@form} action={~p"/conectar"} class="space-y-1">
-          <.input field={@form[:usuario]} label="Usuario" autocomplete="username" required />
-          <.input
-            field={@form[:contrasena]}
-            type="password"
-            label="Contraseña"
-            autocomplete="current-password"
-            required
-          />
-          <div class="grid grid-cols-2 gap-3">
+        <div class="sx-card mt-8 p-6">
+          <.form for={@form} id="form-registro" action={~p"/registrar"} class="space-y-1">
+            <.input field={@form[:usuario]} type="hidden" />
+            <.input field={@form[:contrasena]} type="hidden" />
             <.input
               field={@form[:rol]}
               type="select"
               label="Tipo de usuario"
-              options={InterfazWeb.UI.opciones(Interfaz.Fuente.roles())}
+              options={InterfazWeb.UI.opciones(Interfaz.Fuente.roles_registro())}
             />
             <.input
               field={@form[:zona]}
@@ -38,17 +33,45 @@
               label="Zona principal"
               options={Enum.map(Interfaz.Fuente.zonas(), &{&1.nombre, &1.codigo})}
             />
-          </div>
 
-          <.button variant="primary" class="btn btn-primary mt-4 w-full">
-            Conectar <.icon name="hero-arrow-right" class="size-4" />
-          </.button>
-        </.form>
-      </div>
+            <.button variant="primary" class="btn btn-primary mt-4 w-full">
+              Crear cuenta <.icon name="hero-arrow-right" class="size-4" />
+            </.button>
+          </.form>
+        </div>
 
-      <p class="mt-4 text-center text-xs text-base-content/55">
-        Si el usuario no existe se registra automáticamente con el rol y la zona elegidos.
-      </p>
+        <p class="mt-4 text-center text-xs text-base-content/55">
+          Coordinador y administrador los asigna la administración.
+          <.link href={~p"/conectar"} class="link">Volver</.link>
+        </p>
+      <% else %>
+        <h1 class="sx-portada-titulo">Conectarse</h1>
+
+        <p class="mt-2 text-sm text-base-content/65">
+          Coordinación de la emergencia, en un solo lugar.
+        </p>
+
+        <div class="sx-card mt-8 p-6">
+          <.form for={@form} id="form-conectar" action={~p"/conectar"} class="space-y-1">
+            <.input field={@form[:usuario]} label="Usuario" autocomplete="username" required />
+            <.input
+              field={@form[:contrasena]}
+              type="password"
+              label="Contraseña"
+              autocomplete="current-password"
+              required
+            />
+
+            <.button variant="primary" class="btn btn-primary mt-4 w-full">
+              Conectar <.icon name="hero-arrow-right" class="size-4" />
+            </.button>
+          </.form>
+        </div>
+
+        <p class="mt-4 text-center text-xs text-base-content/55">
+          Si es tu primera vez, te pediremos tu tipo de usuario y tu zona.
+        </p>
+      <% end %>
     </div>
   </main>
 

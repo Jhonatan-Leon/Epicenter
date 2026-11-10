@@ -685,6 +685,24 @@ body {
     background-color 0.2s;
 }
 
+/* Listas desplegables: fondo sólido y más oscuro, sin transparencia,
+   tanto el campo como las opciones que se despliegan. */
+.select {
+  background-color: color-mix(in oklab, var(--color-base-300) 70%, black);
+}
+
+.select option,
+.select optgroup {
+  background-color: color-mix(in oklab, var(--color-base-300) 70%, black);
+  color: var(--color-base-content);
+}
+
+[data-theme="light"] .select,
+[data-theme="light"] .select option,
+[data-theme="light"] .select optgroup {
+  background-color: var(--color-base-300);
+}
+
 .input:focus,
 .input:focus-within,
 .select:focus,

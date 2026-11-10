@@ -16,6 +16,7 @@ defmodule InterfazWeb.Router do
     # connect / disconnect
     get "/conectar", SesionController, :new
     post "/conectar", SesionController, :create
+    post "/registrar", SesionController, :registrar
     delete "/desconectar", SesionController, :delete
 
     live "/", ResumenLive, :index
