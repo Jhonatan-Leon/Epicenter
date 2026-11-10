@@ -17,16 +17,50 @@ defmodule Epicenter.GestorPersonaFamiliaTest do
 
   # Tres personas como las del ejemplo de la interfaz.
   defp cargar_personas do
-    {:ok, _} = GestorPersona.reportar_persona("1094887123", "Andrés Gómez", "34", "zona_norte", "reportada", "carmen")
-    {:ok, _} = GestorPersona.reportar_persona("41923554", "María López", 67, "centro", :sin_informacion, "laura")
-    {:ok, _} = GestorPersona.reportar_persona("18512990", "Luis Pérez", "52", "occidente", "reportada", "andres")
+    {:ok, _} =
+      GestorPersona.reportar_persona(
+        "1094887123",
+        "Andrés Gómez",
+        "34",
+        "zona_norte",
+        "reportada",
+        "carmen"
+      )
+
+    {:ok, _} =
+      GestorPersona.reportar_persona(
+        "41923554",
+        "María López",
+        67,
+        "centro",
+        :sin_informacion,
+        "laura"
+      )
+
+    {:ok, _} =
+      GestorPersona.reportar_persona(
+        "18512990",
+        "Luis Pérez",
+        "52",
+        "occidente",
+        "reportada",
+        "andres"
+      )
+
     :ok
   end
 
   describe "reportar_persona/6" do
     test "acepta los datos como texto, como los manda la interfaz" do
       assert {:ok, persona} =
-               GestorPersona.reportar_persona("1094887123", " Andrés Gómez ", "34", "zona_norte", "reportada", "carmen")
+               GestorPersona.reportar_persona(
+                 "1094887123",
+                 " Andrés Gómez ",
+                 "34",
+                 "zona_norte",
+                 "reportada",
+                 "carmen"
+               )
 
       assert persona.documento == "1094887123"
       assert persona.nombre == "Andrés Gómez"
@@ -37,7 +71,8 @@ defmodule Epicenter.GestorPersonaFamiliaTest do
     end
 
     test "crea el primer registro del historial" do
-      {:ok, persona} = GestorPersona.reportar_persona("1", "Ana", 20, "centro", "reportada", "carmen")
+      {:ok, persona} =
+        GestorPersona.reportar_persona("1", "Ana", 20, "centro", "reportada", "carmen")
 
       assert [%{estado: :reportada, por: "carmen", fecha: %DateTime{}}] = persona.historial
     end
@@ -58,10 +93,17 @@ defmodule Epicenter.GestorPersonaFamiliaTest do
     end
 
     test "rechaza campos vacíos" do
-      assert {:error, :documento_vacio} = GestorPersona.reportar_persona("  ", "Ana", 20, "centro", "reportada")
-      assert {:error, :nombre_vacio} = GestorPersona.reportar_persona("1", "", 20, "centro", "reportada")
-      assert {:error, :zona_vacia} = GestorPersona.reportar_persona("1", "Ana", 20, "", "reportada")
-      assert {:error, :documento_vacio} = GestorPersona.reportar_persona(nil, "Ana", 20, "centro", "reportada")
+      assert {:error, :documento_vacio} =
+               GestorPersona.reportar_persona("  ", "Ana", 20, "centro", "reportada")
+
+      assert {:error, :nombre_vacio} =
+               GestorPersona.reportar_persona("1", "", 20, "centro", "reportada")
+
+      assert {:error, :zona_vacia} =
+               GestorPersona.reportar_persona("1", "Ana", 20, "", "reportada")
+
+      assert {:error, :documento_vacio} =
+               GestorPersona.reportar_persona(nil, "Ana", 20, "centro", "reportada")
     end
 
     test "rechaza una edad inválida" do
@@ -72,8 +114,11 @@ defmodule Epicenter.GestorPersonaFamiliaTest do
     end
 
     test "rechaza un estado que no existe" do
-      assert {:error, :estado_invalido} = GestorPersona.reportar_persona("1", "Ana", 20, "centro", "perdido")
-      assert {:error, :estado_invalido} = GestorPersona.reportar_persona("1", "Ana", 20, "centro", nil)
+      assert {:error, :estado_invalido} =
+               GestorPersona.reportar_persona("1", "Ana", 20, "centro", "perdido")
+
+      assert {:error, :estado_invalido} =
+               GestorPersona.reportar_persona("1", "Ana", 20, "centro", nil)
     end
 
     test "no guarda nada si los datos son inválidos" do
@@ -102,18 +147,26 @@ defmodule Epicenter.GestorPersonaFamiliaTest do
       {:ok, _} = GestorPersona.cambiar_estado("1094887123", :en_albergue, "andres")
 
       assert {:ok, [reportada, localizada, en_albergue]} = GestorPersona.historial("1094887123")
-      assert {reportada.estado, localizada.estado, en_albergue.estado} == {:reportada, :localizada, :en_albergue}
+
+      assert {reportada.estado, localizada.estado, en_albergue.estado} ==
+               {:reportada, :localizada, :en_albergue}
+
       assert en_albergue.por == "andres"
     end
 
     test "desde sin información solo se puede reportar o localizar" do
-      assert {:error, :transicion_invalida} = GestorPersona.cambiar_estado("41923554", "reunificada")
-      assert {:error, :transicion_invalida} = GestorPersona.cambiar_estado("41923554", "en_albergue")
+      assert {:error, :transicion_invalida} =
+               GestorPersona.cambiar_estado("41923554", "reunificada")
+
+      assert {:error, :transicion_invalida} =
+               GestorPersona.cambiar_estado("41923554", "en_albergue")
+
       assert {:ok, _} = GestorPersona.cambiar_estado("41923554", "reportada")
     end
 
     test "rechaza quedarse en el mismo estado" do
-      assert {:error, :transicion_invalida} = GestorPersona.cambiar_estado("1094887123", "reportada")
+      assert {:error, :transicion_invalida} =
+               GestorPersona.cambiar_estado("1094887123", "reportada")
     end
 
     test "una persona reunificada no cambia más" do
@@ -168,7 +221,13 @@ defmodule Epicenter.GestorPersonaFamiliaTest do
       assert documentos(GestorPersona.buscar(%{"texto" => "", "zona" => "", "estado" => ""})) ==
                ["1094887123", "18512990", "41923554"]
 
-      assert documentos(GestorPersona.buscar(%{"texto" => "luis", "zona" => "occidente", "estado" => "reportada"})) ==
+      assert documentos(
+               GestorPersona.buscar(%{
+                 "texto" => "luis",
+                 "zona" => "occidente",
+                 "estado" => "reportada"
+               })
+             ) ==
                ["18512990"]
     end
 

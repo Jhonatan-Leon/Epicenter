@@ -5,10 +5,17 @@ defmodule Epicenter.Usuario do
 
   @rol_verificar [:ciudadano, :voluntario, :coordinar, :administrador]
   @enforce_keys [:nombre_usuario, :contrasena]
-  defstruct [:nombre_usuario, :contrasena, :nombre_completo, :zona_principal, rol: [:ciudadano, :voluntario, :coordinar, :administrador]]
+  defstruct [
+    :nombre_usuario,
+    :contrasena,
+    :nombre_completo,
+    :zona_principal,
+    rol: [:ciudadano, :voluntario, :coordinar, :administrador]
+  ]
 
   def nuevo(nombre_usuario, password, rol \\ :ciudadano) do
-    {:ok,%__MODULE__{nombre_usuario: nombre_usuario, contrasena: password, rol: verificar_rol(rol)}}
+    {:ok,
+     %__MODULE__{nombre_usuario: nombre_usuario, contrasena: password, rol: verificar_rol(rol)}}
   end
 
   def verificar_rol(rol) do

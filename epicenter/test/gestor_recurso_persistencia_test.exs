@@ -1,7 +1,6 @@
 defmodule Epicenter.GestorRecursoPersistenciaTest do
   use ExUnit.Case, async: false
 
-  alias Epicenter.GestorRecurso
   alias Epicenter.Persistencia
 
   setup do
@@ -28,32 +27,26 @@ defmodule Epicenter.GestorRecursoPersistenciaTest do
     :ok
   end
 
-  test "el CRUD de recursos guarda cada cambio en su documento" do
-    assert {:ok, recurso} = GestorRecurso.registro_recurso("Agua", "hidratación", 15, "litros")
-    assert {:ok, ^recurso} = GestorRecurso.obtener(recurso.codigo)
+  test "registra recursos y guarda las entradas en su documento" do
+    datos = %{
+      nombre: "Agua",
+      categoria: "agua",
+      unidad_medida: "litros",
+      cantidad: 15,
+      minimo: 5,
+      ubicacion: "centro-1",
+      codigo_zona: "zona-1"
+    }
 
-    actualizado = %{recurso | cantidad_disponible: 25}
-    assert {:ok, ^actualizado} = GestorRecurso.actualizar(recurso.codigo, actualizado)
-    assert {:ok, [^actualizado]} = Persistencia.cargar_recurso()
+    assert {:ok, recurso} = Epicenter.GenserverRecurso.registrar(datos, "Ana")
+    assert recurso.categoria == :agua
+    assert {:ok, ^recurso} = Epicenter.GenserverRecurso.obtener(recurso.codigo)
 
-    assert {:ok, ^actualizado} = GestorRecurso.eliminar(recurso.codigo)
-    assert {:ok, []} == GestorRecurso.listar()
-  end
+    assert {:ok, recurso_actualizado} =
+             Epicenter.GenserverRecurso.registrar_entrada(recurso.codigo, 10, "Ana")
 
-  test "completa los datos de un recurso buscando por su código" do
-    assert {:ok, recurso} = GestorRecurso.registro_recurso("Agua", "bebida")
-    assert recurso.nombre == "Agua"
-    assert recurso.categoria == "bebida"
-
-    assert {:ok, recurso_completo} =
-             GestorRecurso.completar_informacion(recurso.codigo, 30, "litros")
-
-    assert recurso_completo.codigo == recurso.codigo
-    assert recurso_completo.nombre == "Agua"
-    assert recurso_completo.categoria == "bebida"
-    assert recurso_completo.cantidad_disponible == 30
-    assert recurso_completo.unidad_medida == "litros"
-    assert {:ok, [^recurso_completo]} = GestorRecurso.listar()
+    assert recurso_actualizado.cantidad_disponible == 25
+    assert {:ok, [^recurso_actualizado]} = Persistencia.cargar_recurso()
   end
 
   test "crea inventarios a través del constructor de su estructura" do
@@ -109,46 +102,23 @@ defmodule Epicenter.GestorRecursoPersistenciaTest do
     assert {:ok, [^mensaje_completado]} = Epicenter.GestorMensaje.listar()
   end
 
-  test "completa los campos opcionales del historial buscando por id" do
+  test "registra un movimiento y lo consulta mediante el GenServer" do
     assert {:ok, historial} =
-             Epicenter.GestorHistorial.registro("inv-1", "Ana", "nec-1", "destino-1")
+             Epicenter.GenserverHistorial.registrar(:salida, "R001", 5, "Entrega", "Ana")
 
-    fecha = DateTime.utc_now()
-
-    assert {:ok, historial_completo} =
-             Epicenter.GestorHistorial.completar_informacion(
-               historial.id,
-               :salida,
-               5,
-               fecha
-             )
-
-    assert historial_completo.id == historial.id
-    assert historial_completo.id_invetario == "inv-1"
-    assert historial_completo.id_necesidad == "nec-1"
-    assert historial_completo.tipo == :salida
-    assert historial_completo.cantidad == 5
-    assert historial_completo.fecha == fecha
-    assert {:ok, [^historial_completo]} = Epicenter.GestorHistorial.listar()
+    assert historial.tipo == :salida
+    assert historial.codigo_recurso == "R001"
+    assert historial.cantidad == 5
+    assert historial.detalle == "Entrega"
+    assert historial.usuario == "Ana"
+    assert {:ok, [^historial]} = Epicenter.GenserverHistorial.listar()
   end
 
-  test "completa el albergue por su código y conserva sus datos iniciales" do
-    assert {:ok, albergue} = Epicenter.GestorAlbergue.registro("Refugio", "zona-1", 10)
+  test "consulta cupos del albergue mediante el GenServer" do
+    codigo_zona = "A1F03C9E7B2D4410"
+    assert {:ok, albergue} = Epicenter.GenserverAlbergue.registro("Refugio", codigo_zona, 10)
 
-    assert {:ok, albergue_completo} =
-             Epicenter.GestorAlbergue.completar_informacion(
-               albergue.codigo,
-               4,
-               ["agua"],
-               ["medicinas"]
-             )
-
-    assert albergue_completo.codigo == albergue.codigo
-    assert albergue_completo.nombre == "Refugio"
-    assert albergue_completo.ocupantes == 4
-    assert albergue_completo.recursos == ["agua"]
-    assert albergue_completo.necesidades == ["medicinas"]
-    assert {:ok, [^albergue_completo]} = Epicenter.GestorAlbergue.listar()
+    assert {:ok, 10} = Epicenter.GenserverAlbergue.cupos(albergue.codigo)
   end
 
   test "completa la zona del centro de apoyo buscándolo por código" do
@@ -164,26 +134,25 @@ defmodule Epicenter.GestorRecursoPersistenciaTest do
     assert {:ok, [^centro_completo]} = Epicenter.GestorCentroApoyo.listar()
   end
 
-  test "completa una necesidad buscando por su identificador" do
-    assert {:ok, necesidad} = Epicenter.GestorNecesidad.registro("zona-1", "Ana")
+  test "registra y consulta una necesidad con los campos de su struct" do
+    codigo_zona = "A1F03C9E7B2D4410"
 
-    assert {:ok, necesidad_completa} =
-             Epicenter.GestorNecesidad.completar_informacion(
-               necesidad.id,
+    assert {:ok, necesidad} =
+             Epicenter.GenserverNecesidad.registrar(
+               codigo_zona,
+               "Ana",
                :agua,
                "Agua potable",
                20,
                :alta,
-               :pendiente,
                "centro-1"
              )
 
-    assert necesidad_completa.id == necesidad.id
-    assert necesidad_completa.codigo_zona == "zona-1"
-    assert necesidad_completa.reportador_por == "Ana"
-    assert necesidad_completa.descripicion == "Agua potable"
-    assert necesidad_completa.cantidad == 20
-    assert {:ok, [^necesidad_completa]} = Epicenter.GestorNecesidad.listar()
+    assert necesidad.codigo_zona == codigo_zona
+    assert necesidad.reportado_por == "Ana"
+    assert necesidad.descripcion == "Agua potable"
+    assert necesidad.cantidad == 20
+    assert {:ok, [^necesidad]} = Epicenter.GenserverNecesidad.listar()
   end
 
   test "completa una persona buscando por su identificador" do

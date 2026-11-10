@@ -1,45 +1,32 @@
 defmodule GestorRecursoTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
-  test "suma la disponibilidad del recurso para la zona seleccionada" do
-    inventarios = [
-      %Epicenter.Invetnario{
-        id: "inv-1",
-        zonas: ["zona-1"],
-        codigo_recurso: "agua",
-        codigo_centro: "centro-1",
-        cantidad_disponible: 10
-      },
-      %Epicenter.Invetnario{
-        id: "inv-2",
-        zonas: ["zona-1", "zona-2"],
-        codigo_recurso: "agua",
-        codigo_centro: "centro-2",
-        cantidad_disponible: 5
-      },
-      %Epicenter.Invetnario{
-        id: "inv-3",
-        zonas: ["zona-1"],
-        codigo_recurso: "alimento",
-        codigo_centro: "centro-3",
-        cantidad_disponible: 20
-      }
-    ]
+  setup do
+    ruta = Path.expand("../lib/Datos/Inventario.json", __DIR__)
+    contenido_original = File.read!(ruta)
+    File.write!(ruta, "[]")
 
-    codigos_zona = ["zona-1", "zona-2"]
-
-    assert {:ok, 15} =
-             Recurso.consultar_disponibilidad("zona-1", "agua", codigos_zona, inventarios)
-
-    assert {:ok, 0} =
-             Recurso.consultar_disponibilidad("zona-2", "alimento", codigos_zona, inventarios)
-
-    assert {:error, "La zona no existe"} =
-             Recurso.consultar_disponibilidad("zona-3", "agua", codigos_zona, inventarios)
+    on_exit(fn -> File.write!(ruta, contenido_original) end)
+    :ok
   end
 
-  test "rechaza un valor que no sea una lista de inventarios" do
-    assert {:error, "Las listas de zonas o inventarios no son válidas"} =
-             Recurso.consultar_disponibilidad("zona-1", "agua", nil, nil)
+  test "registra inventarios mediante el GenServer usando el struct vigente" do
+    assert {:ok,
+            %Epicenter.Inventario{
+              id: id,
+              codigo_recurso: "recurso-1",
+              codigo_centro: "centro-1",
+              zonas: ["zona-1"],
+              cantidad_disponible: 10
+            } = inventario} =
+             Epicenter.GenserverInventario.registro(
+               "recurso-1",
+               "centro-1",
+               ["zona-1"],
+               10
+             )
+
+    assert is_binary(id)
+    assert {:ok, [^inventario]} = Epicenter.GenserverInventario.listar()
   end
 end

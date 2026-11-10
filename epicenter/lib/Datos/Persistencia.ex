@@ -301,7 +301,7 @@ defmodule Epicenter.Persistencia do
     do: {:ok, &mensaje_a_struct/1, [:codigo, :remitente, :destinatario, :contenido, :fecha_envio]}
 
   defp especificacion(Epicenter.Necesidad),
-    do: {:ok, &necesidad_a_struct/1, [:id, :codigo_zona, :reportador_por]}
+    do: {:ok, &necesidad_a_struct/1, [:id, :codigo_zona, :reportado_por]}
 
   defp especificacion(Epicenter.Persona),
     do: {:ok, &persona_a_struct/1, [:id, :documento, :nombre, :codigo_zona]}

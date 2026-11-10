@@ -26,14 +26,25 @@ defmodule Epicenter.GestorRecurso do
          {:ok, minimo} <- convertir_a_entero(datos.minimo),
          {:ok, recursos} <- listar(),
          {:ok, recurso} <-
-           Recurso.nuevo(%{
-             datos
-             | categoria: categoria,
-               cantidad: cantidad,
-               minimo: minimo
-           } |> Map.put(:codigo, generar_codigo(recursos))) do
+           Recurso.nuevo(
+             %{
+               datos
+               | categoria: categoria,
+                 cantidad: cantidad,
+                 minimo: minimo
+             }
+             |> Map.put(:codigo, generar_codigo(recursos))
+           ) do
       Persistencia.guardar_recursos([recurso | recursos])
-      GestorHistorial.registrar(:entrada, recurso.codigo, cantidad, "Registro en #{recurso.ubicacion}", usuario)
+
+      GestorHistorial.registrar(
+        :entrada,
+        recurso.codigo,
+        cantidad,
+        "Registro en #{recurso.ubicacion}",
+        usuario
+      )
+
       {:ok, recurso}
     end
   end
@@ -69,7 +80,15 @@ defmodule Epicenter.GestorRecurso do
            retirar_o_rechazar(recurso, cantidad, "#{id_necesidad} pidió #{cantidad}", usuario),
          {:ok, _necesidad} <- GestorNecesidad.asignar_recurso(id_necesidad, codigo, cantidad) do
       Persistencia.guardar_recursos(reemplazar(recursos, recurso))
-      GestorHistorial.registrar(:asignacion, codigo, cantidad, "Asignado a #{id_necesidad}", usuario)
+
+      GestorHistorial.registrar(
+        :asignacion,
+        codigo,
+        cantidad,
+        "Asignado a #{id_necesidad}",
+        usuario
+      )
+
       {:ok, recurso}
     end
   end
@@ -80,13 +99,21 @@ defmodule Epicenter.GestorRecurso do
          {:ok, recursos} <- listar(),
          {:ok, origen} <- buscar_recurso(recursos, codigo),
          :ok <- verificar_destino(origen, destino),
-         {:ok, origen} <- retirar_o_rechazar(origen, cantidad, "Transferencia a #{destino}", usuario) do
+         {:ok, origen} <-
+           retirar_o_rechazar(origen, cantidad, "Transferencia a #{destino}", usuario) do
       recursos
       |> reemplazar(origen)
       |> llevar_a_destino(origen, cantidad, destino)
       |> Persistencia.guardar_recursos()
 
-      GestorHistorial.registrar(:transferencia, codigo, cantidad, "#{origen.ubicacion} a #{destino}", usuario)
+      GestorHistorial.registrar(
+        :transferencia,
+        codigo,
+        cantidad,
+        "#{origen.ubicacion} a #{destino}",
+        usuario
+      )
+
       {:ok, origen}
     end
   end
@@ -167,7 +194,9 @@ defmodule Epicenter.GestorRecurso do
   end
 
   defp convertir_categoria(categoria) do
-    case Enum.find(Recurso.categorias(), fn permitida -> to_string(permitida) == to_string(categoria) end) do
+    case Enum.find(Recurso.categorias(), fn permitida ->
+           to_string(permitida) == to_string(categoria)
+         end) do
       nil -> {:error, :categoria_invalida}
       permitida -> {:ok, permitida}
     end

@@ -127,8 +127,10 @@ defmodule Epicenter.GestorAlbergue do
 
   defp sumar_cupos([_otro | resto], zona), do: sumar_cupos(resto, zona)
 
-   defp zona_existe(codigo) do
-    if Map.has_key?(Epicenter.Persistencia.carga_zonas(), codigo), do: :ok, else: {:error, :zona_no_existe}
+  defp zona_existe(codigo) do
+    if Map.has_key?(Epicenter.Persistencia.carga_zonas(), codigo),
+      do: :ok,
+      else: {:error, :zona_no_existe}
   end
 
   defp guardar_cambio(albergues, albergue) do

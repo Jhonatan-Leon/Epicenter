@@ -1,19 +1,36 @@
 defmodule Epicenter.GestorNecesidad do
-
   @orden_prioridad %{critica: 1, alta: 2, media: 3, baja: 4}
 
   def listar, do: Epicenter.Persistencia.cargar_necesidades()
 
-   # Comando register_need, Los datos pueden llegar como texto ("agua", "30")
-  def registrar(codigo_zona, reportado_por, tipo, descripcion, cantidad, prioridad, destino \\ nil) do
+  # Comando register_need, Los datos pueden llegar como texto ("agua", "30")
+  def registrar(
+        codigo_zona,
+        reportado_por,
+        tipo,
+        descripcion,
+        cantidad,
+        prioridad,
+        destino \\ nil
+      ) do
     with :ok <- verificar_zona(codigo_zona),
          {:ok, tipo} <- convertir_a_atomo(tipo, Epicenter.Necesidad.tipos(), :tipo_invalido),
-         {:ok, prioridad} <- convertir_a_atomo(prioridad, Epicenter.Necesidad.prioridades(), :prioridad_invalida),
+         {:ok, prioridad} <-
+           convertir_a_atomo(prioridad, Epicenter.Necesidad.prioridades(), :prioridad_invalida),
          {:ok, cantidad} <- convertir_a_entero(cantidad),
          {:ok, necesidades} <- listar(),
          id = generar_id(necesidades),
          {:ok, necesidad} <-
-           Epicenter.Necesidad.nuevo(id, codigo_zona, reportado_por, tipo, descripcion, cantidad, prioridad, destino) do
+           Epicenter.Necesidad.nuevo(
+             id,
+             codigo_zona,
+             reportado_por,
+             tipo,
+             descripcion,
+             cantidad,
+             prioridad,
+             destino
+           ) do
       Epicenter.Persistencia.guardar_necesidades([necesidad | necesidades])
       {:ok, necesidad}
     end
@@ -22,7 +39,9 @@ defmodule Epicenter.GestorNecesidad do
   # Comando list_needs con filtros opcionales: zona, tipo, prioridad y estado
   def consultar(filtros \\ %{}) do
     with {:ok, necesidades} <- listar() do
-      encontradas = Enum.filter(necesidades, fn necesidad -> cumple_filtros?(necesidad, filtros) end)
+      encontradas =
+        Enum.filter(necesidades, fn necesidad -> cumple_filtros?(necesidad, filtros) end)
+
       {:ok, ordenar_por_prioridad(encontradas)}
     end
   end
@@ -30,14 +49,17 @@ defmodule Epicenter.GestorNecesidad do
   # Comando pending_needs las que siguen abiertas, con orden de prioridad
   def pendientes do
     with {:ok, necesidades} <- listar() do
-      abiertas = Enum.reject(necesidades, fn necesidad -> Epicenter.Necesidad.cerrada?(necesidad) end)
+      abiertas =
+        Enum.reject(necesidades, fn necesidad -> Epicenter.Necesidad.cerrada?(necesidad) end)
+
       {:ok, ordenar_por_prioridad(abiertas)}
     end
   end
 
   # Cambia el estado de una necesidad (pendiente, asignada, en_atencion, atendida, cancelada).
   def cambiar_estado(id, nuevo_estado) do
-    with {:ok, nuevo_estado} <- convertir_a_atomo(nuevo_estado, Epicenter.Necesidad.estados(), :estado_invalido),
+    with {:ok, nuevo_estado} <-
+           convertir_a_atomo(nuevo_estado, Epicenter.Necesidad.estados(), :estado_invalido),
          {:ok, necesidades} <- listar(),
          {:ok, necesidad} <- buscar_necesidad(necesidades, id),
          {:ok, necesidad} <- Epicenter.Necesidad.cambiar_estado(necesidad, nuevo_estado) do
@@ -51,7 +73,8 @@ defmodule Epicenter.GestorNecesidad do
     with {:ok, cantidad} <- convertir_a_entero(cantidad),
          {:ok, necesidades} <- listar(),
          {:ok, necesidad} <- buscar_necesidad(necesidades, id),
-         {:ok, necesidad} <- Epicenter.Necesidad.asignar_recurso(necesidad, codigo_recurso, cantidad) do
+         {:ok, necesidad} <-
+           Epicenter.Necesidad.asignar_recurso(necesidad, codigo_recurso, cantidad) do
       guardar_cambio(necesidades, necesidad)
     end
   end
@@ -138,7 +161,6 @@ defmodule Epicenter.GestorNecesidad do
       else: id
   end
 
-  
   defp buscar_necesidad(necesidades, id) do
     case Enum.find(necesidades, fn necesidad -> necesidad.id == id end) do
       nil -> {:error, "Necesidad no encontrada"}
