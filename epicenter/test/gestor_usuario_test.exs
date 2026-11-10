@@ -25,10 +25,27 @@ defmodule Epicenter.GestorUsuarioTest do
     assert {:ok, usuario} = GestorUsuario.login("Ana", "ClaveSegura", [])
     assert usuario.nombre_usuario == "Ana"
 
-    assert [%Usuario{nombre_usuario: "Ana", contrasena: "ClaveSegura"}] =
+    assert {:ok, [%Usuario{nombre_usuario: "Ana", contrasena: "ClaveSegura"}]} =
              Persistencia.carga_usuarios()
 
     assert {:ok, ^usuario} =
-             GestorUsuario.login("Ana", "ClaveSegura", Persistencia.carga_usuarios())
+             GestorUsuario.login("Ana", "ClaveSegura", [usuario])
+  end
+
+  test "registra primero los datos obligatorios y luego completa el perfil buscando por usuario" do
+    assert {:ok, %Usuario{nombre_usuario: "Ana"}} =
+             GestorUsuario.registro([], "Ana", "ClaveSegura")
+
+    assert {:ok, otro_usuario} = GestorUsuario.registro([], "Luis", "OtraClave")
+
+    assert {:ok, usuario_completo} =
+             GestorUsuario.completar_informacion("Ana", "Ana Pérez", "zona-1")
+
+    assert usuario_completo.nombre_usuario == "Ana"
+    assert usuario_completo.contrasena == "ClaveSegura"
+    assert usuario_completo.nombre_completo == "Ana Pérez"
+    assert usuario_completo.zona_principal == "zona-1"
+
+    assert {:ok, [^otro_usuario, ^usuario_completo]} = Persistencia.carga_usuarios()
   end
 end

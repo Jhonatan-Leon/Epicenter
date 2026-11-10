@@ -186,4 +186,5 @@ defmodule Epicenter.Mascota do
   defp texto_opcional(texto) when is_binary(texto), do: String.trim(texto)
   defp texto_opcional(_texto), do: ""
 end
-#hoL
+
+# hoL
