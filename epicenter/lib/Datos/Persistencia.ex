@@ -1,6 +1,8 @@
 defmodule Epicenter.Persistencia do
   @path_usuarios Path.join(__DIR__, "Usuario.json")
   @path_zonas Path.join(__DIR__, "Zonas.json")
+  alias Epicenter.{Zona, Sector, PuntoAtencion}
+
   @moduledoc """
     Modulo para la persistencia de datos, que incluye la carga de usuarios desde archivos y la conversión de mapas a structs.
 
@@ -82,13 +84,12 @@ defmodule Epicenter.Persistencia do
   def carga_zonas do
     case File.read(@path_zonas) do
       {:ok, contenido} ->
-        mapa = JSON.decode!(contenido)
-        # Conversion de struct
-        Enum.map(mapa, fn zona -> map_a_struct(zona) end)
+        lista = JSON.decode!(contenido)
+        Map.new(lista, fn mapa -> {mapa["codigo"], mapa_a_zona(mapa)} end)
 
       {:error, razon} ->
         IO.puts("Error al cargar zonas: #{razon}")
-        []
+        %{}
     end
   end
 
