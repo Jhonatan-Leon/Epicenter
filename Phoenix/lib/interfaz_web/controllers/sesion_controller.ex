@@ -22,7 +22,7 @@ defmodule InterfazWeb.SesionController do
           "usuario" => String.trim(usuario),
           "contrasena" => contrasena,
           "rol" => "ciudadano",
-          "zona" => "centro"
+          "zona" => "A1F03C9E7B2D4410"
         }
 
         mostrar_registro(conn, datos)

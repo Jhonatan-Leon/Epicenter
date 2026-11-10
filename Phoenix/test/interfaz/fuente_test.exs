@@ -22,13 +22,13 @@ defmodule Interfaz.FuenteTest do
   describe "registrar/4" do
     test "exige una contraseña de al menos 4 caracteres" do
       assert {:error, "La contraseña debe tener al menos 4 caracteres."} =
-               Fuente.registrar("nuevo_usuario", "123", "ciudadano", "centro")
+               Fuente.registrar("nuevo_usuario", "123", "ciudadano", "A1F03C9E7B2D4410")
     end
 
     test "solo permite ciudadano o voluntario" do
       for rol <- ["coordinador", "administrador", "jefe"] do
         assert {:error, "Al registrarte solo puedes ser ciudadano o voluntario."} =
-                 Fuente.registrar("nuevo_usuario", "1234", rol, "centro")
+                 Fuente.registrar("nuevo_usuario", "1234", rol, "A1F03C9E7B2D4410")
       end
     end
 

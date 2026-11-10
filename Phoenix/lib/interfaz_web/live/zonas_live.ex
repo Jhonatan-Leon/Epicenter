@@ -2,7 +2,7 @@ defmodule InterfazWeb.ZonasLive do
   use InterfazWeb, :live_view
 
   alias Interfaz.Fuente
-  alias InterfazWeb.{Accion, Sesion}
+  alias InterfazWeb.Sesion
 
   on_mount {InterfazWeb.Sesion, {:pagina, :zonas}}
 
@@ -13,10 +13,13 @@ defmodule InterfazWeb.ZonasLive do
      socket
      |> assign(:page_title, "Zonas")
      |> assign(:zonas, zonas)
-     |> assign(:seleccion, List.first(zonas).codigo)
+     |> assign(:seleccion, primera_zona(zonas))
      |> assign(:modal, nil)
      |> assign(:form, to_form(%{}, as: :zona))}
   end
+
+  defp primera_zona([]), do: nil
+  defp primera_zona([zona | _resto]), do: zona.codigo
 
   def handle_event("seleccionar", %{"codigo" => codigo}, socket),
     do: {:noreply, assign(socket, :seleccion, codigo)}
@@ -28,27 +31,51 @@ defmodule InterfazWeb.ZonasLive do
 
   def handle_event("cerrar_modal", _, socket), do: {:noreply, assign(socket, :modal, nil)}
 
-  def handle_event("guardar", %{"zona" => p}, socket),
-    do: {:noreply, Accion.enviar(socket, "register_zone", [p["nombre"], p["nivel"]])}
-
-  def handle_event("guardar", %{"sector" => p}, socket) do
-    {:noreply,
-     Accion.enviar(socket, "register_sector", [
-       p["zona"],
-       p["codigo"],
-       p["nombre"],
-       p["nivel"],
-       p["afectadas"]
-     ])}
+  # Cada formulario llama a Fuente, que a su vez usa GestorZonas y guarda el JSON.
+  def handle_event("guardar", %{"zona" => p}, socket) do
+    resultado = Fuente.registrar_zona(p["nombre"], p["nivel"])
+    {:noreply, responder(socket, resultado, :zona)}
   end
 
-  def handle_event("guardar", %{"punto" => p}, socket),
-    do:
-      {:noreply, Accion.enviar(socket, "register_point", [p["sector"], p["codigo"], p["nombre"]])}
+  def handle_event("guardar", %{"sector" => p}, socket) do
+    resultado = Fuente.registrar_sector(p["zona"], p["nombre"], p["nivel"], p["afectadas"])
+    {:noreply, responder(socket, resultado, p["zona"])}
+  end
+
+  # El selector de sector envía "codigoZona:codigoSector".
+  def handle_event("guardar", %{"punto" => p}, socket) do
+    [codigo_zona, codigo_sector] = String.split(p["sector"] || ":", ":", parts: 2)
+    resultado = Fuente.registrar_punto(codigo_zona, codigo_sector, p["nombre"])
+    {:noreply, responder(socket, resultado, codigo_zona)}
+  end
+
+  # Éxito: recarga las zonas del JSON, cierra el modal y deja seleccionada la zona tocada.
+  # Error: deja el modal abierto con lo que se escribió y muestra el motivo.
+  defp responder(socket, {:ok, mensaje}, seleccion) do
+    zonas = Fuente.zonas()
+
+    seleccion =
+      case seleccion do
+        :zona -> socket.assigns.seleccion || primera_zona(zonas)
+        codigo -> codigo
+      end
+
+    socket
+    |> assign(:zonas, zonas)
+    |> assign(:seleccion, seleccion)
+    |> assign(:modal, nil)
+    |> put_flash(:info, mensaje)
+  end
+
+  defp responder(socket, {:error, mensaje}, _seleccion), do: put_flash(socket, :error, mensaje)
 
   def render(assigns) do
     zona = Enum.find(assigns.zonas, &(&1.codigo == assigns.seleccion))
-    assigns = assign(assigns, zona: zona, estadisticas: Fuente.estadisticas_zona(zona.codigo))
+
+    estadisticas =
+      if zona, do: Fuente.estadisticas_zona(zona.codigo), else: nil
+
+    assigns = assign(assigns, zona: zona, estadisticas: estadisticas)
 
     ~H"""
     <Layouts.app flash={@flash} usuario={@usuario} activo={@activo}>
@@ -71,7 +98,9 @@ defmodule InterfazWeb.ZonasLive do
         </:acciones>
       </.encabezado>
       
-      <div class="grid gap-6 lg:grid-cols-[20rem_1fr]" data-sx-nivel={@zona.nivel}>
+      <.vacio :if={is_nil(@zona)} mensaje="Todavía no hay zonas registradas." icono="hero-map" />
+
+      <div :if={@zona} class="grid gap-6 lg:grid-cols-[20rem_1fr]" data-sx-nivel={@zona.nivel}>
         <nav id="lista-zonas" class="space-y-2" aria-label="Zonas">
           <button
             :for={z <- @zonas}
@@ -188,9 +217,8 @@ defmodule InterfazWeb.ZonasLive do
             label="Zona"
             options={Enum.map(@zonas, &{&1.nombre, &1.codigo})}
           />
+          <.input field={@form[:nombre]} label="Nombre" placeholder="Laureles" required />
           <div class="grid grid-cols-2 gap-3">
-            <.input field={@form[:codigo]} label="Código" required />
-            <.input field={@form[:nombre]} label="Nombre" required />
             <.input
               field={@form[:nivel]}
               type="select"
@@ -205,6 +233,7 @@ defmodule InterfazWeb.ZonasLive do
               required
             />
           </div>
+          <p class="text-xs text-base-content/60">El código del sector lo genera el sistema.</p>
            <.botones_form />
         </.form>
       </.modal>
@@ -215,12 +244,14 @@ defmodule InterfazWeb.ZonasLive do
             field={@form[:sector]}
             type="select"
             label="Sector"
-            options={for z <- @zonas, s <- z.sectores, do: {"#{z.nombre} · #{s.nombre}", s.codigo}}
+            options={
+              for z <- @zonas, s <- z.sectores do
+                {"#{z.nombre} · #{s.nombre}", "#{z.codigo}:#{s.codigo}"}
+              end
+            }
           />
-          <div class="grid grid-cols-2 gap-3">
-            <.input field={@form[:codigo]} label="Código" required />
-            <.input field={@form[:nombre]} label="Nombre" required />
-          </div>
+          <.input field={@form[:nombre]} label="Nombre" placeholder="Carpa Cruz Roja" required />
+          <p class="text-xs text-base-content/60">El código del punto lo genera el sistema.</p>
            <.botones_form />
         </.form>
       </.modal>

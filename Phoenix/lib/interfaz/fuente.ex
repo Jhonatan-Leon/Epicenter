@@ -30,7 +30,7 @@ defmodule Interfaz.Fuente do
          :ok <- validar_contrasena(contrasena) do
       if usuario_existe?(usuario) do
         case Epicenter.GestorUsuario.login(usuario, contrasena, []) do
-          {:ok, u} -> {:ok, sesion(u, rol_interfaz(u.rol), u.zona_principal || "centro")}
+          {:ok, u} -> {:ok, sesion(u, rol_interfaz(u.rol), u.zona_principal || "A1F03C9E7B2D4410")}
           {:error, motivo} -> {:error, motivo}
         end
       else
@@ -200,67 +200,103 @@ defmodule Interfaz.Fuente do
   # Datos de muestra
   # ---------------------------------------------------------------------------
 
+  # ---------------------------------------------------------------------------
+  # Zonas (conectado a la lógica: Epicenter.GestorZonas + Epicenter.Persistencia)
+  #
+  # Cada operación sigue el mismo patrón:
+  #   1. cargar las zonas del JSON
+  #   2. pedirle el cambio al GestorZonas (lógica pura)
+  #   3. guardar el resultado en el JSON
+  # ---------------------------------------------------------------------------
+
+  @doc """
+  Zonas leídas de `Zonas.json`, ordenadas por nombre.
+
+  La interfaz muestra las personas afectadas de cada zona, pero el struct
+  `Epicenter.Zona` no guarda ese dato: se calcula con `Zona.total_afectadas/1`.
+  Por eso cada zona se pasa a un mapa y se le agrega `:afectadas`.
+  """
   def zonas do
-    [
-      %{
-        codigo: "centro",
-        nombre: "Centro",
-        nivel: :critico,
-        afectadas: 1200,
-        sectores: [
-          %{
-            codigo: "S01",
-            nombre: "Sector 3",
-            nivel: :alto,
-            afectadas: 640,
-            puntos: [
-              %{codigo: "P01", nombre: "Punto de atención sector 3"},
-              %{codigo: "P02", nombre: "Parque Sucre"}
-            ]
-          },
-          %{
-            codigo: "S02",
-            nombre: "Plaza de Bolívar",
-            nivel: :medio,
-            afectadas: 560,
-            puntos: [%{codigo: "P03", nombre: "Carpa Cruz Roja"}]
-          }
-        ]
-      },
-      %{
-        codigo: "zona_norte",
-        nombre: "Norte",
-        nivel: :alto,
-        afectadas: 820,
-        sectores: [
-          %{
-            codigo: "S03",
-            nombre: "La Castellana",
-            nivel: :alto,
-            afectadas: 600,
-            puntos: [%{codigo: "P04", nombre: "Albergue Norte"}]
-          },
-          %{codigo: "S04", nombre: "Laureles", nivel: :bajo, afectadas: 220, puntos: []}
-        ]
-      },
-      %{
-        codigo: "zona_sur",
-        nombre: "Sur",
-        nivel: :medio,
-        afectadas: 450,
-        sectores: [
-          %{
-            codigo: "S05",
-            nombre: "La Patria",
-            nivel: :medio,
-            afectadas: 450,
-            puntos: [%{codigo: "P05", nombre: "Coliseo del Sur"}]
-          }
-        ]
-      },
-      %{codigo: "occidente", nombre: "Occidente", nivel: :bajo, afectadas: 120, sectores: []}
-    ]
+    Epicenter.Persistencia.carga_zonas()
+    |> Epicenter.GestorZonas.listar()
+    |> Enum.map(fn zona ->
+      zona
+      |> Map.from_struct()
+      |> Map.put(:afectadas, Epicenter.Zona.total_afectadas(zona))
+    end)
+    |> Enum.sort_by(& &1.nombre)
   end
+
+  @doc "Comando `register_zone`: el código lo genera la lógica."
+  def registrar_zona(nombre, nivel) do
+    with {:ok, nombre} <- texto(nombre, "Escribe el nombre de la zona."),
+         {:ok, nivel} <- nivel(nivel) do
+      Epicenter.Persistencia.carga_zonas()
+      |> Epicenter.GestorZonas.registrar(nombre, nivel)
+      |> guardar_zonas("Zona #{nombre} registrada.")
+    end
+  end
+
+  @doc "Comando `register_sector`: el sector queda dentro de la zona elegida."
+  def registrar_sector(codigo_zona, nombre, nivel, afectadas) do
+    with {:ok, nombre} <- texto(nombre, "Escribe el nombre del sector."),
+         {:ok, nivel} <- nivel(nivel),
+         {:ok, afectadas} <- entero(afectadas) do
+      Epicenter.Persistencia.carga_zonas()
+      |> Epicenter.GestorZonas.registrar_sector(codigo_zona, nombre, nivel, afectadas)
+      |> guardar_zonas("Sector #{nombre} registrado.")
+    end
+  end
+
+  @doc "Comando `register_point`: el punto queda dentro del sector elegido."
+  def registrar_punto(codigo_zona, codigo_sector, nombre) do
+    with {:ok, nombre} <- texto(nombre, "Escribe el nombre del punto de atención.") do
+      Epicenter.Persistencia.carga_zonas()
+      |> Epicenter.GestorZonas.registrar_punto(codigo_zona, codigo_sector, nombre)
+      |> guardar_zonas("Punto de atención #{nombre} registrado.")
+    end
+  end
+
+  # Si la lógica respondió {:ok, zonas}, se guardan; si no, se traduce el error.
+  defp guardar_zonas({:ok, zonas}, mensaje) do
+    Epicenter.Persistencia.guardar_zonas(zonas)
+    {:ok, mensaje}
+  end
+
+  defp guardar_zonas({:error, motivo}, _mensaje), do: {:error, mensaje_error(motivo)}
+
+  # Los formularios envían texto; la lógica espera átomos y enteros.
+  defp texto(valor, mensaje_vacio) do
+    case limpiar(valor) do
+      "" -> {:error, mensaje_vacio}
+      valor -> {:ok, valor}
+    end
+  end
+
+  # Se compara contra la lista de niveles para no crear átomos con lo que escriba el usuario.
+  defp nivel(valor) do
+    case Enum.find(niveles(), &(to_string(&1) == valor)) do
+      nil -> {:error, "Nivel de afectación no válido."}
+      nivel -> {:ok, nivel}
+    end
+  end
+
+  defp entero(valor) do
+    case Integer.parse(to_string(valor)) do
+      {numero, ""} when numero >= 0 -> {:ok, numero}
+      _ -> {:error, "Las personas afectadas deben ser un número entero mayor o igual a 0."}
+    end
+  end
+
+  defp mensaje_error(:nombre_duplicado), do: "Ya existe una zona con ese nombre."
+  defp mensaje_error(:sector_duplicado), do: "Esa zona ya tiene un sector con ese nombre."
+  defp mensaje_error(:punto_duplicado), do: "Ese sector ya tiene un punto con ese nombre."
+  defp mensaje_error(:no_encontrada), do: "La zona no existe."
+  defp mensaje_error(:sector_no_encontrado), do: "El sector no existe."
+  defp mensaje_error(:nombre_vacio), do: "El nombre no puede estar vacío."
+  defp mensaje_error(:nivel_invalido), do: "Nivel de afectación no válido."
+  defp mensaje_error(:afectadas_invalidas), do: "Número de personas afectadas no válido."
+  defp mensaje_error(motivo), do: "No se pudo completar: #{inspect(motivo)}"
 
   def necesidades do
     [
@@ -269,7 +305,7 @@ defmodule Interfaz.Fuente do
         tipo: :agua,
         cantidad: 30,
         prioridad: :critica,
-        zona: "centro",
+        zona: "A1F03C9E7B2D4410",
         estado: :asignada,
         descripcion: "Punto de atención sector 3",
         responsable: "laura"
@@ -279,7 +315,7 @@ defmodule Interfaz.Fuente do
         tipo: :agua,
         cantidad: 25,
         prioridad: :alta,
-        zona: "centro",
+        zona: "A1F03C9E7B2D4410",
         estado: :pendiente,
         descripcion: "Familias del sector 3 sin acueducto",
         responsable: "carlos"
@@ -289,7 +325,7 @@ defmodule Interfaz.Fuente do
         tipo: :medicamentos,
         cantidad: 40,
         prioridad: :critica,
-        zona: "zona_norte",
+        zona: "B7D24E901FA3C665",
         estado: :pendiente,
         descripcion: "Insulina y antihipertensivos",
         responsable: "carlos"
@@ -299,7 +335,7 @@ defmodule Interfaz.Fuente do
         tipo: :alimentos,
         cantidad: 120,
         prioridad: :media,
-        zona: "zona_sur",
+        zona: "C58E13A6B0F94D72",
         estado: :en_atencion,
         descripcion: "Raciones Coliseo del Sur",
         responsable: "laura"
@@ -309,7 +345,7 @@ defmodule Interfaz.Fuente do
         tipo: :refugio,
         cantidad: 12,
         prioridad: :alta,
-        zona: "zona_norte",
+        zona: "B7D24E901FA3C665",
         estado: :pendiente,
         descripcion: "Familia extensa sin vivienda",
         responsable: "andres"
@@ -319,7 +355,7 @@ defmodule Interfaz.Fuente do
         tipo: :rescate,
         cantidad: 1,
         prioridad: :critica,
-        zona: "centro",
+        zona: "A1F03C9E7B2D4410",
         estado: :en_atencion,
         descripcion: "Edificio colapsado calle 20",
         responsable: "laura"
@@ -329,7 +365,7 @@ defmodule Interfaz.Fuente do
         tipo: :transporte,
         cantidad: 3,
         prioridad: :baja,
-        zona: "occidente",
+        zona: "D06A7F2C9E31B845",
         estado: :atendida,
         descripcion: "Traslado de adultos mayores",
         responsable: "carlos"
@@ -339,7 +375,7 @@ defmodule Interfaz.Fuente do
         tipo: :primeros_auxilios,
         cantidad: 15,
         prioridad: :media,
-        zona: "zona_sur",
+        zona: "C58E13A6B0F94D72",
         estado: :cancelada,
         descripcion: "Duplicada con N004",
         responsable: "admin"
@@ -357,7 +393,7 @@ defmodule Interfaz.Fuente do
         minimo: 40,
         unidad: "litros",
         ubicacion: "centro_acopio_1",
-        zona: "centro"
+        zona: "A1F03C9E7B2D4410"
       },
       %{
         codigo: "R002",
@@ -367,7 +403,7 @@ defmodule Interfaz.Fuente do
         minimo: 100,
         unidad: "raciones",
         ubicacion: "centro_acopio_1",
-        zona: "centro"
+        zona: "A1F03C9E7B2D4410"
       },
       %{
         codigo: "R003",
@@ -377,7 +413,7 @@ defmodule Interfaz.Fuente do
         minimo: 30,
         unidad: "kits",
         ubicacion: "albergue_norte",
-        zona: "zona_norte"
+        zona: "B7D24E901FA3C665"
       },
       %{
         codigo: "R004",
@@ -387,7 +423,7 @@ defmodule Interfaz.Fuente do
         minimo: 80,
         unidad: "unidades",
         ubicacion: "albergue_2",
-        zona: "zona_sur"
+        zona: "C58E13A6B0F94D72"
       },
       %{
         codigo: "R005",
@@ -397,7 +433,7 @@ defmodule Interfaz.Fuente do
         minimo: 20,
         unidad: "botiquines",
         ubicacion: "centro_acopio_2",
-        zona: "zona_sur"
+        zona: "C58E13A6B0F94D72"
       },
       %{
         codigo: "R006",
@@ -407,7 +443,7 @@ defmodule Interfaz.Fuente do
         minimo: 40,
         unidad: "litros",
         ubicacion: "centro_acopio_2",
-        zona: "zona_sur"
+        zona: "C58E13A6B0F94D72"
       }
     ]
   end
@@ -478,7 +514,7 @@ defmodule Interfaz.Fuente do
         documento: "1094887123",
         nombre: "Andrés Gómez",
         edad: 34,
-        zona: "zona_norte",
+        zona: "B7D24E901FA3C665",
         estado: :en_albergue,
         albergue: "A01",
         historial: [
@@ -492,7 +528,7 @@ defmodule Interfaz.Fuente do
         documento: "41923554",
         nombre: "María López",
         edad: 67,
-        zona: "centro",
+        zona: "A1F03C9E7B2D4410",
         estado: :sin_informacion,
         albergue: nil,
         historial: [%{fecha: "09/11 06:40", estado: :sin_informacion, por: "laura"}]
@@ -502,7 +538,7 @@ defmodule Interfaz.Fuente do
         documento: "1097001456",
         nombre: "Jorge Ramírez",
         edad: 45,
-        zona: "centro",
+        zona: "A1F03C9E7B2D4410",
         estado: :trasladada,
         albergue: nil,
         historial: [
@@ -515,7 +551,7 @@ defmodule Interfaz.Fuente do
         documento: "TI-1098223",
         nombre: "Sofía Castaño",
         edad: 8,
-        zona: "zona_sur",
+        zona: "C58E13A6B0F94D72",
         estado: :reunificada,
         albergue: "A02",
         historial: [
@@ -529,7 +565,7 @@ defmodule Interfaz.Fuente do
         documento: "18512990",
         nombre: "Luis Pérez",
         edad: 52,
-        zona: "occidente",
+        zona: "D06A7F2C9E31B845",
         estado: :reportada,
         albergue: nil,
         historial: [%{fecha: "09/11 10:15", estado: :reportada, por: "andres"}]
@@ -575,7 +611,7 @@ defmodule Interfaz.Fuente do
         nombre: "Luna",
         color: "negra",
         tamano: :mediano,
-        zona: "zona_norte",
+        zona: "B7D24E901FA3C665",
         contacto: "300 123 4567",
         caracteristicas: "Collar rojo, oreja izquierda caída",
         estado: :posible_coincidencia
@@ -587,7 +623,7 @@ defmodule Interfaz.Fuente do
         nombre: nil,
         color: "negra",
         tamano: :mediano,
-        zona: "zona_norte",
+        zona: "B7D24E901FA3C665",
         contacto: "Carlos (voluntario)",
         caracteristicas: "Collar rojo, muy dócil",
         estado: :posible_coincidencia
@@ -599,7 +635,7 @@ defmodule Interfaz.Fuente do
         nombre: "Michi",
         color: "gris",
         tamano: :pequeno,
-        zona: "centro",
+        zona: "A1F03C9E7B2D4410",
         contacto: "311 222 3344",
         caracteristicas: "Ojos verdes",
         estado: :activa
@@ -611,7 +647,7 @@ defmodule Interfaz.Fuente do
         nombre: nil,
         color: "blanco",
         tamano: :pequeno,
-        zona: "zona_sur",
+        zona: "C58E13A6B0F94D72",
         contacto: "Coliseo del Sur",
         caracteristicas: "Mancha gris en la cola",
         estado: :activa
@@ -623,7 +659,7 @@ defmodule Interfaz.Fuente do
         nombre: "Rocky",
         color: "café",
         tamano: :grande,
-        zona: "zona_sur",
+        zona: "C58E13A6B0F94D72",
         contacto: "320 987 6543",
         caracteristicas: "Labrador",
         estado: :resuelta
@@ -659,19 +695,19 @@ defmodule Interfaz.Fuente do
       %{
         codigo: "A01",
         nombre: "Albergue Norte",
-        zona: "zona_norte",
+        zona: "B7D24E901FA3C665",
         capacidad: 150,
         ocupacion: 128
       },
       %{
         codigo: "A02",
         nombre: "Coliseo del Sur",
-        zona: "zona_sur",
+        zona: "C58E13A6B0F94D72",
         capacidad: 300,
         ocupacion: 141
       },
-      %{codigo: "A03", nombre: "Escuela Centro", zona: "centro", capacidad: 80, ocupacion: 79},
-      %{codigo: "A04", nombre: "Polideportivo", zona: "occidente", capacidad: 120, ocupacion: 22}
+      %{codigo: "A03", nombre: "Escuela Centro", zona: "A1F03C9E7B2D4410", capacidad: 80, ocupacion: 79},
+      %{codigo: "A04", nombre: "Polideportivo", zona: "D06A7F2C9E31B845", capacidad: 120, ocupacion: 22}
     ]
   end
 
@@ -720,11 +756,12 @@ defmodule Interfaz.Fuente do
 
   @doc "Estadísticas acumuladas de una zona y sus sectores."
   def estadisticas_zona(codigo) do
-    zona = Enum.find(zonas(), &(&1.codigo == codigo))
+    {:ok, zona} =
+      Epicenter.GestorZonas.estadisticas(Epicenter.Persistencia.carga_zonas(), codigo)
 
     %{
-      sectores: length(zona.sectores),
-      puntos: zona.sectores |> Enum.map(&length(&1.puntos)) |> Enum.sum(),
+      sectores: zona.sectores,
+      puntos: zona.puntos,
       necesidades: Enum.count(necesidades_pendientes(), &(&1.zona == codigo)),
       cupos:
         albergues()
@@ -740,28 +777,28 @@ defmodule Interfaz.Fuente do
         usuario: "laura",
         nombre: "Laura Restrepo",
         rol: :coordinador,
-        zona: "centro",
+        zona: "A1F03C9E7B2D4410",
         conectado: true
       },
       %{
         usuario: "carlos",
         nombre: "Carlos Mejía",
         rol: :voluntario,
-        zona: "zona_norte",
+        zona: "B7D24E901FA3C665",
         conectado: true
       },
       %{
         usuario: "andres",
         nombre: "Andrés Gómez",
         rol: :ciudadano,
-        zona: "zona_norte",
+        zona: "B7D24E901FA3C665",
         conectado: false
       },
       %{
         usuario: "admin",
         nombre: "Administración",
         rol: :administrador,
-        zona: "centro",
+        zona: "A1F03C9E7B2D4410",
         conectado: true
       }
     ]

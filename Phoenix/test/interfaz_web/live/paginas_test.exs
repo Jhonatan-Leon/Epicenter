@@ -5,7 +5,7 @@ defmodule InterfazWeb.PaginasTest do
 
   defp conectado(conn, rol) do
     init_test_session(conn,
-      usuario: %{usuario: "laura", nombre: "Laura", rol: rol, zona: "centro"}
+      usuario: %{usuario: "laura", nombre: "Laura", rol: rol, zona: "A1F03C9E7B2D4410"}
     )
   end
 
@@ -39,26 +39,13 @@ defmodule InterfazWeb.PaginasTest do
           tipo: "agua",
           cantidad: "30",
           prioridad: "critica",
-          zona: "centro",
+          zona: "A1F03C9E7B2D4410",
           descripcion: "Punto de atención sector 3"
         }
       )
       |> render_submit()
 
-    assert html =~ "register_need agua 30 critica centro"
-  end
-
-  test "registrar una zona solo pide nombre y nivel", %{conn: conn} do
-    {:ok, view, _} = live(conectado(conn, :coordinador), ~p"/zonas")
-    view |> element("#nueva-zona") |> render_click()
-    refute has_element?(view, "#form-zona input[name='zona[codigo]']")
-
-    html =
-      view
-      |> form("#form-zona", zona: %{nombre: "Norte", nivel: "alto"})
-      |> render_submit()
-
-    assert html =~ "register_zone Norte alto"
+    assert html =~ "register_need agua 30 critica A1F03C9E7B2D4410"
   end
 
   test "los filtros de necesidades reducen la lista", %{conn: conn} do

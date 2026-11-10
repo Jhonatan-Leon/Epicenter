@@ -74,17 +74,17 @@ defmodule InterfazWeb.SesionControllerTest do
 
   test "al completar el registro entra con el rol y la zona elegidos", %{conn: conn} do
     conn =
-      registrar(conn, %{usuario: "laura", contrasena: "1234", rol: "voluntario", zona: "zona_norte"})
+      registrar(conn, %{usuario: "laura", contrasena: "1234", rol: "voluntario", zona: "B7D24E901FA3C665"})
 
     assert redirected_to(conn) == ~p"/"
-    assert %{usuario: "laura", rol: :voluntario, zona: "zona_norte"} = get_session(conn, :usuario)
+    assert %{usuario: "laura", rol: :voluntario, zona: "B7D24E901FA3C665"} = get_session(conn, :usuario)
     assert File.read!(@usuarios) =~ "laura"
   end
 
   test "el registro rechaza coordinador y muestra el error en el mismo paso", %{conn: conn} do
     html =
       conn
-      |> registrar(%{usuario: "laura", contrasena: "1234", rol: "coordinador", zona: "centro"})
+      |> registrar(%{usuario: "laura", contrasena: "1234", rol: "coordinador", zona: "A1F03C9E7B2D4410"})
       |> html_response(200)
 
     assert html =~ "Completa tu registro"
