@@ -1,5 +1,3 @@
-Code.require_file("Zona.exs", __DIR__)
-
 defmodule Utilidad do
   @moduledoc """
   """
@@ -8,7 +6,7 @@ defmodule Utilidad do
   end
 
   def generar_fecha_actual() do
-    DateTime.utc_now() 
+    DateTime.utc_now()
   end
 
   def verificar_cantidad(cantidad) when cantidad < 0 do

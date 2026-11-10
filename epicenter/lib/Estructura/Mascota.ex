@@ -1,5 +1,3 @@
-Code.require_file("Zona.exs", __DIR__)
-
 defmodule Epicenter.Mascota do
   @moduledoc """
   """
@@ -8,7 +6,7 @@ defmodule Epicenter.Mascota do
   defstruct [:id, :nombre, :tipo, :codigo_zona, :especie, :carateristicas, :color, :tamano, :contacto, :estado]
 
   def nuevo(id, nombre, tipo, codigo_zona, especie, carateristicas, color, tamano, contacto, estado) do
-    {:Ok, %__MODULE__{id: Utilidad.generar_codigo_unico(), nombre: nombre, tipo: verificar_tipo(tipo), codigo_zona: verificar_zona(codigo_zona), especie: especie, carateristicas: carateristicas, color: color, tamano: tamano, contacto: contacto, estado: verificar_estado_minimo(estado) }}
+    {:ok, %__MODULE__{id: Utilidad.generar_codigo_unico(), nombre: nombre, tipo: verificar_tipo(tipo), codigo_zona: verificar_zona(codigo_zona), especie: especie, carateristicas: carateristicas, color: color, tamano: tamano, contacto: contacto, estado: verificar_estado_minimo(estado) }}
   end
 
 
@@ -27,7 +25,7 @@ defmodule Epicenter.Mascota do
     end
   end
 
-  def verficar_estado_minimo(estado) do
+  def verificar_estado_minimo(estado) do
     if estado in @estado_minimo do
       {:ok, estado}
     else

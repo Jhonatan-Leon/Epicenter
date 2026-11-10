@@ -1,14 +1,11 @@
-Code.require_file("Zona.exs", __DIR__)
-Code.require_file("Albergue.exs", __DIR__)
-
 defmodule Epicenter.Persona do
   @moduledoc """
   """
   @enforce_keys [:id, :documento, :tipo_documento, :nombre, :codigo_zona, :codigo_albergue]
   defstruct [:id, :documento, :tipo_documento, :nombre, :edad, :codigo_zona, :estado, :codigo_albergue, :historial ]
 
-  def nuevo(id, nombre, apellido, edad, sexo) do
-    {:Ok, %__MODULE__{id: Utilidad.generar_codigo_unico(), nombre: nombre, edad: edad, codigo_zona: codigo_zona, estado: estado, codigo_albergue: codigo_albergue, historial: historial}}
+  def nuevo(id, documento, tipo_documento, nombre, edad, codigo_zona, estado, codigo_albergue, historial) do
+    {:ok, %__MODULE__{id: Utilidad.generar_codigo_unico(), documento: documento, tipo_documento: tipo_documento, nombre: nombre, edad: edad, codigo_zona: codigo_zona, estado: estado, codigo_albergue: codigo_albergue, historial: historial}}
   end
 
 

@@ -1,0 +1,4 @@
+# La interfaz grafica vive en la rama interfaz-phoenix.
+# Mientras no se una a main, se ignora aqui para no subirla por error con `git add .`.
+# IMPORTANTE: borrar esta linea al hacer merge de interfaz-phoenix en main.
+/Phoenix/

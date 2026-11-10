@@ -1,1 +1,0 @@
-nombre_usaurio;contraseña;nombre_completo;zona_principal;rol
