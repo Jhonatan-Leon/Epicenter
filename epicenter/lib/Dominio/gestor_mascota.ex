@@ -109,6 +109,60 @@ defmodule Epicenter.GestorMascota do
   end
 
   @doc """
+  Consulta reportes por especie, zona y estado, solos o combinados.
+
+  Los filtros llegan como lista de claves o como mapa, por ejemplo
+  `consultar(especie: "perro", zona: "zona_norte", estado: :activa)`. Sin filtros
+  devuelve todos los reportes. El estado puede ser átomo o texto, y la especie no
+  distingue mayúsculas.
+
+  Devuelve `{:ok, reportes}` (lista vacía si nada coincide) o `{:error, motivo}`:
+  `:filtro_invalido` (clave desconocida o valor que no es texto),
+  `:estado_invalido` o `:filtros_invalidos` (no son una lista ni un mapa).
+  """
+  def consultar(filtros \\ [])
+
+  def consultar(filtros) when is_list(filtros) or is_map(filtros) do
+    with {:ok, filtros} <- normalizar_filtros(filtros),
+         {:ok, mascotas} <- listar() do
+      {:ok, filtrar(mascotas, filtros)}
+    end
+  end
+
+  def consultar(_filtros), do: {:error, :filtros_invalidos}
+
+  defp normalizar_filtros(filtros) do
+    Enum.reduce_while(filtros, {:ok, []}, fn {clave, valor}, {:ok, normalizados} ->
+      case normalizar_filtro(clave, valor) do
+        {:ok, filtro} -> {:cont, {:ok, [filtro | normalizados]}}
+        {:error, _motivo} = error -> {:halt, error}
+      end
+    end)
+  end
+
+  defp normalizar_filtro(:especie, valor) when is_binary(valor),
+    do: {:ok, {:especie, valor |> String.trim() |> String.downcase()}}
+
+  defp normalizar_filtro(:zona, valor) when is_binary(valor),
+    do: {:ok, {:zona, String.trim(valor)}}
+
+  defp normalizar_filtro(:estado, valor) do
+    case Enum.find(Epicenter.Mascota.estados(), &(&1 == valor or Atom.to_string(&1) == valor)) do
+      nil -> {:error, :estado_invalido}
+      estado -> {:ok, {:estado, estado}}
+    end
+  end
+
+  defp normalizar_filtro(_clave, _valor), do: {:error, :filtro_invalido}
+
+  # Un reporte pasa si cumple todos los filtros.
+  defp filtrar(mascotas, filtros) do
+    Enum.filter(mascotas, fn mascota ->
+      Enum.all?(filtros, fn {campo, valor} -> Map.fetch!(mascota, campo) == valor end)
+    end)
+  end
+
+  @doc """
   Coincidencias candidatas (puntaje de 40 o más) entre reportes perdidos y
   encontrados no resueltos, de mayor a menor puntaje. No modifica nada.
   """
