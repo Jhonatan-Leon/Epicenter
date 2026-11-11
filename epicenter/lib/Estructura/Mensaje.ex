@@ -4,6 +4,9 @@ defmodule Epicenter.Mensaje do
   @enforce_keys [:codigo, :remitente, :destinatario, :contenido, :fecha_envio]
   defstruct [:codigo, :remitente, :destinatario, :contenido, :estado, :fecha_envio]
 
+  @doc "Estados con los que se marca un mensaje."
+  def estados, do: [:pendiente, :entregado]
+
   def nuevo(remitente, destinatario, contenido) do
     nuevo(nil, remitente, destinatario, contenido, nil)
   end

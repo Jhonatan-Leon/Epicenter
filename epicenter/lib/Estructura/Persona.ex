@@ -1,7 +1,14 @@
 defmodule Epicenter.Persona do
   @moduledoc """
+  Persona afectada por la emergencia.
+
+  `tipo_documento` y `codigo_albergue` son opcionales: una persona "sin
+  información" o "reportada" todavía no está en ningún albergue.
   """
-  @enforce_keys [:id, :documento, :tipo_documento, :nombre, :codigo_zona, :codigo_albergue]
+
+  @estados [:sin_informacion, :reportada, :localizada, :trasladada, :en_albergue, :reunificada]
+
+  @enforce_keys [:id, :documento, :nombre, :codigo_zona]
   defstruct [
     :id,
     :documento,
@@ -13,6 +20,9 @@ defmodule Epicenter.Persona do
     :codigo_albergue,
     :historial
   ]
+
+  @doc "Estados válidos de una persona."
+  def estados, do: @estados
 
   def nuevo(documento, tipo_documento, nombre, codigo_zona, codigo_albergue) do
     {:ok,

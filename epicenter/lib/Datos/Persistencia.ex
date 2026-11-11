@@ -185,7 +185,7 @@ defmodule Epicenter.Persistencia do
       codigo_zona: persona["codigo_zona"],
       estado: a_atomo_existente(persona["estado"]),
       codigo_albergue: persona["codigo_albergue"],
-      historial: persona["historial"]
+      historial: historial_a_lista(persona["historial"])
     }
   end
 
@@ -294,9 +294,7 @@ defmodule Epicenter.Persistencia do
     do: {:ok, &necesidad_a_struct/1, [:id, :codigo_zona, :reportador_por]}
 
   defp especificacion(Epicenter.Persona),
-    do:
-      {:ok, &persona_a_struct/1,
-       [:id, :documento, :tipo_documento, :nombre, :codigo_zona, :codigo_albergue]}
+    do: {:ok, &persona_a_struct/1, [:id, :documento, :nombre, :codigo_zona]}
 
   defp especificacion(_estructura), do: :error
 
@@ -349,6 +347,23 @@ defmodule Epicenter.Persistencia do
 
   defp a_atomo_existente(valor), do: valor
 
+  # El historial de una persona se guarda como lista de mapas; al cargarlo se
+  # recuperan los átomos y las fechas. Lo que no tenga esa forma se deja igual.
+  defp historial_a_lista(entradas) when is_list(entradas),
+    do: Enum.map(entradas, &entrada_historial_persona/1)
+
+  defp historial_a_lista(otro), do: otro
+
+  defp entrada_historial_persona(%{"estado" => estado} = entrada) do
+    %{
+      fecha: a_datetime(entrada["fecha"]),
+      estado: a_atomo_existente(estado),
+      por: entrada["por"]
+    }
+  end
+
+  defp entrada_historial_persona(otra), do: otra
+
   defp mascota_estado(nil), do: :activa
 
   defp mascota_estado(estado) when estado in [:activa, :posible_coincidencia, :resuelta],
@@ -376,7 +391,7 @@ defmodule Epicenter.Persistencia do
   end
 
   defp a_datetime(valor), do: valor
-  
+
   def guardar_usuarios(usuarios) do
     list =
       Enum.map(usuarios, fn u ->

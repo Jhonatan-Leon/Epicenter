@@ -83,6 +83,78 @@ defmodule Epicenter.GestorMensaje do
     end
   end
 
+  # ===== Comunicación entre familiares: enviar, consultar y marcar mensajes =====
+
+  @doc """
+  Envía un mensaje dirigido a una persona (comando `send_family_message`).
+
+  El destinatario es el documento de una persona ya reportada. El mensaje queda
+  `:pendiente` y con la fecha actual. Devuelve `{:ok, mensaje}` o
+  `{:error, motivo}`: `:remitente_vacio`, `:destinatario_vacio`,
+  `:contenido_vacio` o `"Persona no encontrada"`.
+  """
+  def enviar(remitente, documento_destinatario, contenido) do
+    with {:ok, remitente} <- texto_obligatorio(remitente, :remitente_vacio),
+         {:ok, documento} <- texto_obligatorio(documento_destinatario, :destinatario_vacio),
+         {:ok, contenido} <- texto_obligatorio(contenido, :contenido_vacio),
+         {:ok, _persona} <- Epicenter.GestorPersona.obtener_por_documento(documento) do
+      registro(remitente, documento, contenido)
+    end
+  end
+
+  @doc """
+  Mensajes dirigidos a una persona (comando `list_family_messages`), del más
+  reciente al más antiguo.
+  """
+  def listar_por_persona(documento) do
+    with {:ok, documento} <- texto_obligatorio(documento, :destinatario_vacio),
+         {:ok, mensajes} <- listar() do
+      {:ok, Enum.filter(mensajes, &(&1.destinatario == documento))}
+    end
+  end
+
+  @doc """
+  Marca un mensaje como `:entregado` o `:pendiente` (átomo o texto).
+
+  Devuelve `{:ok, mensaje}` o `{:error, motivo}`: `:estado_invalido` o
+  `"Mensaje no encontrado"`.
+  """
+  def marcar(codigo, estado) do
+    with {:ok, estado} <- validar_estado(estado),
+         {:ok, mensajes} <- listar(),
+         {:ok, mensaje} <- buscar_mensaje(mensajes, codigo) do
+      actualizado = %{mensaje | estado: estado}
+
+      Epicenter.Persistencia.guardar_mensajes(
+        Enum.map(mensajes, fn existente ->
+          if existente.codigo == codigo, do: actualizado, else: existente
+        end)
+      )
+
+      {:ok, actualizado}
+    end
+  end
+
+  defp texto_obligatorio(valor, motivo) when is_binary(valor) do
+    case String.trim(valor) do
+      "" -> {:error, motivo}
+      texto -> {:ok, texto}
+    end
+  end
+
+  defp texto_obligatorio(_valor, motivo), do: {:error, motivo}
+
+  defp validar_estado(estado) when is_atom(estado) or is_binary(estado) do
+    texto = estado |> to_string() |> String.trim()
+
+    case Enum.find(Epicenter.Mensaje.estados(), &(Atom.to_string(&1) == texto)) do
+      nil -> {:error, :estado_invalido}
+      valido -> {:ok, valido}
+    end
+  end
+
+  defp validar_estado(_estado), do: {:error, :estado_invalido}
+
   defp buscar_mensaje(mensajes, codigo) do
     case Enum.find(mensajes, &(&1.codigo == codigo)) do
       nil -> {:error, "Mensaje no encontrado"}
