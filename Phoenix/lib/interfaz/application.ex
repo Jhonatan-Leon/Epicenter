@@ -8,6 +8,7 @@ defmodule Interfaz.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      {Epicenter.Genserver, []},
       InterfazWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:interfaz, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Interfaz.PubSub},
