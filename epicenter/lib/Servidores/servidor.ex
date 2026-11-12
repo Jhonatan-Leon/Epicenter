@@ -10,6 +10,9 @@ defmodule Epicenter.Genserver do
 
   def listar, do: GenServer.call(__MODULE__, :listar)
 
+  def login(nombre_usuario, contrasena),
+    do: GenServer.call(__MODULE__, {:login, nombre_usuario, contrasena})
+
   def obtener(nombre_usuario),
     do: GenServer.call(__MODULE__, {:obtener, nombre_usuario})
 
@@ -31,6 +34,11 @@ defmodule Epicenter.Genserver do
   @impl true
   def handle_call(:listar, _from, state) do
     {:reply, Epicenter.GestorUsuario.listar(), state}
+  end
+
+  def handle_call({:login, nombre_usuario, contrasena}, _from, state) do
+    resultado = Epicenter.GestorUsuario.login(nombre_usuario, contrasena, [])
+    {:reply, resultado, state}
   end
 
   def handle_call({:obtener, nombre_usuario}, _from, state) do
