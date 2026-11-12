@@ -66,7 +66,7 @@ defmodule InterfazWeb.CoreComponents do
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
-      phx-hook={@autocerrar && ".AutoCerrar"}
+      phx-hook=".AutoCerrar"
       data-autocerrar={@autocerrar}
       role="alert"
       class="toast toast-top toast-end z-50"
@@ -74,7 +74,9 @@ defmodule InterfazWeb.CoreComponents do
     >
       <%!-- Cierra la notificación a los 5 s haciendo el mismo clic que la X:
            borra el mensaje en el servidor y la oculta con la animación. Si llega
-           otra notificación mientras se ve, el tiempo vuelve a empezar. --%>
+           otra notificación mientras se ve, el tiempo vuelve a empezar.
+           phx-hook debe ir escrito literal para que Phoenix encuentre el hook;
+           las que no se cierran solas (sin conexión) no tienen data-autocerrar. --%>
       <script :type={Phoenix.LiveView.ColocatedHook} name=".AutoCerrar">
         export default {
           mounted() { this.programar() },
@@ -82,6 +84,7 @@ defmodule InterfazWeb.CoreComponents do
           destroyed() { clearTimeout(this.temporizador) },
           programar() {
             clearTimeout(this.temporizador)
+            if (!this.el.hasAttribute("data-autocerrar")) return
             this.temporizador = setTimeout(() => this.el.click(), 5000)
           }
         }

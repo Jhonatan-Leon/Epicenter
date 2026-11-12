@@ -116,6 +116,9 @@ defmodule InterfazWeb.MascotasPersonasLiveTest do
       |> render_submit()
 
       assert has_element?(view, "#mensajes-persona", "Estoy bien, en el albergue norte")
+      # El campo se reemplaza por uno nuevo y vacío.
+      assert has_element?(view, "#mensaje-contenido-1")
+      refute has_element?(view, "#mensaje-contenido-1[value]")
       {:ok, [mensaje]} = Epicenter.GestorMensaje.listar_por_persona("1094")
       assert mensaje.remitente == "Laura Gómez"
     end

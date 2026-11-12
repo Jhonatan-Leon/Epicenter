@@ -46,6 +46,13 @@ liveSocket.connect()
 // Fondo sísmico, sismógrafo y microinteracciones (solo presentación).
 iniciarEfectos()
 
+// Notificaciones en páginas que no son LiveView (como la de conectar): ahí el
+// hook .AutoCerrar no corre, así que se ocultan aquí a los 5 segundos.
+document.querySelectorAll("[data-autocerrar]").forEach(aviso => {
+  if (aviso.closest("[data-phx-session]")) return
+  setTimeout(() => aviso.remove(), 5000)
+})
+
 // expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
