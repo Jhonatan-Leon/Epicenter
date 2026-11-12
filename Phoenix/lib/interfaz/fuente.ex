@@ -19,7 +19,11 @@ defmodule Interfaz.Fuente do
   @doc """
   Comando `connect usuario contraseña`.
 
-  Si el usuario ya existe, valida la contraseña con `Epicenter.GestorUsuario.login/3`
+  Los usuarios se manejan a través del proceso `Epicenter.Genserver` (lo arranca
+  el supervisor `Epicenter.Aplicacion` al iniciar la lógica). Así varias
+  conexiones al mismo tiempo pasan por un solo proceso, una después de otra.
+
+  Si el usuario ya existe, valida la contraseña con `Epicenter.Genserver.login/2`
   y devuelve `{:ok, sesion}`. Si no existe devuelve `:nuevo`, para que la pantalla
   pida nombre completo, tipo de usuario y zona antes de registrarlo con `registrar/5`.
   """
@@ -29,7 +33,7 @@ defmodule Interfaz.Fuente do
     with :ok <- validar_usuario(usuario),
          :ok <- validar_contrasena(contrasena) do
       if usuario_existe?(usuario) do
-        case Epicenter.GestorUsuario.login(usuario, contrasena, []) do
+        case Epicenter.Genserver.login(usuario, contrasena) do
           {:ok, u} -> {:ok, sesion(u, rol_interfaz(u.rol), codigo_zona(u.zona_principal))}
           {:error, motivo} -> {:error, motivo}
         end
@@ -43,11 +47,12 @@ defmodule Interfaz.Fuente do
   Registra a un usuario nuevo con su nombre completo, tipo de usuario y zona principal.
 
   Un usuario nuevo solo puede ser ciudadano o voluntario. La lógica todavía no
-  tiene un registro que reciba todos los datos (`GestorUsuario.registro/3` crea a
-  todos como ciudadano, sin nombre ni zona), así que se hace en dos pasos:
+  tiene un registro que reciba todos los datos (`Genserver.crear/2` crea a todos
+  como ciudadano, sin nombre ni zona), así que se hace en dos pasos, ambos por
+  el GenServer de usuarios:
 
-    1. `GestorUsuario.login/3` crea el usuario básico.
-    2. `GestorUsuario.actualizar/2` lo guarda completo con rol, nombre y zona.
+    1. `Epicenter.Genserver.crear/2` crea el usuario básico.
+    2. `Epicenter.Genserver.actualizar/2` lo guarda completo con rol, nombre y zona.
 
   Cuando la lógica tenga un registro completo, se reemplazan los dos pasos por esa llamada.
 
@@ -64,9 +69,9 @@ defmodule Interfaz.Fuente do
          {:ok, rol} <- validar_rol_registro(rol),
          {:ok, zona} <- buscar_zona_por_nombre(nombre_zona),
          :ok <- validar_usuario_libre(usuario),
-         {:ok, basico} <- Epicenter.GestorUsuario.login(usuario, contrasena, []),
+         {:ok, basico} <- Epicenter.Genserver.crear(usuario, contrasena),
          completo = %{basico | rol: rol, nombre_completo: nombre_completo, zona_principal: zona.nombre},
-         {:ok, u} <- Epicenter.GestorUsuario.actualizar(usuario, completo) do
+         {:ok, u} <- Epicenter.Genserver.actualizar(usuario, completo) do
       {:ok, sesion(u, rol, zona.codigo)}
     end
   end
@@ -74,12 +79,9 @@ defmodule Interfaz.Fuente do
   @doc "Tipos de usuario que puede elegir alguien que se registra."
   def roles_registro, do: [:ciudadano, :voluntario]
 
-  # La lógica devuelve {:ok, usuarios}; si el archivo no se puede leer, nadie existe todavía.
+  # Se pregunta al GenServer de usuarios; si no lo encuentra, el usuario es nuevo.
   defp usuario_existe?(usuario) do
-    case Epicenter.Persistencia.carga_usuarios() do
-      {:ok, usuarios} -> Enum.any?(usuarios, &(&1.nombre_usuario == usuario))
-      {:error, _motivo} -> false
-    end
+    match?({:ok, _usuario}, Epicenter.Genserver.obtener(usuario))
   end
 
   defp sesion(u, rol, zona) do

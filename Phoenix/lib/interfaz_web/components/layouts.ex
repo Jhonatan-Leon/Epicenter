@@ -182,6 +182,7 @@ defmodule InterfazWeb.Layouts do
       <.flash
         id="client-error"
         kind={:error}
+        autocerrar={false}
         title="Sin conexión"
         phx-disconnected={
           show(".phx-client-error #client-error")
@@ -197,6 +198,7 @@ defmodule InterfazWeb.Layouts do
       <.flash
         id="server-error"
         kind={:error}
+        autocerrar={false}
         title="Algo salió mal"
         phx-disconnected={
           show(".phx-server-error #server-error")

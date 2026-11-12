@@ -49,6 +49,11 @@ defmodule InterfazWeb.CoreComponents do
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, default: nil
   attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
+
+  attr :autocerrar, :boolean,
+    default: true,
+    doc: "si se cierra sola a los 5 segundos (los avisos de conexión no)"
+
   attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
 
   slot :inner_block, doc: "the optional inner block that renders the flash message"
@@ -61,10 +66,26 @@ defmodule InterfazWeb.CoreComponents do
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
+      phx-hook={@autocerrar && ".AutoCerrar"}
+      data-autocerrar={@autocerrar}
       role="alert"
       class="toast toast-top toast-end z-50"
       {@rest}
     >
+      <%!-- Cierra la notificación a los 5 s haciendo el mismo clic que la X:
+           borra el mensaje en el servidor y la oculta con la animación. Si llega
+           otra notificación mientras se ve, el tiempo vuelve a empezar. --%>
+      <script :type={Phoenix.LiveView.ColocatedHook} name=".AutoCerrar">
+        export default {
+          mounted() { this.programar() },
+          updated() { this.programar() },
+          destroyed() { clearTimeout(this.temporizador) },
+          programar() {
+            clearTimeout(this.temporizador)
+            this.temporizador = setTimeout(() => this.el.click(), 5000)
+          }
+        }
+      </script>
       <div class={[
         "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
         @kind == :info && "alert-info",

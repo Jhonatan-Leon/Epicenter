@@ -7,8 +7,10 @@ defmodule Interfaz.Application do
 
   @impl true
   def start(_type, _args) do
+    # Epicenter.Genserver (usuarios) no va aquí: lo arranca y supervisa la propia
+    # lógica con Epicenter.Aplicacion, que se inicia antes que la interfaz porque
+    # :epicenter es una dependencia. Ponerlo aquí también lo iniciaría dos veces.
     children = [
-      {Epicenter.Genserver, []},
       InterfazWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:interfaz, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Interfaz.PubSub},

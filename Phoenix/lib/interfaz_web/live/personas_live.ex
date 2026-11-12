@@ -14,6 +14,7 @@ defmodule InterfazWeb.PersonasLive do
       |> assign(:modal, nil)
       |> assign(:form, to_form(%{}, as: :persona))
       |> assign(:mensaje_form, to_form(%{}, as: :mensaje))
+      |> assign(:mensajes_enviados, 0)
       |> buscar(@busqueda_vacia)
 
     {:ok, seleccionar(socket, primer_documento(socket.assigns.personas))}
@@ -74,9 +75,15 @@ defmodule InterfazWeb.PersonasLive do
 
     socket = responder(socket, resultado, documento)
 
+    # Al enviar bien, se limpia el campo. El formulario vacío es igual al anterior y
+    # LiveView no tocaría el <input>; por eso se cuenta el envío y ese número va en
+    # el id del campo: al cambiar el id, el navegador recibe un campo nuevo y vacío.
     socket =
       if match?({:ok, _}, resultado),
-        do: assign(socket, :mensaje_form, to_form(%{}, as: :mensaje)),
+        do:
+          socket
+          |> assign(:mensaje_form, to_form(%{}, as: :mensaje))
+          |> update(:mensajes_enviados, &(&1 + 1)),
         else: socket
 
     {:noreply, socket}
@@ -292,6 +299,7 @@ defmodule InterfazWeb.PersonasLive do
               <div class="flex-1">
                 <.input
                   field={@mensaje_form[:contenido]}
+                  id={"mensaje-contenido-#{@mensajes_enviados}"}
                   label="Nuevo mensaje"
                   placeholder="Estoy bien, estoy en el albergue norte"
                   required
