@@ -21,8 +21,9 @@ defmodule InterfazWeb.SesionController do
         datos = %{
           "usuario" => String.trim(usuario),
           "contrasena" => contrasena,
+          "nombre_completo" => "",
           "rol" => "ciudadano",
-          "zona" => "A1F03C9E7B2D4410"
+          "zona" => ""
         }
 
         mostrar_registro(conn, datos)
@@ -40,9 +41,15 @@ defmodule InterfazWeb.SesionController do
     |> redirect(to: ~p"/conectar")
   end
 
-  # Paso 2: solo para usuarios nuevos, eligen tipo de usuario y zona.
+  # Paso 2: solo para usuarios nuevos: nombre completo, tipo de usuario y zona principal.
   def registrar(conn, %{"registro" => datos}) do
-    case Fuente.registrar(datos["usuario"], datos["contrasena"], datos["rol"], datos["zona"]) do
+    case Fuente.registrar(
+           datos["usuario"],
+           datos["contrasena"],
+           datos["nombre_completo"],
+           datos["rol"],
+           datos["zona"]
+         ) do
       {:ok, sesion} ->
         entrar(conn, sesion, "Cuenta creada. Bienvenido, #{sesion.nombre}.")
 

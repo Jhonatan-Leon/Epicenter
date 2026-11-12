@@ -2,7 +2,7 @@ defmodule InterfazWeb.MascotasLive do
   use InterfazWeb, :live_view
 
   alias Interfaz.Fuente
-  alias InterfazWeb.{Accion, Sesion}
+  alias InterfazWeb.Sesion
 
   on_mount {InterfazWeb.Sesion, {:pagina, :mascotas}}
 
@@ -14,7 +14,6 @@ defmodule InterfazWeb.MascotasLive do
      |> assign(:page_title, "Mascotas")
      |> assign(:modal, nil)
      |> assign(:form, to_form(%{}, as: :mascota))
-     |> assign(:coincidencias, Fuente.coincidencias())
      |> filtrar(@filtros_vacios)}
   end
 
@@ -27,43 +26,44 @@ defmodule InterfazWeb.MascotasLive do
 
   def handle_event("cerrar_modal", _, socket), do: {:noreply, assign(socket, :modal, nil)}
 
-  def handle_event("guardar", %{"mascota" => p}, socket) do
-    reporte = if p["reporte"] == "encontrada", do: "found", else: "lost"
-    nombre = if p["nombre"] in [nil, ""], do: "desconocido", else: p["nombre"]
-
-    {:noreply,
-     Accion.enviar(socket, "report_pet", [
-       reporte,
-       p["especie"],
-       nombre,
-       p["color"],
-       p["tamano"],
-       p["zona"],
-       p["contacto"]
-     ])}
-  end
+  # Cada acción llama a Fuente, que usa Epicenter.GestorMascota y guarda Mascota.json.
+  def handle_event("guardar", %{"mascota" => p}, socket),
+    do: {:noreply, responder(socket, Fuente.reportar_mascota(p))}
 
   def handle_event("buscar_coincidencias", _, socket),
-    do: {:noreply, Accion.enviar(socket, "match_pets", [])}
+    do: {:noreply, responder(socket, Fuente.buscar_coincidencias())}
 
   def handle_event("confirmar", %{"perdida" => a, "encontrada" => b}, socket),
-    do: {:noreply, Accion.enviar(socket, "confirm_match", [a, b])}
+    do: {:noreply, responder(socket, Fuente.confirmar_coincidencia(a, b))}
+
+  # Éxito: recarga los reportes y las coincidencias, y cierra el modal.
+  # Error: deja el modal abierto con lo escrito y muestra el motivo.
+  defp responder(socket, {:ok, mensaje}) do
+    socket
+    |> filtrar(socket.assigns.filtros.params)
+    |> assign(:modal, nil)
+    |> put_flash(:info, mensaje)
+  end
+
+  defp responder(socket, {:error, mensaje}), do: put_flash(socket, :error, mensaje)
 
   defp filtrar(socket, f) do
-    lista =
-      Enum.filter(Fuente.mascotas(), fn m ->
-        (f["especie"] == "" or to_string(m.especie) == f["especie"]) and
-          (f["zona"] == "" or m.zona == f["zona"]) and
-          (f["estado"] == "" or to_string(m.estado) == f["estado"])
-      end)
+    lista = Fuente.consultar_mascotas(f)
 
     socket
+    |> assign(:todas, Fuente.mascotas())
+    |> assign(:coincidencias, Fuente.coincidencias())
     |> assign(:perdidas, Enum.filter(lista, &(&1.reporte == :perdida)))
     |> assign(:encontradas, Enum.filter(lista, &(&1.reporte == :encontrada)))
     |> assign(:filtros, to_form(f, as: :filtro))
   end
 
-  defp mascota(id), do: Enum.find(Fuente.mascotas(), &(&1.id == id))
+  defp nombre_mascota(todas, id) do
+    case Enum.find(todas, &(&1.id == id)) do
+      %{nombre: nombre} when is_binary(nombre) -> nombre
+      _sin_nombre -> "Sin nombre"
+    end
+  end
 
   attr :m, :map, required: true
 
@@ -137,6 +137,11 @@ defmodule InterfazWeb.MascotasLive do
           </button>
         </:acciones>
         
+        <.vacio
+          :if={@coincidencias == []}
+          mensaje="Sin coincidencias de 40 puntos o más entre perdidas y encontradas."
+          icono="hero-arrows-right-left"
+        />
         <div id="coincidencias" class="grid gap-4 md:grid-cols-2">
           <div
             :for={c <- @coincidencias}
@@ -145,17 +150,18 @@ defmodule InterfazWeb.MascotasLive do
           >
             <div class="flex items-center justify-between gap-2">
               <p class="text-sm">
-                <span class="font-semibold">{mascota(c.perdida).nombre}</span>
-                ({c.perdida})
+                <span class="font-semibold">{nombre_mascota(@todas, c.perdida)}</span>
+                (perdida)
                 <.icon name="hero-arrows-right-left" class="mx-1 size-4 text-base-content/50" />
-                encontrada {c.encontrada}
+                {nombre_mascota(@todas, c.encontrada)} (encontrada)
               </p>
-              
+
+              <%!-- 70 o más: la lógica la marca como posible coincidencia; 40 o más: candidata --%>
               <span class={[
                 "text-2xl font-semibold tabular-nums",
                 cond do
-                  c.puntaje >= 75 -> "text-success"
-                  c.puntaje >= 50 -> "text-warning"
+                  c.puntaje >= 70 -> "text-success"
+                  c.puntaje >= 40 -> "text-warning"
                   true -> "text-base-content/50"
                 end
               ]}>{c.puntaje}%</span>

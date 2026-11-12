@@ -13,13 +13,13 @@ defmodule Utilidad do
     {:error, "La cantidad no puede ser negativa"}
   end
 
-  def verificar_zona(codigo_zona) do
-    zonas = Epicenter.Zona.listar_zonas(Epicenter.Zona)
-    if codigo_zona in zonas do
-      {:ok, codigo_zona}
-    else
-      {:error, "La zona no existe"}
-    end
-  end
+  # def verificar_zona(codigo_zona) do
+  #   zonas = Epicenter.Zona.listar_zonas(Epicenter.Zona)
 
+  #   if codigo_zona in zonas do
+  #     {:ok, codigo_zona}
+  #   else
+  #     {:error, "La zona no existe"}
+  #   end
+  # end
 end

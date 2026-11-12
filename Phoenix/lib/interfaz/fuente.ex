@@ -21,7 +21,7 @@ defmodule Interfaz.Fuente do
 
   Si el usuario ya existe, valida la contraseña con `Epicenter.GestorUsuario.login/3`
   y devuelve `{:ok, sesion}`. Si no existe devuelve `:nuevo`, para que la pantalla
-  pida el tipo de usuario y la zona antes de registrarlo con `registrar/4`.
+  pida nombre completo, tipo de usuario y zona antes de registrarlo con `registrar/5`.
   """
   def conectar(usuario, contrasena) do
     usuario = limpiar(usuario)
@@ -30,7 +30,7 @@ defmodule Interfaz.Fuente do
          :ok <- validar_contrasena(contrasena) do
       if usuario_existe?(usuario) do
         case Epicenter.GestorUsuario.login(usuario, contrasena, []) do
-          {:ok, u} -> {:ok, sesion(u, rol_interfaz(u.rol), u.zona_principal || "A1F03C9E7B2D4410")}
+          {:ok, u} -> {:ok, sesion(u, rol_interfaz(u.rol), codigo_zona(u.zona_principal))}
           {:error, motivo} -> {:error, motivo}
         end
       else
@@ -40,33 +40,46 @@ defmodule Interfaz.Fuente do
   end
 
   @doc """
-  Registra a un usuario nuevo con el tipo de usuario y la zona que eligió.
+  Registra a un usuario nuevo con su nombre completo, tipo de usuario y zona principal.
 
-  Un usuario nuevo solo puede ser ciudadano o voluntario. Hoy la lógica
-  (`GestorUsuario.registro/3`) guarda a todos como ciudadano y no guarda la zona,
-  así que el rol y la zona elegidos solo se usan en esta sesión. Cuando la lógica
-  los reciba, basta con pasárselos aquí.
+  Un usuario nuevo solo puede ser ciudadano o voluntario. La lógica todavía no
+  tiene un registro que reciba todos los datos (`GestorUsuario.registro/3` crea a
+  todos como ciudadano, sin nombre ni zona), así que se hace en dos pasos:
+
+    1. `GestorUsuario.login/3` crea el usuario básico.
+    2. `GestorUsuario.actualizar/2` lo guarda completo con rol, nombre y zona.
+
+  Cuando la lógica tenga un registro completo, se reemplazan los dos pasos por esa llamada.
+
+  La zona llega por su nombre ("Sur") y así se guarda en `zona_principal`. La sesión
+  usa el código de la zona, porque los demás formularios eligen zonas por código.
   """
-  def registrar(usuario, contrasena, rol, zona) do
+  def registrar(usuario, contrasena, nombre_completo, rol, nombre_zona) do
     usuario = limpiar(usuario)
+    nombre_completo = limpiar(nombre_completo)
 
     with :ok <- validar_usuario(usuario),
          :ok <- validar_contrasena_nueva(contrasena),
+         :ok <- validar_nombre_completo(nombre_completo),
          {:ok, rol} <- validar_rol_registro(rol),
-         :ok <- validar_zona(zona),
-         :ok <- validar_usuario_libre(usuario) do
-      case Epicenter.GestorUsuario.login(usuario, contrasena, []) do
-        {:ok, u} -> {:ok, sesion(u, rol, zona)}
-        {:error, motivo} -> {:error, motivo}
-      end
+         {:ok, zona} <- buscar_zona_por_nombre(nombre_zona),
+         :ok <- validar_usuario_libre(usuario),
+         {:ok, basico} <- Epicenter.GestorUsuario.login(usuario, contrasena, []),
+         completo = %{basico | rol: rol, nombre_completo: nombre_completo, zona_principal: zona.nombre},
+         {:ok, u} <- Epicenter.GestorUsuario.actualizar(usuario, completo) do
+      {:ok, sesion(u, rol, zona.codigo)}
     end
   end
 
   @doc "Tipos de usuario que puede elegir alguien que se registra."
   def roles_registro, do: [:ciudadano, :voluntario]
 
+  # La lógica devuelve {:ok, usuarios}; si el archivo no se puede leer, nadie existe todavía.
   defp usuario_existe?(usuario) do
-    Enum.any?(Epicenter.Persistencia.carga_usuarios(), &(&1.nombre_usuario == usuario))
+    case Epicenter.Persistencia.carga_usuarios() do
+      {:ok, usuarios} -> Enum.any?(usuarios, &(&1.nombre_usuario == usuario))
+      {:error, _motivo} -> false
+    end
   end
 
   defp sesion(u, rol, zona) do
@@ -122,10 +135,34 @@ defmodule Interfaz.Fuente do
     end
   end
 
-  defp validar_zona(zona) do
-    if Enum.any?(zonas(), &(&1.codigo == zona)),
-      do: :ok,
-      else: {:error, "Zona no válida."}
+  @nombre_min 3
+  @nombre_max 60
+
+  defp validar_nombre_completo(""), do: {:error, "Escribe tu nombre completo."}
+
+  defp validar_nombre_completo(nombre) do
+    if String.length(nombre) < @nombre_min or String.length(nombre) > @nombre_max,
+      do: {:error, "El nombre completo debe tener entre #{@nombre_min} y #{@nombre_max} caracteres."},
+      else: :ok
+  end
+
+  # El usuario guarda su zona principal por nombre ("Centro"); la sesión usa el código.
+  # También acepta un código, por si algún usuario quedó guardado así.
+  # Si no coincide con ninguna zona, se usa la primera.
+  defp codigo_zona(valor) do
+    zonas = zonas()
+
+    case Enum.find(zonas, &(&1.nombre == valor or &1.codigo == valor)) do
+      nil -> if zonas == [], do: nil, else: hd(zonas).codigo
+      zona -> zona.codigo
+    end
+  end
+
+  defp buscar_zona_por_nombre(nombre) do
+    case Enum.find(zonas(), &(&1.nombre == nombre)) do
+      nil -> {:error, "Zona no válida."}
+      zona -> {:ok, zona}
+    end
   end
 
   defp validar_usuario_libre(usuario) do
@@ -296,6 +333,27 @@ defmodule Interfaz.Fuente do
   defp mensaje_error(:nombre_vacio), do: "El nombre no puede estar vacío."
   defp mensaje_error(:nivel_invalido), do: "Nivel de afectación no válido."
   defp mensaje_error(:afectadas_invalidas), do: "Número de personas afectadas no válido."
+  # Personas y mensajes
+  defp mensaje_error(:documento_vacio), do: "Escribe el documento o una referencia."
+  defp mensaje_error(:documento_duplicado), do: "Ya hay una persona reportada con ese documento."
+  defp mensaje_error(:edad_invalida), do: "La edad debe estar entre 0 y 120."
+  defp mensaje_error(:zona_vacia), do: "Elige una zona."
+  defp mensaje_error(:estado_invalido), do: "Estado no válido."
+  defp mensaje_error(:transicion_invalida), do: "Ese cambio de estado no está permitido."
+  defp mensaje_error(:ya_reunificada), do: "La persona ya fue reunificada; su estado no cambia."
+  defp mensaje_error(:remitente_vacio), do: "Falta quién envía el mensaje."
+  defp mensaje_error(:destinatario_vacio), do: "Falta la persona a quien va el mensaje."
+  defp mensaje_error(:contenido_vacio), do: "Escribe el mensaje."
+  # Mascotas
+  defp mensaje_error(:tipo_invalido), do: "Elige si la mascota está perdida o fue encontrada."
+  defp mensaje_error(:especie_vacia), do: "Elige la especie."
+  defp mensaje_error(:color_vacio), do: "Escribe el color."
+  defp mensaje_error(:tamano_invalido), do: "Tamaño no válido."
+  defp mensaje_error(:contacto_vacio), do: "Escribe un contacto."
+  defp mensaje_error(:ya_resuelta), do: "Ese reporte ya estaba resuelto."
+  defp mensaje_error(:tipos_incompatibles), do: "Se debe confirmar una perdida con una encontrada."
+  # La lógica a veces responde con texto ("Persona no encontrada"): se muestra tal cual.
+  defp mensaje_error(motivo) when is_binary(motivo), do: motivo
   defp mensaje_error(motivo), do: "No se pudo completar: #{inspect(motivo)}"
 
   def necesidades do
@@ -507,187 +565,219 @@ defmodule Interfaz.Fuente do
     ]
   end
 
-  def personas do
-    [
-      %{
-        id: "PE01",
-        documento: "1094887123",
-        nombre: "Andrés Gómez",
-        edad: 34,
-        zona: "B7D24E901FA3C665",
-        estado: :en_albergue,
-        albergue: "A01",
-        historial: [
-          %{fecha: "09/11 07:10", estado: :reportada, por: "carmen"},
-          %{fecha: "09/11 09:30", estado: :localizada, por: "carlos"},
-          %{fecha: "09/11 10:05", estado: :en_albergue, por: "andres"}
-        ]
-      },
-      %{
-        id: "PE02",
-        documento: "41923554",
-        nombre: "María López",
-        edad: 67,
-        zona: "A1F03C9E7B2D4410",
-        estado: :sin_informacion,
-        albergue: nil,
-        historial: [%{fecha: "09/11 06:40", estado: :sin_informacion, por: "laura"}]
-      },
-      %{
-        id: "PE03",
-        documento: "1097001456",
-        nombre: "Jorge Ramírez",
-        edad: 45,
-        zona: "A1F03C9E7B2D4410",
-        estado: :trasladada,
-        albergue: nil,
-        historial: [
-          %{fecha: "09/11 06:55", estado: :reportada, por: "laura"},
-          %{fecha: "09/11 08:20", estado: :trasladada, por: "carlos"}
-        ]
-      },
-      %{
-        id: "PE04",
-        documento: "TI-1098223",
-        nombre: "Sofía Castaño",
-        edad: 8,
-        zona: "C58E13A6B0F94D72",
-        estado: :reunificada,
-        albergue: "A02",
-        historial: [
-          %{fecha: "09/11 07:00", estado: :reportada, por: "carlos"},
-          %{fecha: "09/11 08:10", estado: :en_albergue, por: "carlos"},
-          %{fecha: "09/11 09:45", estado: :reunificada, por: "laura"}
-        ]
-      },
-      %{
-        id: "PE05",
-        documento: "18512990",
-        nombre: "Luis Pérez",
-        edad: 52,
-        zona: "D06A7F2C9E31B845",
-        estado: :reportada,
-        albergue: nil,
-        historial: [%{fecha: "09/11 10:15", estado: :reportada, por: "andres"}]
-      }
-    ]
+  # ---------------------------------------------------------------------------
+  # Personas y mensajes familiares (conectado a Epicenter.GestorPersona y
+  # Epicenter.GestorMensaje). Los structs se pasan a mapas con la forma que
+  # usan las vistas.
+  # ---------------------------------------------------------------------------
+
+  @doc "Todas las personas reportadas."
+  def personas, do: buscar_personas(%{})
+
+  @doc """
+  Comando `find_person`: busca por texto (nombre o documento), zona y estado.
+  Los campos vacíos se ignoran.
+  """
+  def buscar_personas(filtros) do
+    filtros = %{
+      texto: Map.get(filtros, "texto", ""),
+      zona: Map.get(filtros, "zona", ""),
+      estado: Map.get(filtros, "estado", "")
+    }
+
+    case Epicenter.GestorPersona.buscar(filtros) do
+      {:ok, personas} -> Enum.map(personas, &persona_a_mapa/1)
+      {:error, _motivo} -> []
+    end
   end
 
+  @doc "Comando `report_person`. `por` es el usuario que hace el reporte."
+  def reportar_persona(documento, nombre, edad, zona, estado, por) do
+    case Epicenter.GestorPersona.reportar_persona(documento, nombre, edad, zona, estado, por) do
+      {:ok, persona} -> {:ok, "Persona #{persona.nombre} reportada."}
+      {:error, motivo} -> {:error, mensaje_error(motivo)}
+    end
+  end
+
+  @doc "Comando `update_person`: el cambio queda en el historial."
+  def cambiar_estado_persona(documento, estado, por) do
+    case Epicenter.GestorPersona.cambiar_estado(documento, estado, por) do
+      {:ok, persona} -> {:ok, "Estado de #{persona.nombre} actualizado."}
+      {:error, motivo} -> {:error, mensaje_error(motivo)}
+    end
+  end
+
+  @doc "Comando `list_family_messages`: mensajes para una persona, del más reciente al más antiguo."
+  def mensajes_de(documento) do
+    case Epicenter.GestorMensaje.listar_por_persona(documento) do
+      {:ok, mensajes} ->
+        mensajes
+        |> Enum.sort_by(& &1.fecha_envio, {:desc, DateTime})
+        |> Enum.map(&mensaje_a_mapa/1)
+
+      {:error, _motivo} ->
+        []
+    end
+  end
+
+  @doc "Todos los mensajes familiares (para el resumen)."
   def mensajes do
-    [
-      %{
-        id: "MS01",
-        fecha: "09/11 09:50",
-        remitente: "Carmen Gómez (hermana)",
-        destinatario: "1094887123",
-        contenido: "Te estamos buscando, estamos en el albergue sur.",
-        estado: :entregado
-      },
-      %{
-        id: "MS02",
-        fecha: "09/11 10:10",
-        remitente: "Andrés Gómez",
-        destinatario: "1094887123",
-        contenido: "Estoy bien, estoy en el albergue norte.",
-        estado: :pendiente
-      },
-      %{
-        id: "MS03",
-        fecha: "09/11 10:20",
-        remitente: "Familia López",
-        destinatario: "41923554",
-        contenido: "Mamá, si ves esto llama al 300 555 0101.",
-        estado: :pendiente
-      }
-    ]
+    case Epicenter.GestorMensaje.listar() do
+      {:ok, mensajes} -> Enum.map(mensajes, &mensaje_a_mapa/1)
+      {:error, _motivo} -> []
+    end
   end
 
-  def mascotas do
-    [
-      %{
-        id: "M001",
-        reporte: :perdida,
-        especie: :perro,
-        nombre: "Luna",
-        color: "negra",
-        tamano: :mediano,
-        zona: "B7D24E901FA3C665",
-        contacto: "300 123 4567",
-        caracteristicas: "Collar rojo, oreja izquierda caída",
-        estado: :posible_coincidencia
-      },
-      %{
-        id: "M002",
-        reporte: :encontrada,
-        especie: :perro,
-        nombre: nil,
-        color: "negra",
-        tamano: :mediano,
-        zona: "B7D24E901FA3C665",
-        contacto: "Carlos (voluntario)",
-        caracteristicas: "Collar rojo, muy dócil",
-        estado: :posible_coincidencia
-      },
-      %{
-        id: "M003",
-        reporte: :perdida,
-        especie: :gato,
-        nombre: "Michi",
-        color: "gris",
-        tamano: :pequeno,
-        zona: "A1F03C9E7B2D4410",
-        contacto: "311 222 3344",
-        caracteristicas: "Ojos verdes",
-        estado: :activa
-      },
-      %{
-        id: "M004",
-        reporte: :encontrada,
-        especie: :gato,
-        nombre: nil,
-        color: "blanco",
-        tamano: :pequeno,
-        zona: "C58E13A6B0F94D72",
-        contacto: "Coliseo del Sur",
-        caracteristicas: "Mancha gris en la cola",
-        estado: :activa
-      },
-      %{
-        id: "M005",
-        reporte: :perdida,
-        especie: :perro,
-        nombre: "Rocky",
-        color: "café",
-        tamano: :grande,
-        zona: "C58E13A6B0F94D72",
-        contacto: "320 987 6543",
-        caracteristicas: "Labrador",
-        estado: :resuelta
-      }
-    ]
+  @doc "Comando `send_family_message`."
+  def enviar_mensaje(remitente, documento, contenido) do
+    case Epicenter.GestorMensaje.enviar(remitente, documento, contenido) do
+      {:ok, _mensaje} -> {:ok, "Mensaje enviado."}
+      {:error, motivo} -> {:error, mensaje_error(motivo)}
+    end
   end
 
+  @doc "Comando `mark_message`: `:entregado` o `:pendiente`."
+  def marcar_mensaje(codigo, estado) do
+    case Epicenter.GestorMensaje.marcar(codigo, estado) do
+      {:ok, mensaje} -> {:ok, "Mensaje marcado como #{InterfazWeb.UI.t(mensaje.estado)}."}
+      {:error, motivo} -> {:error, mensaje_error(motivo)}
+    end
+  end
+
+  defp persona_a_mapa(persona) do
+    %{
+      id: persona.id,
+      documento: persona.documento,
+      nombre: persona.nombre,
+      edad: persona.edad,
+      zona: persona.codigo_zona,
+      estado: persona.estado,
+      albergue: persona.codigo_albergue,
+      historial:
+        Enum.map(persona.historial || [], fn h ->
+          %{fecha: fecha_corta(h.fecha), estado: h.estado, por: h.por}
+        end)
+    }
+  end
+
+  defp mensaje_a_mapa(mensaje) do
+    %{
+      id: mensaje.codigo,
+      fecha: fecha_corta(mensaje.fecha_envio),
+      remitente: mensaje.remitente,
+      destinatario: mensaje.destinatario,
+      contenido: mensaje.contenido,
+      estado: mensaje.estado
+    }
+  end
+
+  # Las fechas llegan como DateTime (UTC). Se muestran en hora de Colombia (UTC-5).
+  defp fecha_corta(%DateTime{} = fecha),
+    do: fecha |> DateTime.add(-5, :hour) |> Calendar.strftime("%d/%m %H:%M")
+
+  defp fecha_corta(fecha), do: to_string(fecha)
+
+  # ---------------------------------------------------------------------------
+  # Mascotas (conectado a Epicenter.GestorMascota)
+  # ---------------------------------------------------------------------------
+
+  @doc "Todos los reportes de mascotas."
+  def mascotas, do: consultar_mascotas(%{})
+
+  @doc """
+  Comando `list_pets`: filtra por especie, zona y estado. Los campos vacíos se
+  ignoran (la lógica no los acepta vacíos, por eso se quitan aquí).
+  """
+  def consultar_mascotas(filtros) do
+    filtros =
+      for {clave, campo} <- [{"especie", :especie}, {"zona", :zona}, {"estado", :estado}],
+          valor = Map.get(filtros, clave, ""),
+          valor not in [nil, ""],
+          do: {campo, valor}
+
+    case Epicenter.GestorMascota.consultar(filtros) do
+      {:ok, mascotas} -> Enum.map(mascotas, &mascota_a_mapa/1)
+      {:error, _motivo} -> []
+    end
+  end
+
+  @doc "Comando `report_pet`."
+  def reportar_mascota(p) do
+    datos = %{
+      tipo: p["reporte"],
+      especie: p["especie"],
+      nombre: p["nombre"],
+      color: p["color"],
+      tamano: p["tamano"],
+      zona: p["zona"],
+      contacto: p["contacto"],
+      caracteristicas: p["caracteristicas"]
+    }
+
+    case Epicenter.GestorMascota.registro(datos) do
+      {:ok, mascota} -> {:ok, "Mascota #{InterfazWeb.UI.t(mascota.tipo)} reportada."}
+      {:error, motivo} -> {:error, mensaje_error(motivo)}
+    end
+  end
+
+  @doc """
+  Coincidencias candidatas (puntaje de 40 o más) entre perdidas y encontradas
+  no resueltas. Cada una trae qué criterios coincidieron.
+  """
   def coincidencias do
-    [
-      %{
-        perdida: "M001",
-        encontrada: "M002",
-        puntaje: 92,
-        criterios: [especie: true, color: true, tamano: true, zona: true, caracteristicas: true]
-      },
-      %{
-        perdida: "M003",
-        encontrada: "M004",
-        puntaje: 45,
-        criterios: [
-          especie: true,
-          color: false,
-          tamano: true,
-          zona: false,
-          caracteristicas: false
-        ]
-      }
-    ]
+    case Epicenter.GestorMascota.coincidencias_posibles() do
+      {:ok, lista} -> Enum.map(lista, &coincidencia_a_mapa/1)
+      {:error, _motivo} -> []
+    end
+  end
+
+  @doc "Comando `match_pets`: marca como posible coincidencia las parejas de 70 o más."
+  def buscar_coincidencias do
+    case Epicenter.GestorMascota.marcar_coincidencias() do
+      {:ok, []} -> {:ok, "No hay parejas nuevas con 70 puntos o más para marcar."}
+      {:ok, [_una]} -> {:ok, "Se marcó 1 posible coincidencia."}
+      {:ok, parejas} -> {:ok, "Se marcaron #{length(parejas)} posibles coincidencias."}
+      {:error, motivo} -> {:error, mensaje_error(motivo)}
+    end
+  end
+
+  @doc "Comando `confirm_match`: cierra ambos reportes."
+  def confirmar_coincidencia(id_perdida, id_encontrada) do
+    case Epicenter.GestorMascota.confirmar_coincidencia(id_perdida, id_encontrada) do
+      {:ok, _par} -> {:ok, "Coincidencia confirmada. Ambos reportes quedaron resueltos."}
+      {:error, motivo} -> {:error, mensaje_error(motivo)}
+    end
+  end
+
+  defp mascota_a_mapa(mascota) do
+    %{
+      id: mascota.id,
+      reporte: mascota.tipo,
+      especie: especie(mascota.especie),
+      nombre: mascota.nombre,
+      color: mascota.color,
+      tamano: mascota.tamano,
+      zona: mascota.zona,
+      contacto: mascota.contacto,
+      caracteristicas: mascota.caracteristicas,
+      estado: mascota.estado,
+      coincidencia_con: mascota.coincidencia_con
+    }
+  end
+
+  # La lógica guarda la especie como texto ("perro"); la interfaz usa el átomo si es conocido.
+  defp especie(texto), do: Enum.find(especies(), texto, &(to_string(&1) == texto))
+
+  defp coincidencia_a_mapa(c) do
+    %{
+      perdida: c.perdida,
+      encontrada: c.encontrada,
+      puntaje: c.puntaje,
+      criterios:
+        for criterio <- [:especie, :color, :tamano, :zona, :caracteristicas] do
+          {criterio, Map.get(c.desglose, criterio, 0) > 0}
+        end
+    }
   end
 
   def albergues do

@@ -65,26 +65,74 @@ defmodule InterfazWeb.SesionControllerTest do
     html = conn |> conectar("laura", "1234") |> html_response(200)
 
     assert html =~ "Completa tu registro"
+    assert html =~ ~s(name="registro[nombre_completo]")
     assert html =~ ~s(name="registro[rol]")
     assert html =~ ~s(name="registro[zona]")
+    assert html =~ ~s(<option value="Sur">Sur</option>)
     refute html =~ ~s(value="coordinador")
     refute html =~ ~s(value="administrador")
     assert File.read!(@usuarios) == antes
   end
 
-  test "al completar el registro entra con el rol y la zona elegidos", %{conn: conn} do
+  test "al completar el registro se guarda el usuario completo", %{conn: conn} do
     conn =
-      registrar(conn, %{usuario: "laura", contrasena: "1234", rol: "voluntario", zona: "B7D24E901FA3C665"})
+      registrar(conn, %{
+        usuario: "laura",
+        contrasena: "1234",
+        nombre_completo: "Laura Gómez",
+        rol: "voluntario",
+        zona: "Norte"
+      })
 
     assert redirected_to(conn) == ~p"/"
-    assert %{usuario: "laura", rol: :voluntario, zona: "B7D24E901FA3C665"} = get_session(conn, :usuario)
-    assert File.read!(@usuarios) =~ "laura"
+
+    assert %{usuario: "laura", nombre: "Laura Gómez", rol: :voluntario, zona: "B7D24E901FA3C665"} =
+             get_session(conn, :usuario)
+
+    {:ok, usuarios} = Epicenter.Persistencia.carga_usuarios()
+    laura = Enum.find(usuarios, &(&1.nombre_usuario == "laura"))
+
+    assert laura.rol == :voluntario
+    assert laura.nombre_completo == "Laura Gómez"
+    # En el JSON queda el nombre de la zona; en la sesión, su código.
+    assert laura.zona_principal == "Norte"
+  end
+
+  test "al volver a conectarse conserva rol, nombre y zona", %{conn: conn} do
+    registrar(conn, %{
+      usuario: "laura",
+      contrasena: "1234",
+      nombre_completo: "Laura Gómez",
+      rol: "voluntario",
+      zona: "Norte"
+    })
+
+    conn = conectar(build_conn(), "laura", "1234")
+
+    assert %{nombre: "Laura Gómez", rol: :voluntario, zona: "B7D24E901FA3C665"} =
+             get_session(conn, :usuario)
+  end
+
+  test "un usuario con la zona guardada por nombre entra con su código", %{conn: conn} do
+    File.write!(@usuarios, """
+    [{"nombre_usuario": "steven", "contrasena": "1234", "rol": "administrador",
+      "nombre_completo": "Steven Sanchez", "zona_principal": "Centro"}]
+    """)
+
+    conn = conectar(conn, "steven", "1234")
+    assert %{rol: :administrador, zona: "A1F03C9E7B2D4410"} = get_session(conn, :usuario)
   end
 
   test "el registro rechaza coordinador y muestra el error en el mismo paso", %{conn: conn} do
     html =
       conn
-      |> registrar(%{usuario: "laura", contrasena: "1234", rol: "coordinador", zona: "A1F03C9E7B2D4410"})
+      |> registrar(%{
+        usuario: "laura",
+        contrasena: "1234",
+        nombre_completo: "Laura Gómez",
+        rol: "coordinador",
+        zona: "Centro"
+      })
       |> html_response(200)
 
     assert html =~ "Completa tu registro"

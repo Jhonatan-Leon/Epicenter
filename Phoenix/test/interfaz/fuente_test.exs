@@ -19,22 +19,33 @@ defmodule Interfaz.FuenteTest do
     end
   end
 
-  describe "registrar/4" do
+  describe "registrar/5" do
     test "exige una contraseña de al menos 4 caracteres" do
       assert {:error, "La contraseña debe tener al menos 4 caracteres."} =
-               Fuente.registrar("nuevo_usuario", "123", "ciudadano", "A1F03C9E7B2D4410")
+               Fuente.registrar("nuevo_usuario", "123", "Laura Gómez", "ciudadano", "Centro")
     end
 
     test "solo permite ciudadano o voluntario" do
       for rol <- ["coordinador", "administrador", "jefe"] do
         assert {:error, "Al registrarte solo puedes ser ciudadano o voluntario."} =
-                 Fuente.registrar("nuevo_usuario", "1234", rol, "A1F03C9E7B2D4410")
+                 Fuente.registrar("nuevo_usuario", "1234", "Laura Gómez", rol, "Centro")
       end
     end
 
-    test "la zona debe existir" do
+    test "el nombre completo es obligatorio y de 3 a 60 caracteres" do
+      assert {:error, "Escribe tu nombre completo."} =
+               Fuente.registrar("nuevo_usuario", "1234", "  ", "ciudadano", "Centro")
+
+      assert {:error, "El nombre completo debe tener entre 3 y 60 caracteres."} =
+               Fuente.registrar("nuevo_usuario", "1234", "Al", "ciudadano", "Centro")
+    end
+
+    test "la zona se elige por nombre y debe existir" do
       assert {:error, "Zona no válida."} =
-               Fuente.registrar("nuevo_usuario", "1234", "voluntario", "marte")
+               Fuente.registrar("nuevo_usuario", "1234", "Laura Gómez", "voluntario", "marte")
+
+      assert {:error, "Zona no válida."} =
+               Fuente.registrar("nuevo_usuario", "1234", "Laura Gómez", "voluntario", "A1F03C9E7B2D4410")
     end
   end
 end

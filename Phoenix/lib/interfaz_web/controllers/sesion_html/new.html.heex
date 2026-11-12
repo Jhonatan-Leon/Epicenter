@@ -14,13 +14,20 @@
 
         <p class="mt-2 text-sm text-base-content/65">
           No encontramos a <span class="font-semibold text-base-content">{@form[:usuario].value}</span>.
-          Elige tu tipo de usuario y tu zona principal para crear la cuenta.
+          Completa tus datos para crear la cuenta.
         </p>
 
         <div class="sx-card mt-8 p-6">
           <.form for={@form} id="form-registro" action={~p"/registrar"} class="space-y-1">
             <.input field={@form[:usuario]} type="hidden" />
             <.input field={@form[:contrasena]} type="hidden" />
+            <.input
+              field={@form[:nombre_completo]}
+              label="Nombre completo"
+              placeholder="Steven Sánchez"
+              autocomplete="name"
+              required
+            />
             <.input
               field={@form[:rol]}
               type="select"
@@ -31,7 +38,9 @@
               field={@form[:zona]}
               type="select"
               label="Zona principal"
-              options={Enum.map(Interfaz.Fuente.zonas(), &{&1.nombre, &1.codigo})}
+              prompt="Elige tu zona"
+              options={Enum.map(Interfaz.Fuente.zonas(), & &1.nombre)}
+              required
             />
 
             <.button variant="primary" class="btn btn-primary mt-4 w-full">
@@ -69,7 +78,7 @@
         </div>
 
         <p class="mt-4 text-center text-xs text-base-content/55">
-          Si es tu primera vez, te pediremos tu tipo de usuario y tu zona.
+          Si es tu primera vez, te pediremos tu nombre, tu tipo de usuario y tu zona.
         </p>
       <% end %>
     </div>

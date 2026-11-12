@@ -1,16 +1,44 @@
 [
   {
-    "nombre_usuario": "Ruzten",
-    "contrasena": "123456",
-    "rol": "administrador",
-    "nombre_completo": "Steven Sanchez",
-    "zona_principal": "Centro"
+    "rol": "ciudadano",
+    "contrasena": "1234",
+    "nombre_completo": "hola hola",
+    "zona_principal": "Occidente",
+    "nombre_usuario": "Hola77"
   },
   {
-    "nombre_usuario": "ANA",
-    "contrasena": "ClaveSegura",
     "rol": "ciudadano",
+    "contrasena": "1234",
+    "nombre_completo": "juan di",
+    "zona_principal": "Occidente",
+    "nombre_usuario": "juand"
+  },
+  {
+    "rol": "voluntario",
+    "contrasena": "676767",
+    "nombre_completo": "Elpi Ton Perez",
+    "zona_principal": "B7D24E901FA3C665",
+    "nombre_usuario": "ElpiTon67"
+  },
+  {
+    "rol": "ciudadano",
+    "contrasena": "6767",
     "nombre_completo": null,
-    "zona_principal": null
+    "zona_principal": null,
+    "nombre_usuario": "ElverGalarga"
+  },
+  {
+    "rol": "administrador",
+    "contrasena": "123456",
+    "nombre_completo": "Steven Sanchez",
+    "zona_principal": "Centro",
+    "nombre_usuario": "Ruzten"
+  },
+  {
+    "rol": "ciudadano",
+    "contrasena": "ClaveSegura",
+    "nombre_completo": null,
+    "zona_principal": null,
+    "nombre_usuario": "ANA"
   }
 ]

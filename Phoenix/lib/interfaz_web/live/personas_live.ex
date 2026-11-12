@@ -2,22 +2,25 @@ defmodule InterfazWeb.PersonasLive do
   use InterfazWeb, :live_view
 
   alias Interfaz.Fuente
-  alias InterfazWeb.Accion
 
   on_mount {InterfazWeb.Sesion, {:pagina, :personas}}
 
   @busqueda_vacia %{"texto" => "", "zona" => "", "estado" => ""}
 
   def mount(_params, _session, socket) do
-    {:ok,
-     socket
-     |> assign(:page_title, "Personas y mensajes")
-     |> assign(:modal, nil)
-     |> assign(:form, to_form(%{}, as: :persona))
-     |> assign(:mensaje_form, to_form(%{}, as: :mensaje))
-     |> buscar(@busqueda_vacia)
-     |> seleccionar(List.first(Fuente.personas()).documento)}
+    socket =
+      socket
+      |> assign(:page_title, "Personas y mensajes")
+      |> assign(:modal, nil)
+      |> assign(:form, to_form(%{}, as: :persona))
+      |> assign(:mensaje_form, to_form(%{}, as: :mensaje))
+      |> buscar(@busqueda_vacia)
+
+    {:ok, seleccionar(socket, primer_documento(socket.assigns.personas))}
   end
+
+  defp primer_documento([]), do: nil
+  defp primer_documento([persona | _resto]), do: persona.documento
 
   def handle_event("buscar", %{"busqueda" => b}, socket), do: {:noreply, buscar(socket, b)}
 
@@ -38,53 +41,75 @@ defmodule InterfazWeb.PersonasLive do
 
   def handle_event("cerrar_modal", _, socket), do: {:noreply, assign(socket, :modal, nil)}
 
+  # Cada acción llama a Fuente, que usa Epicenter.GestorPersona / GestorMensaje
+  # y guarda Persona.json / Mensaje.json. Quien hace el cambio queda en el historial.
   def handle_event("guardar", %{"persona" => p}, socket) do
-    {:noreply,
-     Accion.enviar(socket, "report_person", [
-       p["documento"],
-       p["nombre"],
-       p["edad"],
-       p["zona"],
-       p["estado"]
-     ])}
+    resultado =
+      Fuente.reportar_persona(
+        p["documento"],
+        p["nombre"],
+        p["edad"],
+        p["zona"],
+        p["estado"],
+        socket.assigns.usuario.usuario
+      )
+
+    {:noreply, responder(socket, resultado, String.trim(p["documento"] || ""))}
   end
 
   def handle_event("guardar", %{"estado" => p}, socket) do
-    {:noreply,
-     Accion.enviar(socket, "update_person", [socket.assigns.persona.documento, p["estado"]])}
+    documento = socket.assigns.persona.documento
+
+    resultado =
+      Fuente.cambiar_estado_persona(documento, p["estado"], socket.assigns.usuario.usuario)
+
+    {:noreply, responder(socket, resultado, documento)}
   end
 
   def handle_event("enviar_mensaje", %{"mensaje" => p}, socket) do
-    socket =
-      Accion.enviar(socket, "send_family_message", [
-        socket.assigns.persona.documento,
-        p["contenido"]
-      ])
+    documento = socket.assigns.persona.documento
 
-    {:noreply, assign(socket, :mensaje_form, to_form(%{}, as: :mensaje))}
+    resultado =
+      Fuente.enviar_mensaje(socket.assigns.usuario.nombre, documento, p["contenido"] || "")
+
+    socket = responder(socket, resultado, documento)
+
+    socket =
+      if match?({:ok, _}, resultado),
+        do: assign(socket, :mensaje_form, to_form(%{}, as: :mensaje)),
+        else: socket
+
+    {:noreply, socket}
   end
 
-  def handle_event("marcar", %{"id" => id, "estado" => estado}, socket),
-    do: {:noreply, Accion.enviar(socket, "mark_message", [id, estado])}
+  def handle_event("marcar", %{"id" => id, "estado" => estado}, socket) do
+    resultado = Fuente.marcar_mensaje(id, estado)
+    {:noreply, responder(socket, resultado, socket.assigns.persona.documento)}
+  end
+
+  # Éxito: recarga la lista, deja seleccionada la persona tocada y cierra el modal.
+  # Error: deja el modal abierto con lo escrito y muestra el motivo.
+  defp responder(socket, {:ok, mensaje}, documento) do
+    socket
+    |> buscar(socket.assigns.busqueda.params)
+    |> seleccionar(documento)
+    |> assign(:modal, nil)
+    |> put_flash(:info, mensaje)
+  end
+
+  defp responder(socket, {:error, mensaje}, _documento), do: put_flash(socket, :error, mensaje)
 
   defp buscar(socket, b) do
-    texto = b["texto"] |> to_string() |> String.trim() |> String.downcase()
-
-    lista =
-      Enum.filter(Fuente.personas(), fn p ->
-        (texto == "" or String.contains?(String.downcase(p.nombre), texto) or
-           String.contains?(String.downcase(p.documento), texto)) and
-          (b["zona"] == "" or p.zona == b["zona"]) and
-          (b["estado"] == "" or to_string(p.estado) == b["estado"])
-      end)
-
-    socket |> assign(:personas, lista) |> assign(:busqueda, to_form(b, as: :busqueda))
+    socket
+    |> assign(:personas, Fuente.buscar_personas(b))
+    |> assign(:busqueda, to_form(b, as: :busqueda))
   end
+
+  defp seleccionar(socket, nil), do: socket |> assign(:persona, nil) |> assign(:mensajes, [])
 
   defp seleccionar(socket, documento) do
     persona = Enum.find(Fuente.personas(), &(&1.documento == documento))
-    mensajes = Enum.filter(Fuente.mensajes(), &(&1.destinatario == documento))
-    socket |> assign(:persona, persona) |> assign(:mensajes, mensajes)
+    socket |> assign(:persona, persona) |> assign(:mensajes, Fuente.mensajes_de(documento))
   end
 
   def render(assigns) do
@@ -173,6 +198,12 @@ defmodule InterfazWeb.PersonasLive do
           </ul>
         </div>
         
+        <.vacio
+          :if={is_nil(@persona)}
+          mensaje="Todavía no hay personas reportadas. Usa «Reportar persona» para agregar la primera."
+          icono="hero-user-group"
+        />
+
         <div :if={@persona} id="detalle-persona" class="space-y-6">
           <.panel titulo={@persona.nombre}>
             <:acciones>
@@ -193,7 +224,7 @@ defmodule InterfazWeb.PersonasLive do
               
               <div>
                 <dt class="text-base-content/60">Edad</dt><dd class="font-medium">
-                  {@persona.edad} años
+                  {if @persona.edad, do: "#{@persona.edad} años", else: "—"}
                 </dd>
               </div>
               
