@@ -1,1 +1,32 @@
-[]
+[
+  {
+    "nombre": "Arroz",
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "codigo": "R003",
+    "categoria": "alimentos",
+    "ubicacion": "Centro_acopio_10",
+    "unidad_medida": "libras",
+    "minimo": 15,
+    "cantidad_disponible": 50
+  },
+  {
+    "nombre": "Agua potable",
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "codigo": "R002",
+    "categoria": "agua",
+    "ubicacion": "albergue_norte",
+    "unidad_medida": "litros",
+    "minimo": 40,
+    "cantidad_disponible": 5
+  },
+  {
+    "nombre": "Agua potable",
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "codigo": "R001",
+    "categoria": "agua",
+    "ubicacion": "centro_acopio_1",
+    "unidad_medida": "litros",
+    "minimo": 40,
+    "cantidad_disponible": 15
+  }
+]

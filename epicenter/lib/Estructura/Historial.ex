@@ -1,42 +1,27 @@
 defmodule Epicenter.Historial do
   @moduledoc """
+    Son los movimientos del inventario
   """
-  @enforce_keys [:id, :id_invetario, :usuario, :id_necesidad, :codigo_destino]
-  defstruct [
-    :id,
-    :id_invetario,
-    :usuario,
-    :id_necesidad,
-    :codigo_destino,
-    :tipo,
-    cantidad: 0,
-    fecha: nil
-  ]
+  @tipos [:entrada, :salida, :asignacion, :transferencia, :rechazo]
 
-  def nuevo(id_invetario, usuario, id_necesidad, codigo_destino) do
+  @enforce_keys [:id, :tipo, :codigo_recurso, :cantidad]
+  defstruct [:id, :tipo, :codigo_recurso, :cantidad, :detalle, :usuario, :fecha]
+
+  def tipos, do: @tipos
+
+  def nuevo(id, tipo, codigo_recurso, cantidad, detalle, usuario) when tipo in @tipos do
     {:ok,
      %__MODULE__{
-       id: Utilidad.generar_codigo_unico(),
-       id_invetario: id_invetario,
+       id: id,
+       tipo: tipo,
+       codigo_recurso: codigo_recurso,
+       cantidad: cantidad,
+       detalle: detalle,
        usuario: usuario,
-       id_necesidad: id_necesidad,
-       codigo_destino: codigo_destino
+       fecha: Utilidad.generar_fecha_actual()
      }}
   end
 
-  def nuevo(id_invetario, usuario, id_necesidad, codigo_destino, tipo, cantidad, _fecha) do
-    with {:ok, historial} <- nuevo(id_invetario, usuario, id_necesidad, codigo_destino) do
-      completar_historial(historial, tipo, cantidad, Utilidad.generar_fecha_actual())
-    end
-  end
-
-  def completar_historial(%__MODULE__{} = historial, tipo, cantidad, fecha) do
-    {:ok,
-     %__MODULE__{
-       historial
-       | tipo: tipo,
-         cantidad: cantidad,
-         fecha: fecha
-     }}
-  end
+  def nuevo(_id, _tipo, _codigo_recurso, _cantidad, _detalle, _usuario),
+    do: {:error, :tipo_movimiento_invalido}
 end

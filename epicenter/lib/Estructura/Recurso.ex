@@ -1,28 +1,67 @@
 defmodule Epicenter.Recurso do
   @moduledoc """
   """
-  @enforce_keys [:codigo, :nombre, :categoria]
-  defstruct [:codigo, :nombre, :categoria, :unidad_medida, cantidad_disponible: 0]
+  @categorias [:agua, :alimentos, :medicamentos, :abrigo, :higiene, :otros]
 
-  def nuevo(nombre, categoria) do
-    {:ok,%__MODULE__{codigo: Utilidad.generar_codigo_unico(), nombre: nombre,categoria: categoria}}
-  end
+  @enforce_keys [:codigo, :nombre, :categoria, :unidad_medida, :ubicacion]
+  defstruct [
+    :codigo,
+    :nombre,
+    :categoria,
+    :unidad_medida,
+    :ubicacion,
+    :codigo_zona,
+    cantidad_disponible: 0,
+    minimo: 0
+  ]
 
-  def nuevo(nombre, categoria, cantidad_disponible, unidad_medida) do
-    with {:ok, recurso} <- nuevo(nombre, categoria) do
-      completar_recurso(recurso, cantidad_disponible, unidad_medida)
+  def categorias, do: @categorias
+
+  # Crea el recurso validando la categoría y que las cantidades no sean negativas
+  def nuevo(datos) when is_map(datos) do
+    cond do
+      datos.categoria not in @categorias ->
+        {:error, :categoria_invalida}
+
+      not cantidad_valida?(datos.cantidad) or not cantidad_valida?(datos.minimo) ->
+        {:error, :cantidad_invalida}
+
+      true ->
+        {:ok,
+         %__MODULE__{
+           codigo: datos.codigo,
+           nombre: datos.nombre,
+           categoria: datos.categoria,
+           unidad_medida: datos.unidad_medida,
+           ubicacion: datos.ubicacion,
+           codigo_zona: datos.codigo_zona,
+           cantidad_disponible: datos.cantidad,
+           minimo: datos.minimo
+         }}
     end
   end
 
-  def completar_recurso(%__MODULE__{} = recurso, cantidad_disponible, unidad_medida) do
-    {:ok, %__MODULE__{recurso| unidad_medida: unidad_medida, cantidad_disponible: cantidad_disponible}}
+  # Suma unidades al recurso (entrada de inventario)
+  def agregar(%__MODULE__{} = recurso, cantidad) when is_integer(cantidad) and cantidad > 0 do
+    {:ok, %__MODULE__{recurso | cantidad_disponible: recurso.cantidad_disponible + cantidad}}
   end
 
-  def actualizar_cantidad_disponible(recurso, cantidad) do
-    {:ok, %__MODULE__{recurso | cantidad_disponible: cantidad}}
+  def agregar(_recurso, _cantidad), do: {:error, :cantidad_invalida}
+
+  # Resta unidades solo si alcanzan
+  def retirar(%__MODULE__{cantidad_disponible: disponible} = recurso, cantidad)
+      when is_integer(cantidad) and cantidad > 0 and cantidad <= disponible do
+    {:ok, %__MODULE__{recurso | cantidad_disponible: disponible - cantidad}}
   end
 
-  def verificar_cantidad(cantidad) when cantidad > 0 do
-    cantidad
-  end
+  def retirar(%__MODULE__{}, cantidad) when is_integer(cantidad) and cantidad > 0,
+    do: {:error, :sin_existencias}
+
+  def retirar(_recurso, _cantidad), do: {:error, :cantidad_invalida}
+
+  # Un recurso es critico cuando está por debajo de su mínimo
+  def critico?(%__MODULE__{cantidad_disponible: disponible, minimo: minimo}),
+    do: disponible < minimo
+
+  defp cantidad_valida?(cantidad), do: is_integer(cantidad) and cantidad >= 0
 end

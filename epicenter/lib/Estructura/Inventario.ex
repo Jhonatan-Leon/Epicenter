@@ -1,4 +1,4 @@
-defmodule Epicenter.Invetnario do
+defmodule Epicenter.Inventario do
   @moduledoc """
   """
   @enforce_keys [:id, :codigo_recurso, :codigo_centro]

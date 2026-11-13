@@ -3,7 +3,7 @@ defmodule Epicenter.GestorInventario do
 
   def registro(codigo_recurso, codigo_centro, zonas, cantidad_disponible) do
     with {:ok, inventario} <-
-           Epicenter.Invetnario.nuevo(
+           Epicenter.Inventario.nuevo(
              codigo_recurso,
              codigo_centro,
              zonas,
@@ -15,7 +15,7 @@ defmodule Epicenter.GestorInventario do
   end
 
   def registro(codigo_recurso, codigo_centro) do
-    with {:ok, inventario} <- Epicenter.Invetnario.nuevo(codigo_recurso, codigo_centro),
+    with {:ok, inventario} <- Epicenter.Inventario.nuevo(codigo_recurso, codigo_centro),
          {:ok, inventario} <- crear(inventario) do
       {:ok, inventario}
     end
@@ -25,7 +25,7 @@ defmodule Epicenter.GestorInventario do
     with {:ok, inventarios} <- listar(),
          {:ok, inventario} <- buscar_inventario(inventarios, id),
          {:ok, inventario_actualizado} <-
-           Epicenter.Invetnario.completar_inventario(inventario, zonas, cantidad_disponible) do
+           Epicenter.Inventario.completar_inventario(inventario, zonas, cantidad_disponible) do
       inventarios_actualizados =
         Enum.map(inventarios, fn existente ->
           if existente.id == id, do: inventario_actualizado, else: existente
@@ -45,7 +45,7 @@ defmodule Epicenter.GestorInventario do
     end
   end
 
-  def crear(%Epicenter.Invetnario{} = inventario) do
+  def crear(%Epicenter.Inventario{} = inventario) do
     with {:ok, inventarios} <- listar() do
       if Enum.any?(inventarios, &(&1.id == inventario.id)) do
         {:error, "El inventario ya existe"}
@@ -58,7 +58,7 @@ defmodule Epicenter.GestorInventario do
 
   def crear(_), do: {:error, "El inventario no es válido"}
 
-  def actualizar(id, %Epicenter.Invetnario{id: id} = inventario) do
+  def actualizar(id, %Epicenter.Inventario{id: id} = inventario) do
     with {:ok, inventarios} <- listar() do
       if Enum.any?(inventarios, &(&1.id == id)) do
         Epicenter.Persistencia.guardar_inventarios(

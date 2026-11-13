@@ -1,1 +1,47 @@
-[]
+[
+  {
+    "id": "MV005",
+    "usuario": "Ruzten",
+    "tipo": "entrada",
+    "cantidad": 50,
+    "fecha": "2026-11-13T22:30:00.946000Z",
+    "codigo_recurso": "R003",
+    "detalle": "Registro en Centro_acopio_10"
+  },
+  {
+    "id": "MV004",
+    "usuario": "Ruzten",
+    "tipo": "transferencia",
+    "cantidad": 5,
+    "fecha": "2026-11-13T22:28:01.103000Z",
+    "codigo_recurso": "R001",
+    "detalle": "centro_acopio_1 a albergue_norte"
+  },
+  {
+    "id": "MV003",
+    "usuario": "Ruzten",
+    "tipo": "salida",
+    "cantidad": 30,
+    "fecha": "2026-11-13T22:27:59.775000Z",
+    "codigo_recurso": "R001",
+    "detalle": "Entrega albergue"
+  },
+  {
+    "id": "MV002",
+    "usuario": "Ruzten",
+    "tipo": "rechazo",
+    "cantidad": 70,
+    "fecha": "2026-11-13T22:27:58.959000Z",
+    "codigo_recurso": "R001",
+    "detalle": "Entrega albergue; quedaban 50"
+  },
+  {
+    "id": "MV001",
+    "usuario": "Ruzten",
+    "tipo": "entrada",
+    "cantidad": 50,
+    "fecha": "2026-11-13T22:27:53.619000Z",
+    "codigo_recurso": "R001",
+    "detalle": "Registro en centro_acopio_1"
+  }
+]

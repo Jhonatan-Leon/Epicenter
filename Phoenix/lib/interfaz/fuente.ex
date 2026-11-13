@@ -70,7 +70,12 @@ defmodule Interfaz.Fuente do
          {:ok, zona} <- buscar_zona_por_nombre(nombre_zona),
          :ok <- validar_usuario_libre(usuario),
          {:ok, basico} <- Epicenter.Genserver.crear(usuario, contrasena),
-         completo = %{basico | rol: rol, nombre_completo: nombre_completo, zona_principal: zona.nombre},
+         completo = %{
+           basico
+           | rol: rol,
+             nombre_completo: nombre_completo,
+             zona_principal: zona.nombre
+         },
          {:ok, u} <- Epicenter.Genserver.actualizar(usuario, completo) do
       {:ok, sesion(u, rol, zona.codigo)}
     end
@@ -85,7 +90,12 @@ defmodule Interfaz.Fuente do
   end
 
   defp sesion(u, rol, zona) do
-    %{usuario: u.nombre_usuario, nombre: u.nombre_completo || u.nombre_usuario, rol: rol, zona: zona}
+    %{
+      usuario: u.nombre_usuario,
+      nombre: u.nombre_completo || u.nombre_usuario,
+      rol: rol,
+      zona: zona
+    }
   end
 
   defp limpiar(texto), do: texto |> to_string() |> String.trim()
@@ -144,7 +154,9 @@ defmodule Interfaz.Fuente do
 
   defp validar_nombre_completo(nombre) do
     if String.length(nombre) < @nombre_min or String.length(nombre) > @nombre_max,
-      do: {:error, "El nombre completo debe tener entre #{@nombre_min} y #{@nombre_max} caracteres."},
+      do:
+        {:error,
+         "El nombre completo debe tener entre #{@nombre_min} y #{@nombre_max} caracteres."},
       else: :ok
   end
 
@@ -359,7 +371,15 @@ defmodule Interfaz.Fuente do
   defp mensaje_error(:no_esta_en_el_albergue), do: "Esa persona no está en el albergue."
   defp mensaje_error(:capacidad_invalida), do: "La capacidad debe ser mayor que 0."
   defp mensaje_error(:zona_no_existe), do: "La zona no existe."
-  defp mensaje_error(:tipos_incompatibles), do: "Se debe confirmar una perdida con una encontrada."
+
+  defp mensaje_error(:tipos_incompatibles),
+    do: "Se debe confirmar una perdida con una encontrada."
+
+  defp mensaje_error(:categoria_invalida), do: "Elige una categoría válida."
+  defp mensaje_error(:cantidad_invalida), do: "La cantidad debe ser un número entero mayor que 0."
+  defp mensaje_error(:sin_existencias), do: "No hay suficientes unidades en inventario."
+  defp mensaje_error(:mismo_destino), do: "El destino debe ser distinto de la ubicación actual."
+  defp mensaje_error(:recurso_no_encontrado), do: "El recurso no existe."
   # La lógica a veces responde con texto ("Persona no encontrada"): se muestra tal cual.
   defp mensaje_error(motivo) when is_binary(motivo), do: motivo
   defp mensaje_error(motivo), do: "No se pudo completar: #{inspect(motivo)}"
@@ -449,128 +469,106 @@ defmodule Interfaz.Fuente do
     ]
   end
 
+  # ---------------------------------------------------------------------------
+  # Recursos (conectado a Epicenter.GestorRecurso y Epicenter.GestorHistorial)
+  # ---------------------------------------------------------------------------
+
+  @doc "Recursos guardados en Recurso.json, ordenados por código."
   def recursos do
-    [
-      %{
-        codigo: "R001",
-        nombre: "Agua potable",
-        categoria: :agua,
-        cantidad: 20,
-        minimo: 40,
-        unidad: "litros",
-        ubicacion: "centro_acopio_1",
-        zona: "A1F03C9E7B2D4410"
-      },
-      %{
-        codigo: "R002",
-        nombre: "Raciones",
-        categoria: :alimentos,
-        cantidad: 340,
-        minimo: 100,
-        unidad: "raciones",
-        ubicacion: "centro_acopio_1",
-        zona: "A1F03C9E7B2D4410"
-      },
-      %{
-        codigo: "R003",
-        nombre: "Kits de medicamentos",
-        categoria: :medicamentos,
-        cantidad: 18,
-        minimo: 30,
-        unidad: "kits",
-        ubicacion: "albergue_norte",
-        zona: "B7D24E901FA3C665"
-      },
-      %{
-        codigo: "R004",
-        nombre: "Frazadas",
-        categoria: :refugio,
-        cantidad: 210,
-        minimo: 80,
-        unidad: "unidades",
-        ubicacion: "albergue_2",
-        zona: "C58E13A6B0F94D72"
-      },
-      %{
-        codigo: "R005",
-        nombre: "Botiquines",
-        categoria: :primeros_auxilios,
-        cantidad: 6,
-        minimo: 20,
-        unidad: "botiquines",
-        ubicacion: "centro_acopio_2",
-        zona: "C58E13A6B0F94D72"
-      },
-      %{
-        codigo: "R006",
-        nombre: "Agua potable",
-        categoria: :agua,
-        cantidad: 400,
-        minimo: 40,
-        unidad: "litros",
-        ubicacion: "centro_acopio_2",
-        zona: "C58E13A6B0F94D72"
-      }
-    ]
+    case Epicenter.GestorRecurso.listar() do
+      {:ok, recursos} -> recursos |> Enum.map(&recurso_a_mapa/1) |> Enum.sort_by(& &1.codigo)
+      {:error, _motivo} -> []
+    end
   end
 
+  def categorias_recurso, do: Epicenter.Recurso.categorias()
+
+  @doc "Historial de movimientos (Historial.json), del más reciente al más antiguo."
   def movimientos do
-    [
-      %{
-        id: "MV006",
-        fecha: "09/11 10:42",
-        tipo: :rechazo,
-        recurso: "R001",
-        cantidad: 25,
-        detalle: "N002 pidió 25 L; quedaban 20 L",
-        usuario: "carlos"
-      },
-      %{
-        id: "MV005",
-        fecha: "09/11 10:42",
-        tipo: :asignacion,
-        recurso: "R001",
-        cantidad: 30,
-        detalle: "Asignado a N001",
-        usuario: "laura"
-      },
-      %{
-        id: "MV004",
-        fecha: "09/11 10:30",
-        tipo: :entrada,
-        recurso: "R001",
-        cantidad: 50,
-        detalle: "Donación Empresas Públicas",
-        usuario: "laura"
-      },
-      %{
-        id: "MV003",
-        fecha: "09/11 09:15",
-        tipo: :transferencia,
-        recurso: "R004",
-        cantidad: 30,
-        detalle: "centro_acopio_1 → albergue_2",
-        usuario: "laura"
-      },
-      %{
-        id: "MV002",
-        fecha: "09/11 08:50",
-        tipo: :salida,
-        recurso: "R002",
-        cantidad: 60,
-        detalle: "Entrega Coliseo del Sur",
-        usuario: "carlos"
-      },
-      %{
-        id: "MV001",
-        fecha: "09/11 08:00",
-        tipo: :entrada,
-        recurso: "R002",
-        cantidad: 400,
-        detalle: "Llegada Defensa Civil",
-        usuario: "admin"
-      }
-    ]
+    case Epicenter.GestorHistorial.listar() do
+      {:ok, movimientos} -> Enum.map(movimientos, &movimiento_a_mapa/1)
+      {:error, _motivo} -> []
+    end
+  end
+
+  def registrar_recurso(datos, por) do
+    with {:ok, nombre} <- texto(datos["nombre"], "Escribe el nombre del recurso."),
+         {:ok, unidad} <- texto(datos["unidad"], "Escribe la unidad de medida."),
+         {:ok, ubicacion} <- texto(datos["ubicacion"], "Escribe la ubicación."),
+         {:ok, zona} <- texto(datos["zona"], "Elige una zona."),
+         {:ok, recurso} <-
+           Epicenter.GestorRecurso.registrar(
+             %{
+               nombre: nombre,
+               categoria: datos["categoria"],
+               unidad_medida: unidad,
+               cantidad: datos["cantidad"],
+               minimo: datos["minimo"],
+               ubicacion: ubicacion,
+               codigo_zona: zona
+             },
+             por
+           ) do
+      {:ok, "Recurso #{recurso.codigo} · #{recurso.nombre} registrado."}
+    else
+      {:error, motivo} -> {:error, mensaje_error(motivo)}
+    end
+  end
+
+  def registrar_entrada_recurso(codigo, cantidad, por) do
+    case Epicenter.GestorRecurso.registrar_entrada(codigo, cantidad, por) do
+      {:ok, recurso} ->
+        {:ok,
+         "Entrada registrada: #{recurso.nombre} queda en #{recurso.cantidad_disponible} #{recurso.unidad_medida}."}
+
+      {:error, motivo} ->
+        {:error, mensaje_error(motivo)}
+    end
+  end
+
+  def registrar_salida_recurso(codigo, cantidad, motivo, por) do
+    with {:ok, motivo} <- texto(motivo, "Escribe el motivo de la salida."),
+         {:ok, recurso} <- Epicenter.GestorRecurso.registrar_salida(codigo, cantidad, motivo, por) do
+      {:ok,
+       "Salida registrada: #{recurso.nombre} queda en #{recurso.cantidad_disponible} #{recurso.unidad_medida}."}
+    else
+      {:error, motivo} -> {:error, mensaje_error(motivo)}
+    end
+  end
+
+  def transferir_recurso(codigo, cantidad, destino, por) do
+    with {:ok, destino} <- texto(destino, "Escribe el destino."),
+         {:ok, recurso} <- Epicenter.GestorRecurso.transferir(codigo, cantidad, destino, por) do
+      {:ok,
+       "Transferencia hecha a #{destino}. En #{recurso.ubicacion} quedan #{recurso.cantidad_disponible} #{recurso.unidad_medida}."}
+    else
+      {:error, motivo} -> {:error, mensaje_error(motivo)}
+    end
+  end
+
+  defp recurso_a_mapa(recurso) do
+    %{
+      codigo: recurso.codigo,
+      nombre: recurso.nombre,
+      categoria: recurso.categoria,
+      cantidad: recurso.cantidad_disponible,
+      minimo: recurso.minimo,
+      unidad: recurso.unidad_medida,
+      ubicacion: recurso.ubicacion,
+      zona: recurso.codigo_zona
+    }
+  end
+
+  defp movimiento_a_mapa(movimiento) do
+    %{
+      id: movimiento.id,
+      fecha: fecha_corta(movimiento.fecha),
+      tipo: movimiento.tipo,
+      recurso: movimiento.codigo_recurso,
+      cantidad: movimiento.cantidad,
+      detalle: movimiento.detalle,
+      usuario: movimiento.usuario
+    }
   end
 
   # ---------------------------------------------------------------------------
