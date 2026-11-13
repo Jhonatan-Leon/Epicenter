@@ -2,51 +2,80 @@ defmodule InterfazWeb.AlberguesLive do
   use InterfazWeb, :live_view
 
   alias Interfaz.Fuente
-  alias InterfazWeb.{Accion, Sesion}
+  alias InterfazWeb.Sesion
 
   on_mount {InterfazWeb.Sesion, {:pagina, :albergues}}
 
   def mount(_params, _session, socket) do
-    albergues = Fuente.albergues()
-
     {:ok,
      socket
      |> assign(:page_title, "Albergues")
-     |> assign(:albergues, albergues)
-     |> assign(:ranking, Enum.sort_by(albergues, &(&1.ocupacion / &1.capacidad), :desc))
      |> assign(:modal, nil)
      |> assign(:albergue, nil)
-     |> assign(:form, to_form(%{}, as: :albergue))}
+     |> assign(:tipo_movimiento, "ingreso")
+     |> assign(:form, to_form(%{}, as: :albergue))
+     |> cargar()}
   end
 
-  def handle_event("nuevo", _, socket),
-    do:
-      {:noreply,
-       socket |> assign(:modal, :albergue) |> assign(:form, to_form(%{}, as: :albergue))}
+  # Albergues y ranking salen de Epicenter.GestorAlbergue (Albergue.json).
+  defp cargar(socket) do
+    socket
+    |> assign(:albergues, Fuente.albergues())
+    |> assign(:ranking, Fuente.reporte_albergues())
+  end
+
+  def handle_event("nuevo", _, socket) do
+    form = to_form(%{"zona" => socket.assigns.usuario.zona}, as: :albergue)
+    {:noreply, socket |> assign(:modal, :albergue) |> assign(:form, form)}
+  end
 
   def handle_event("movimiento", %{"codigo" => codigo, "tipo" => tipo}, socket) do
     albergue = Enum.find(socket.assigns.albergues, &(&1.codigo == codigo))
     form = to_form(%{"tipo" => tipo}, as: :movimiento)
 
     {:noreply,
-     socket |> assign(:modal, :movimiento) |> assign(:albergue, albergue) |> assign(:form, form)}
+     socket
+     |> assign(:modal, :movimiento)
+     |> assign(:albergue, albergue)
+     |> assign(:tipo_movimiento, tipo)
+     |> assign(:form, form)}
   end
 
   def handle_event("cerrar_modal", _, socket), do: {:noreply, assign(socket, :modal, nil)}
 
   def handle_event("guardar", %{"albergue" => p}, socket) do
-    {:noreply,
-     Accion.enviar(socket, "register_shelter", [
-       p["codigo"],
-       p["nombre"],
-       p["zona"],
-       p["capacidad"]
-     ])}
+    resultado = Fuente.registrar_albergue(p["nombre"], p["zona"], p["capacidad"])
+    {:noreply, responder(socket, resultado)}
   end
 
   def handle_event("guardar", %{"movimiento" => p}, socket) do
-    accion = if p["tipo"] == "salida", do: "register_exit", else: "register_entry"
-    {:noreply, Accion.enviar(socket, accion, [socket.assigns.albergue.codigo, p["documento"]])}
+    codigo = socket.assigns.albergue.codigo
+
+    resultado =
+      if socket.assigns.tipo_movimiento == "salida",
+        do: Fuente.registrar_salida(codigo, p["documento"]),
+        else: Fuente.registrar_ingreso(codigo, p["documento"], socket.assigns.usuario.usuario)
+
+    {:noreply, responder(socket, resultado)}
+  end
+
+  # Éxito: recarga los albergues y cierra el modal. Error: muestra el motivo.
+  defp responder(socket, {:ok, mensaje}),
+    do: socket |> cargar() |> assign(:modal, nil) |> put_flash(:info, mensaje)
+
+  defp responder(socket, {:error, mensaje}), do: put_flash(socket, :error, mensaje)
+
+  # Ingreso: personas reportadas que no están ya en este albergue.
+  # Salida: las personas que están dentro.
+  defp opciones_movimiento(%{ocupantes: ocupantes}, "salida") do
+    nombres = Map.new(Fuente.personas(), &{&1.documento, &1.nombre})
+    Enum.map(ocupantes, &{"#{Map.get(nombres, &1, "Sin nombre")} · #{&1}", &1})
+  end
+
+  defp opciones_movimiento(%{ocupantes: ocupantes}, _ingreso) do
+    for p <- Fuente.personas(), p.documento not in ocupantes do
+      {"#{p.nombre} · #{p.documento}", p.documento}
+    end
   end
 
   def render(assigns) do
@@ -60,7 +89,13 @@ defmodule InterfazWeb.AlberguesLive do
         </:acciones>
       </.encabezado>
       
-      <div class="grid gap-6 xl:grid-cols-[1fr_20rem]">
+      <.vacio
+        :if={@albergues == []}
+        mensaje="Todavía no hay albergues registrados."
+        icono="hero-home-modern"
+      />
+
+      <div :if={@albergues != []} class="grid gap-6 xl:grid-cols-[1fr_20rem]">
         <div id="lista-albergues" class="grid gap-4 sm:grid-cols-2">
           <article
             :for={a <- @albergues}
@@ -69,7 +104,7 @@ defmodule InterfazWeb.AlberguesLive do
           >
             <div class="flex items-start justify-between gap-2">
               <div>
-                <p class="text-xs text-base-content/60">{a.codigo} · {zona(a.zona)}</p>
+                <p class="text-xs text-base-content/60">{zona(a.zona)}</p>
                 
                 <h3 class="text-lg font-semibold">{a.nombre}</h3>
               </div>
@@ -78,7 +113,7 @@ defmodule InterfazWeb.AlberguesLive do
             </div>
             
             <div class="mt-4 flex items-end justify-between">
-              <p class="text-3xl font-semibold tabular-nums">{a.capacidad - a.ocupacion}</p>
+              <p class="text-3xl font-semibold tabular-nums">{a.cupos}</p>
               
               <p class="text-sm text-base-content/60">{a.ocupacion} / {a.capacidad} ocupados</p>
             </div>
@@ -118,6 +153,9 @@ defmodule InterfazWeb.AlberguesLive do
               <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-medium">{a.nombre}</p>
                  <.barra valor={a.ocupacion} maximo={a.capacidad} />
+                <p class="mt-1 text-xs text-base-content/60">
+                  {a.ocupacion} / {a.capacidad} ocupados
+                </p>
               </div>
             </li>
           </ol>
@@ -126,8 +164,8 @@ defmodule InterfazWeb.AlberguesLive do
       
       <.modal id="modal-albergue" titulo="Registrar albergue" abierto={@modal == :albergue}>
         <.form for={@form} id="form-albergue" phx-submit="guardar">
+          <.input field={@form[:nombre]} label="Nombre" placeholder="Albergue Norte" required />
           <div class="grid grid-cols-2 gap-3">
-            <.input field={@form[:codigo]} label="Código" placeholder="A01" required />
             <.input
               field={@form[:capacidad]}
               type="number"
@@ -135,36 +173,46 @@ defmodule InterfazWeb.AlberguesLive do
               label="Capacidad máxima"
               required
             />
+            <.input
+              field={@form[:zona]}
+              type="select"
+              label="Zona"
+              options={Enum.map(Fuente.zonas(), &{&1.nombre, &1.codigo})}
+            />
           </div>
-           <.input field={@form[:nombre]} label="Nombre" placeholder="Albergue Norte" required />
-          <.input
-            field={@form[:zona]}
-            type="select"
-            label="Zona"
-            options={Enum.map(Fuente.zonas(), &{&1.nombre, &1.codigo})}
-          /> <.botones_form texto="Registrar" />
+          <p class="text-xs text-base-content/60">El código del albergue lo genera el sistema.</p>
+           <.botones_form texto="Registrar" />
         </.form>
       </.modal>
       
       <.modal
         :if={@albergue}
         id="modal-movimiento-albergue"
-        titulo={"#{@albergue.nombre} · registrar movimiento"}
+        titulo={"#{@albergue.nombre} · #{if @tipo_movimiento == "salida", do: "registrar salida", else: "registrar ingreso"}"}
         abierto={@modal == :movimiento}
       >
         <p class="mb-3 text-sm text-base-content/70">
-          {@albergue.capacidad - @albergue.ocupacion} cupos disponibles de {@albergue.capacidad}.
+          {@albergue.cupos} cupos disponibles de {@albergue.capacidad}.
         </p>
         
         <.form for={@form} id="form-movimiento-albergue" phx-submit="guardar">
-          <div class="grid grid-cols-2 gap-3">
-            <.input
-              field={@form[:tipo]}
-              type="select"
-              label="Tipo"
-              options={[{"Ingreso", "ingreso"}, {"Salida", "salida"}]}
-            /> <.input field={@form[:documento]} label="Documento de la persona" required />
-          </div>
+          <% opciones = opciones_movimiento(@albergue, @tipo_movimiento) %>
+          <.vacio
+            :if={opciones == []}
+            mensaje={
+              if @tipo_movimiento == "salida",
+                do: "No hay personas en este albergue.",
+                else: "No hay personas reportadas para ingresar. Repórtalas en «Personas y mensajes»."
+            }
+            icono="hero-user-group"
+          />
+          <.input
+            :if={opciones != []}
+            field={@form[:documento]}
+            type="select"
+            label="Persona"
+            options={opciones}
+          />
            <.botones_form texto="Registrar" />
         </.form>
       </.modal>

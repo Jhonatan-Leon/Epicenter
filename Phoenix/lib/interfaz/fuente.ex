@@ -353,6 +353,12 @@ defmodule Interfaz.Fuente do
   defp mensaje_error(:tamano_invalido), do: "Tamaño no válido."
   defp mensaje_error(:contacto_vacio), do: "Escribe un contacto."
   defp mensaje_error(:ya_resuelta), do: "Ese reporte ya estaba resuelto."
+  # Albergues
+  defp mensaje_error(:sin_cupo), do: "El albergue está lleno: no hay cupos disponibles."
+  defp mensaje_error(:ya_esta_en_el_albergue), do: "Esa persona ya está en el albergue."
+  defp mensaje_error(:no_esta_en_el_albergue), do: "Esa persona no está en el albergue."
+  defp mensaje_error(:capacidad_invalida), do: "La capacidad debe ser mayor que 0."
+  defp mensaje_error(:zona_no_existe), do: "La zona no existe."
   defp mensaje_error(:tipos_incompatibles), do: "Se debe confirmar una perdida con una encontrada."
   # La lógica a veces responde con texto ("Persona no encontrada"): se muestra tal cual.
   defp mensaje_error(motivo) when is_binary(motivo), do: motivo
@@ -782,25 +788,70 @@ defmodule Interfaz.Fuente do
     }
   end
 
+  # ---------------------------------------------------------------------------
+  # Albergues (conectado a Epicenter.GestorAlbergue)
+  # ---------------------------------------------------------------------------
+
+  @doc "Albergues guardados en Albergue.json, ordenados por nombre."
   def albergues do
-    [
-      %{
-        codigo: "A01",
-        nombre: "Albergue Norte",
-        zona: "B7D24E901FA3C665",
-        capacidad: 150,
-        ocupacion: 128
-      },
-      %{
-        codigo: "A02",
-        nombre: "Coliseo del Sur",
-        zona: "C58E13A6B0F94D72",
-        capacidad: 300,
-        ocupacion: 141
-      },
-      %{codigo: "A03", nombre: "Escuela Centro", zona: "A1F03C9E7B2D4410", capacidad: 80, ocupacion: 79},
-      %{codigo: "A04", nombre: "Polideportivo", zona: "D06A7F2C9E31B845", capacidad: 120, ocupacion: 22}
-    ]
+    case Epicenter.GestorAlbergue.listar() do
+      {:ok, albergues} -> albergues |> Enum.map(&albergue_a_mapa/1) |> Enum.sort_by(& &1.nombre)
+      {:error, _motivo} -> []
+    end
+  end
+
+  @doc "Reporte de albergues con mayor nivel de ocupación (de mayor a menor)."
+  def reporte_albergues do
+    case Epicenter.GestorAlbergue.reporte_ocupacion() do
+      {:ok, albergues} -> Enum.map(albergues, &albergue_a_mapa/1)
+      {:error, _motivo} -> []
+    end
+  end
+
+  @doc "Comando `register_shelter`: el código lo genera la lógica."
+  def registrar_albergue(nombre, zona, capacidad) do
+    with {:ok, nombre} <- texto(nombre, "Escribe el nombre del albergue."),
+         {:ok, capacidad} <- capacidad(capacidad),
+         {:ok, albergue} <- Epicenter.GestorAlbergue.registro(nombre, zona, capacidad) do
+      {:ok, "Albergue #{albergue.nombre} registrado."}
+    else
+      {:error, motivo} -> {:error, mensaje_error(motivo)}
+    end
+  end
+
+  @doc "Comando `register_entry`: la persona queda en el albergue y su estado pasa a en albergue."
+  def registrar_ingreso(codigo, documento, por) do
+    case Epicenter.GestorAlbergue.registrar_ingreso(codigo, documento, por) do
+      {:ok, albergue} -> {:ok, "Ingreso registrado en #{albergue.nombre}."}
+      {:error, motivo} -> {:error, mensaje_error(motivo)}
+    end
+  end
+
+  @doc "Comando `register_exit`."
+  def registrar_salida(codigo, documento) do
+    case Epicenter.GestorAlbergue.registrar_salida(codigo, documento) do
+      {:ok, albergue} -> {:ok, "Salida registrada de #{albergue.nombre}."}
+      {:error, motivo} -> {:error, mensaje_error(motivo)}
+    end
+  end
+
+  defp albergue_a_mapa(albergue) do
+    %{
+      codigo: albergue.codigo,
+      nombre: albergue.nombre,
+      zona: albergue.codigo_zona,
+      capacidad: albergue.capacidad,
+      ocupacion: Epicenter.Albergue.ocupacion(albergue),
+      cupos: Epicenter.Albergue.cupos(albergue),
+      ocupantes: albergue.ocupantes
+    }
+  end
+
+  defp capacidad(valor) do
+    case Integer.parse(to_string(valor)) do
+      {numero, ""} when numero > 0 -> {:ok, numero}
+      _ -> {:error, "La capacidad debe ser un número entero mayor que 0."}
+    end
   end
 
   # ---------------------------------------------------------------------------
@@ -846,6 +897,14 @@ defmodule Interfaz.Fuente do
     }
   end
 
+  # Cupos libres de los albergues de la zona (función recursiva de la lógica).
+  defp cupos_de_zona(codigo) do
+    case Epicenter.GestorAlbergue.listar() do
+      {:ok, albergues} -> Epicenter.GestorAlbergue.cupos_por_zona(albergues, codigo)
+      {:error, _motivo} -> 0
+    end
+  end
+
   @doc "Estadísticas acumuladas de una zona y sus sectores."
   def estadisticas_zona(codigo) do
     {:ok, zona} =
@@ -855,11 +914,7 @@ defmodule Interfaz.Fuente do
       sectores: zona.sectores,
       puntos: zona.puntos,
       necesidades: Enum.count(necesidades_pendientes(), &(&1.zona == codigo)),
-      cupos:
-        albergues()
-        |> Enum.filter(&(&1.zona == codigo))
-        |> Enum.map(&(&1.capacidad - &1.ocupacion))
-        |> Enum.sum()
+      cupos: cupos_de_zona(codigo)
     }
   end
 

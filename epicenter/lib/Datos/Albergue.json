@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "nombre": "Uniquindio",
+    "capacidad": 200,
+    "codigo": "D568C8B79834BBE3",
+    "codigo_zona": "B7D24E901FA3C665",
+    "necesidades": [],
+    "ocupantes": [
+      "109236483"
+    ],
+    "recursos": []
+  }
+]
