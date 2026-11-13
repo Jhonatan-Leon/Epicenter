@@ -2,10 +2,39 @@ defmodule Epicenter.GestorAlbergue do
   def listar, do: Epicenter.Persistencia.cargar_albergues()
 
   def registro(nombre, codigo_zona, capacidad) do
-    with {:ok, albergue} <- Epicenter.Albergue.nuevo(nombre, codigo_zona, capacidad),
-         {:ok, albergue} <- crear(albergue) do
+    with :ok <- zona_existe(codigo_zona),
+         {:ok, albergues} <- listar(),
+         {:ok, albergue} <-
+           Epicenter.Albergue.nuevo(generar_codigo(albergues), nombre, codigo_zona, capacidad) do
+      Epicenter.Persistencia.guardar_albergues([albergue | albergues])
       {:ok, albergue}
     end
+  end
+
+  # Registrar el ingreso de las personas al albergue
+  def registrar_ingreso(codigo, documento, por \\ "sistema") do
+    with {:ok, albergues} <- listar(),
+         {:ok, albergue} <- buscar_albergue(albergues, codigo),
+         {:ok, _persona} <- Epicenter.GestorPersona.obtener_por_documento(documento),
+         {:ok, albergue} <- Epicenter.Albergue.registrar_ingreso(albergue, documento) do
+      guardar_cambio(albergues, albergue)
+      Epicenter.GestorPersona.cambiar_estado(documento, :en_albergue, por)
+      {:ok, albergue}
+    end
+  end
+
+  # la salida
+  def registrar_salida(codigo, documento) do
+    with {:ok, albergues} <- listar(),
+         {:ok, albergue} <- buscar_albergue(albergues, codigo),
+         {:ok, albergue} <- Epicenter.Albergue.registrar_salida(albergue, documento) do
+      guardar_cambio(albergues, albergue)
+      {:ok, albergue}
+    end
+  end
+
+  def cupos(codigo) do
+    with {:ok, albergue} <- obtener(codigo), do: {:ok, Epicenter.Albergue.cupos(albergue)}
   end
 
   def completar_informacion(codigo, ocupantes, recursos, necesidades) do
@@ -81,5 +110,35 @@ defmodule Epicenter.GestorAlbergue do
       nil -> {:error, "Albergue no encontrado"}
       albergue -> {:ok, albergue}
     end
+  end
+
+  def reporte_ocupacion do
+    with {:ok, albergues} <- listar() do
+      {:ok, Enum.sort_by(albergues, &Epicenter.Albergue.porcentaje/1, :desc)}
+    end
+  end
+
+  # Recursiva
+  def cupos_por_zona(albergues, zona), do: sumar_cupos(albergues, zona)
+  defp sumar_cupos([], _zona), do: 0
+
+  defp sumar_cupos([%{codigo_zona: zona} = a | resto], zona),
+    do: Epicenter.Albergue.cupos(a) + sumar_cupos(resto, zona)
+
+  defp sumar_cupos([_otro | resto], zona), do: sumar_cupos(resto, zona)
+
+   defp zona_existe(codigo) do
+    if Map.has_key?(Epicenter.Persistencia.carga_zonas(), codigo), do: :ok, else: {:error, :zona_no_existe}
+  end
+
+  defp guardar_cambio(albergues, albergue) do
+    Epicenter.Persistencia.guardar_albergues(
+      Enum.map(albergues, fn a -> if a.codigo == albergue.codigo, do: albergue, else: a end)
+    )
+  end
+
+  defp generar_codigo(albergues) do
+    codigo = Utilidad.generar_codigo_unico()
+    if Enum.any?(albergues, &(&1.codigo == codigo)), do: generar_codigo(albergues), else: codigo
   end
 end

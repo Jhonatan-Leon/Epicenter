@@ -61,9 +61,9 @@ defmodule Epicenter.Persistencia do
       nombre: albergue["nombre"],
       codigo_zona: albergue["codigo_zona"],
       capacidad: albergue["capacidad"],
-      ocupantes: albergue["ocupantes"],
-      recursos: albergue["recursos"],
-      necesidades: albergue["necesidades"]
+      ocupantes: if(is_list(albergue["ocupantes"]), do: albergue["ocupantes"], else: []),
+      recursos: albergue["recursos"] || [],
+      necesidades: albergue["necesidades"] || []
     }
   end
 
