@@ -162,14 +162,23 @@ defmodule Epicenter.Persistencia do
     %Epicenter.Necesidad{
       id: necesidad["id"],
       codigo_zona: necesidad["codigo_zona"],
-      reportador_por: necesidad["reportador_por"],
+      reportado_por: necesidad["reportado_por"],
       tipo: a_atomo_existente(necesidad["tipo"]),
-      descripicion: necesidad["descripicion"],
+      descripcion: necesidad["descripcion"],
       cantidad: necesidad["cantidad"],
       prioridad: a_atomo_existente(necesidad["prioridad"]),
       estado: a_atomo_existente(necesidad["estado"]),
-      destino: necesidad["destino"]
+      destino: necesidad["destino"],
+      asignaciones: asignaciones_a_lista(necesidad["asignaciones"])
     }
+  end
+
+  efp asignaciones_a_lista(nil), do: []
+
+  defp asignaciones_a_lista(asignaciones) do
+    Enum.map(asignaciones, fn asignacion ->
+      %{recurso: asignacion["recurso"], cantidad: asignacion["cantidad"]}
+    end)
   end
 
   def cargar_personas, do: cargar_archivo(@path_personas, Epicenter.Persona)
