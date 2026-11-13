@@ -1,4 +1,4 @@
-defmodule Recurso do
+defmodule Epicenter.GestorRecurso do
   @moduledoc """
     administración de recursos disponibles, cantidad disponible, ubicación y unidad de medida
     implementación de lógica pura
