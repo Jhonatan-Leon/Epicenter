@@ -5,20 +5,53 @@ defmodule InterfazWeb.ZonasLiveTest do
 
   import Phoenix.LiveViewTest
 
-  @json Path.expand("../../../../epicenter/lib/Datos/Zonas.json", __DIR__)
   @centro "A1F03C9E7B2D4410"
   @centro_historico "C3E19A07F5B26D81"
 
   setup do
-    original = File.read!(@json)
-    on_exit(fn -> File.write!(@json, original) end)
+    ruta_zonas = Epicenter.Persistencia.ruta_datos("Zonas.json")
+    ruta_usuarios = Epicenter.Persistencia.ruta_datos("Usuario.json")
+    original = File.read!(ruta_zonas)
+    usuarios_originales = File.read!(ruta_usuarios)
+
+    usuarios =
+      Jason.decode!(usuarios_originales) |> Enum.reject(&(&1["nombre_usuario"] == "laura"))
+
+    File.write!(
+      ruta_usuarios,
+      Jason.encode!([
+        %{
+          "nombre_usuario" => "admin",
+          "contrasena" => "clave",
+          "rol" => "administrador",
+          "nombre_completo" => "Admin",
+          "zona_principal" => nil
+        },
+        %{
+          "nombre_usuario" => "laura",
+          "contrasena" => "clave",
+          "rol" => "coordinar",
+          "nombre_completo" => "Laura",
+          "zona_principal" => "Centro"
+        }
+        | usuarios
+      ])
+    )
+
+    on_exit(fn -> File.write!(ruta_zonas, original) end)
+    on_exit(fn -> File.write!(ruta_usuarios, usuarios_originales) end)
     :ok
   end
 
-  defp abrir(conn, modal) do
+  defp abrir(conn, modal, usuario \\ "laura") do
+    {rol, nombre, zona} =
+      if usuario == "admin",
+        do: {:administrador, "Admin", nil},
+        else: {:coordinador, "Laura", @centro}
+
     conn =
       init_test_session(conn,
-        usuario: %{usuario: "laura", nombre: "Laura", rol: :coordinador, zona: @centro}
+        usuario: %{usuario: usuario, nombre: nombre, rol: rol, zona: zona}
       )
 
     {:ok, view, _html} = live(conn, ~p"/zonas")
@@ -27,13 +60,13 @@ defmodule InterfazWeb.ZonasLiveTest do
   end
 
   test "muestra las zonas guardadas en el JSON", %{conn: conn} do
-    view = abrir(conn, "zona")
+    view = abrir(conn, "zona", "admin")
     assert has_element?(view, "#zona-#{@centro}")
     assert has_element?(view, "#sector-#{@centro_historico}")
   end
 
   test "registrar una zona la guarda en el JSON", %{conn: conn} do
-    view = abrir(conn, "zona")
+    view = abrir(conn, "zona", "admin")
     refute has_element?(view, "#form-zona input[name='zona[codigo]']")
 
     html =
@@ -47,7 +80,7 @@ defmodule InterfazWeb.ZonasLiveTest do
 
   test "no deja repetir el nombre de una zona", %{conn: conn} do
     html =
-      abrir(conn, "zona")
+      abrir(conn, "zona", "admin")
       |> form("#form-zona", zona: %{nombre: "Centro", nivel: "alto"})
       |> render_submit()
 

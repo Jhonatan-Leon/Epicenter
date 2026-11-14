@@ -2,19 +2,18 @@ defmodule InterfazWeb.SesionControllerTest do
   # No es async: el login real lee y escribe epicenter/lib/Datos/Usuario.json.
   use InterfazWeb.ConnCase, async: false
 
-  @usuarios Path.expand("../epicenter/lib/Datos/Usuario.json")
-
   setup do
-    original = File.read!(@usuarios)
+    ruta_usuarios = Epicenter.Persistencia.ruta_datos("Usuario.json")
+    original = File.read!(ruta_usuarios)
 
-    File.write!(@usuarios, """
+    File.write!(ruta_usuarios, """
     [{"nombre_usuario": "ANA", "contrasena": "ClaveSegura", "rol": "coordinar",
       "nombre_completo": null, "zona_principal": null},
      {"nombre_usuario": "hola", "contrasena": "137", "rol": "ciudadano",
       "nombre_completo": null, "zona_principal": null}]
     """)
 
-    on_exit(fn -> File.write!(@usuarios, original) end)
+    on_exit(fn -> File.write!(ruta_usuarios, original) end)
     :ok
   end
 
@@ -52,16 +51,16 @@ defmodule InterfazWeb.SesionControllerTest do
   end
 
   test "un dato inválido se rechaza sin llegar a la lógica", %{conn: conn} do
-    antes = File.read!(@usuarios)
+    antes = File.read!(Epicenter.Persistencia.ruta_datos("Usuario.json"))
     conn = conectar(conn, "ana maria", "1234")
 
     assert redirected_to(conn) == ~p"/conectar"
     assert Phoenix.Flash.get(conn.assigns.flash, :error) == "El usuario no puede tener espacios."
-    assert File.read!(@usuarios) == antes
+    assert File.read!(Epicenter.Persistencia.ruta_datos("Usuario.json")) == antes
   end
 
   test "un usuario nuevo ve el paso de registro y todavía no se guarda", %{conn: conn} do
-    antes = File.read!(@usuarios)
+    antes = File.read!(Epicenter.Persistencia.ruta_datos("Usuario.json"))
     html = conn |> conectar("laura", "1234") |> html_response(200)
 
     assert html =~ "Completa tu registro"
@@ -71,7 +70,7 @@ defmodule InterfazWeb.SesionControllerTest do
     assert html =~ ~s(<option value="Sur">Sur</option>)
     refute html =~ ~s(value="coordinador")
     refute html =~ ~s(value="administrador")
-    assert File.read!(@usuarios) == antes
+    assert File.read!(Epicenter.Persistencia.ruta_datos("Usuario.json")) == antes
   end
 
   test "al completar el registro se guarda el usuario completo", %{conn: conn} do
@@ -114,7 +113,7 @@ defmodule InterfazWeb.SesionControllerTest do
   end
 
   test "un usuario con la zona guardada por nombre entra con su código", %{conn: conn} do
-    File.write!(@usuarios, """
+    File.write!(Epicenter.Persistencia.ruta_datos("Usuario.json"), """
     [{"nombre_usuario": "steven", "contrasena": "1234", "rol": "administrador",
       "nombre_completo": "Steven Sanchez", "zona_principal": "Centro"}]
     """)

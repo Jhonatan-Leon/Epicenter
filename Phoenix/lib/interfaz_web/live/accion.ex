@@ -7,7 +7,9 @@ defmodule InterfazWeb.Accion do
   import Phoenix.Component, only: [assign: 3]
 
   def enviar(socket, accion, argumentos) do
-    case Interfaz.Fuente.ejecutar(accion, argumentos) do
+    usuario = socket.assigns.usuario.usuario
+
+    case Interfaz.Fuente.ejecutar(accion, argumentos, usuario) do
       {:ok, comando} ->
         socket
         |> put_flash(:info, "Solicitud enviada: #{comando}")

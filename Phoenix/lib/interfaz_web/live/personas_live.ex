@@ -2,6 +2,7 @@ defmodule InterfazWeb.PersonasLive do
   use InterfazWeb, :live_view
 
   alias Interfaz.Fuente
+  alias InterfazWeb.Sesion
 
   on_mount {InterfazWeb.Sesion, {:pagina, :personas}}
 
@@ -71,7 +72,11 @@ defmodule InterfazWeb.PersonasLive do
     documento = socket.assigns.persona.documento
 
     resultado =
-      Fuente.enviar_mensaje(socket.assigns.usuario.nombre, documento, p["contenido"] || "")
+      Fuente.enviar_mensaje(
+        socket.assigns.usuario.usuario,
+        documento,
+        p["contenido"] || ""
+      )
 
     socket = responder(socket, resultado, documento)
 
@@ -90,7 +95,7 @@ defmodule InterfazWeb.PersonasLive do
   end
 
   def handle_event("marcar", %{"id" => id, "estado" => estado}, socket) do
-    resultado = Fuente.marcar_mensaje(id, estado)
+    resultado = Fuente.marcar_mensaje(id, estado, socket.assigns.usuario.usuario)
     {:noreply, responder(socket, resultado, socket.assigns.persona.documento)}
   end
 
@@ -104,7 +109,8 @@ defmodule InterfazWeb.PersonasLive do
     |> put_flash(:info, mensaje)
   end
 
-  defp responder(socket, {:error, mensaje}, _documento), do: put_flash(socket, :error, mensaje)
+  defp responder(socket, {:error, mensaje}, _documento),
+    do: put_flash(socket, :error, to_string(mensaje))
 
   defp buscar(socket, b) do
     socket
@@ -121,7 +127,12 @@ defmodule InterfazWeb.PersonasLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} usuario={@usuario} activo={@activo}>
+    <Layouts.app
+      flash={@flash}
+      usuario={@usuario}
+      activo={@activo}
+      zonas_por_codigo={@zonas_por_codigo}
+    >
       <.encabezado
         titulo="Personas y comunicación familiar"
         subtitulo="Busca personas afectadas y deja mensajes para sus familias."
@@ -137,7 +148,7 @@ defmodule InterfazWeb.PersonasLive do
           </button>
         </:acciones>
       </.encabezado>
-      
+
       <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <div class="space-y-4">
           <.form
@@ -159,7 +170,7 @@ defmodule InterfazWeb.PersonasLive do
                 type="select"
                 label="Zona"
                 prompt="Todas"
-                options={Enum.map(Fuente.zonas(), &{&1.nombre, &1.codigo})}
+                options={@opciones_zonas}
               />
               <.input
                 field={@busqueda[:estado]}
@@ -170,12 +181,12 @@ defmodule InterfazWeb.PersonasLive do
               />
             </div>
           </.form>
-          
+
           <ul id="lista-personas" class="space-y-2">
             <li :if={@personas == []}>
               <.vacio mensaje="No se encontraron personas." icono="hero-magnifying-glass" />
             </li>
-            
+
             <li :for={p <- @personas} id={"persona-#{p.id}"}>
               <button
                 phx-click="seleccionar"
@@ -193,63 +204,65 @@ defmodule InterfazWeb.PersonasLive do
                     <span class="text-sm">{String.first(p.nombre)}</span>
                   </div>
                 </div>
-                
+
                 <div class="min-w-0 flex-1">
                   <p class="truncate font-medium">{p.nombre}</p>
-                  
-                  <p class="text-xs text-base-content/60">Doc. {p.documento} · {zona(p.zona)}</p>
+
+                  <p class="text-xs text-base-content/60">
+                    Doc. {p.documento} · {zona(p.zona, @zonas_por_codigo)}
+                  </p>
                 </div>
-                 <.insignia valor={p.estado} />
+                <.insignia valor={p.estado} />
               </button>
             </li>
           </ul>
         </div>
-        
+
         <.vacio
           :if={is_nil(@persona)}
           mensaje="Todavía no hay personas reportadas. Usa «Reportar persona» para agregar la primera."
           icono="hero-user-group"
         />
-
         <div :if={@persona} id="detalle-persona" class="space-y-6">
           <.panel titulo={@persona.nombre}>
             <:acciones>
               <button
+                :if={Sesion.gestiona?(@usuario)}
                 id="cambiar-estado"
                 class="btn btn-xs"
                 phx-click="abrir"
                 phx-value-modal="estado"
               >Cambiar estado</button>
             </:acciones>
-            
+
             <dl class="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
               <div>
                 <dt class="text-base-content/60">Documento</dt><dd class="font-medium">
                   {@persona.documento}
                 </dd>
               </div>
-              
+
               <div>
                 <dt class="text-base-content/60">Edad</dt><dd class="font-medium">
                   {if @persona.edad, do: "#{@persona.edad} años", else: "—"}
                 </dd>
               </div>
-              
+
               <div>
                 <dt class="text-base-content/60">Zona</dt><dd class="font-medium">
-                  {zona(@persona.zona)}
+                  {zona(@persona.zona, @zonas_por_codigo)}
                 </dd>
               </div>
-              
+
               <div>
                 <dt class="text-base-content/60">Estado</dt><dd>
                   <.insignia valor={@persona.estado} />
                 </dd>
               </div>
             </dl>
-            
+
             <h3 class="mt-6 mb-3 text-sm font-semibold">Historial de estado</h3>
-            
+
             <ol id="historial-persona" class="relative ml-2 border-l border-base-300">
               <li :for={h <- Enum.reverse(@persona.historial)} class="mb-4 ml-4 last:mb-0">
                 <span class="absolute -left-1.5 mt-1.5 size-3 rounded-full border-2 border-base-100 bg-primary"></span>
@@ -260,7 +273,7 @@ defmodule InterfazWeb.PersonasLive do
               </li>
             </ol>
           </.panel>
-          
+
           <.panel titulo="Mensajes para la familia">
             <ul id="mensajes-persona" class="space-y-3">
               <li :if={@mensajes == []}>
@@ -269,7 +282,7 @@ defmodule InterfazWeb.PersonasLive do
                   icono="hero-chat-bubble-left-right"
                 />
               </li>
-              
+
               <li :for={m <- @mensajes} id={"mensaje-#{m.id}"} class="rounded-box bg-base-200 p-3">
                 <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-base-content/60">
                   <span><span class="font-medium text-base-content">{m.remitente}</span> · {m.fecha}</span>
@@ -285,11 +298,11 @@ defmodule InterfazWeb.PersonasLive do
                     </button>
                   </div>
                 </div>
-                
+
                 <p class="mt-1 text-sm">{m.contenido}</p>
               </li>
             </ul>
-            
+
             <.form
               for={@mensaje_form}
               id="form-mensaje"
@@ -305,7 +318,7 @@ defmodule InterfazWeb.PersonasLive do
                   required
                 />
               </div>
-              
+
               <button class="btn btn-primary mb-2" phx-disable-with="Enviando...">
                 <.icon name="hero-paper-airplane" class="size-4" /> Enviar
               </button>
@@ -313,20 +326,20 @@ defmodule InterfazWeb.PersonasLive do
           </.panel>
         </div>
       </div>
-      
+
       <.modal id="modal-persona" titulo="Reportar persona afectada" abierto={@modal == :persona}>
         <.form for={@form} id="form-persona" phx-submit="guardar">
           <div class="grid grid-cols-2 gap-3">
             <.input field={@form[:documento]} label="Documento o referencia" required />
             <.input field={@form[:edad]} type="number" min="0" label="Edad" required />
           </div>
-           <.input field={@form[:nombre]} label="Nombre completo" required />
+          <.input field={@form[:nombre]} label="Nombre completo" required />
           <div class="grid grid-cols-2 gap-3">
             <.input
               field={@form[:zona]}
               type="select"
               label="Zona"
-              options={Enum.map(Fuente.zonas(), &{&1.nombre, &1.codigo})}
+              options={@opciones_zonas}
             />
             <.input
               field={@form[:estado]}
@@ -335,10 +348,10 @@ defmodule InterfazWeb.PersonasLive do
               options={opciones(Fuente.estados_persona())}
             />
           </div>
-           <.botones_form texto="Reportar" />
+          <.botones_form texto="Reportar" />
         </.form>
       </.modal>
-      
+
       <.modal
         :if={@persona}
         id="modal-estado"
@@ -353,7 +366,7 @@ defmodule InterfazWeb.PersonasLive do
             options={opciones(Fuente.estados_persona())}
           />
           <p class="text-xs text-base-content/60">El cambio queda en el historial de la persona.</p>
-           <.botones_form texto="Actualizar" />
+          <.botones_form texto="Actualizar" />
         </.form>
       </.modal>
     </Layouts.app>

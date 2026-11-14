@@ -18,6 +18,7 @@ defmodule InterfazWeb.Layouts do
   attr :flash, :map, required: true
   attr :usuario, :map, required: true
   attr :activo, :atom, default: nil
+  attr :zonas_por_codigo, :map, required: true
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -54,13 +55,15 @@ defmodule InterfazWeb.Layouts do
           </div>
 
           <div class="ml-auto flex items-center gap-3">
-            <.boton_movimiento />
-            <.theme_toggle />
+            <.boton_movimiento /> <.theme_toggle />
             <div class="hidden text-right sm:block">
               <p class="text-sm font-semibold leading-tight">{@usuario.nombre}</p>
 
               <p class="sx-etiqueta mt-0.5">
-                {InterfazWeb.UI.t(@usuario.rol)} · {InterfazWeb.UI.zona(@usuario.zona)}
+                {InterfazWeb.UI.t(@usuario.rol)} · {InterfazWeb.UI.zona(
+                  @usuario.zona,
+                  @zonas_por_codigo
+                )}
               </p>
             </div>
 

@@ -12,6 +12,8 @@ defmodule Interfaz.Fuente do
   cambiar.
   """
 
+  alias Epicenter.Autorizacion
+
   # ---------------------------------------------------------------------------
   # Sesión
   # ---------------------------------------------------------------------------
@@ -188,13 +190,52 @@ defmodule Interfaz.Fuente do
   interfaz. Integración: despachar `accion` al módulo de dominio que corresponda
   y devolver `{:ok, mensaje}` o `{:error, motivo}`.
   """
-  def ejecutar(accion, argumentos) when is_list(argumentos) do
-    if Enum.any?(argumentos, &(&1 in [nil, ""])) do
-      {:error, "Completa todos los campos."}
+  def ejecutar(accion, argumentos, usuario) when is_list(argumentos) do
+    with {:ok, permiso, zona} <- permiso_accion(accion, argumentos),
+         false <- Enum.any?(argumentos, &(&1 in [nil, ""])) do
+      Autorizacion.ejecutar(usuario, permiso, zona, fn _usuario ->
+        {:ok, comando(accion, argumentos)}
+      end)
     else
-      {:ok, comando(accion, argumentos)}
+      true -> {:error, "Completa todos los campos."}
+      {:error, _motivo} = error -> error
     end
   end
+
+  def ejecutar(_accion, _argumentos, _usuario), do: {:error, :accion_no_autorizada}
+
+  defp permiso_accion("register_need", argumentos) do
+    prioridad = Enum.at(argumentos, 2)
+    permiso = if to_string(prioridad) == "critica", do: :registrar_necesidad_critica, else: :registrar_necesidad
+    {:ok, permiso, Enum.at(argumentos, 3)}
+  end
+
+  defp permiso_accion("assign_resource", argumentos),
+    do: {:ok, :asignar_recurso, zona_necesidad(Enum.at(argumentos, 0))}
+
+  defp permiso_accion("update_need", argumentos),
+    do: {:ok, :cambiar_estado_necesidad, zona_necesidad(Enum.at(argumentos, 0))}
+
+  defp permiso_accion("register_resource", argumentos),
+    do: {:ok, :gestionar_recursos, Enum.at(argumentos, 6)}
+
+  defp permiso_accion("register_entry", argumentos),
+    do: {:ok, :registrar_ingreso_albergue, zona_albergue(Enum.at(argumentos, 0))}
+
+  defp permiso_accion("register_exit", argumentos),
+    do: {:ok, :registrar_salida_albergue, zona_albergue(Enum.at(argumentos, 0))}
+
+  defp permiso_accion("transfer_resource", argumentos),
+    do: {:ok, :transferir_recursos, zona_recurso(Enum.at(argumentos, 0))}
+
+  defp permiso_accion("register_shelter", _argumentos),
+    do: {:ok, :registrar_albergue, nil}
+
+  defp permiso_accion(_accion, _argumentos), do: {:error, :accion_no_autorizada}
+
+  defp zona_necesidad(id), do: Enum.find_value(necesidades(), &if(&1.id == id, do: &1.zona))
+  defp zona_recurso(codigo), do: Enum.find_value(recursos(), &if(&1.codigo == codigo, do: &1.zona))
+  defp zona_albergue(codigo), do: Enum.find_value(albergues(), &if(&1.codigo == codigo, do: &1.zona))
 
   defp comando(accion, argumentos) do
     valores =
@@ -267,32 +308,38 @@ defmodule Interfaz.Fuente do
   end
 
   @doc "Comando `register_zone`: el código lo genera la lógica."
-  def registrar_zona(nombre, nivel) do
+  def registrar_zona(nombre, nivel, usuario) do
     with {:ok, nombre} <- texto(nombre, "Escribe el nombre de la zona."),
          {:ok, nivel} <- nivel(nivel) do
-      Epicenter.Persistencia.carga_zonas()
-      |> Epicenter.GestorZonas.registrar(nombre, nivel)
-      |> guardar_zonas("Zona #{nombre} registrada.")
+      Autorizacion.ejecutar(usuario, :administrar_configuracion, nil, fn _usuario ->
+        Epicenter.Persistencia.carga_zonas()
+        |> Epicenter.GestorZonas.registrar(nombre, nivel)
+        |> guardar_zonas("Zona #{nombre} registrada.")
+      end)
     end
   end
 
   @doc "Comando `register_sector`: el sector queda dentro de la zona elegida."
-  def registrar_sector(codigo_zona, nombre, nivel, afectadas) do
+  def registrar_sector(codigo_zona, nombre, nivel, afectadas, usuario) do
     with {:ok, nombre} <- texto(nombre, "Escribe el nombre del sector."),
          {:ok, nivel} <- nivel(nivel),
          {:ok, afectadas} <- entero(afectadas) do
-      Epicenter.Persistencia.carga_zonas()
-      |> Epicenter.GestorZonas.registrar_sector(codigo_zona, nombre, nivel, afectadas)
-      |> guardar_zonas("Sector #{nombre} registrado.")
+      Autorizacion.ejecutar(usuario, :registrar_sector, codigo_zona, fn _usuario ->
+        Epicenter.Persistencia.carga_zonas()
+        |> Epicenter.GestorZonas.registrar_sector(codigo_zona, nombre, nivel, afectadas)
+        |> guardar_zonas("Sector #{nombre} registrado.")
+      end)
     end
   end
 
   @doc "Comando `register_point`: el punto queda dentro del sector elegido."
-  def registrar_punto(codigo_zona, codigo_sector, nombre) do
+  def registrar_punto(codigo_zona, codigo_sector, nombre, usuario) do
     with {:ok, nombre} <- texto(nombre, "Escribe el nombre del punto de atención.") do
-      Epicenter.Persistencia.carga_zonas()
-      |> Epicenter.GestorZonas.registrar_punto(codigo_zona, codigo_sector, nombre)
-      |> guardar_zonas("Punto de atención #{nombre} registrado.")
+      Autorizacion.ejecutar(usuario, :registrar_punto_atencion, codigo_zona, fn _usuario ->
+        Epicenter.Persistencia.carga_zonas()
+        |> Epicenter.GestorZonas.registrar_punto(codigo_zona, codigo_sector, nombre)
+        |> guardar_zonas("Punto de atención #{nombre} registrado.")
+      end)
     end
   end
 
@@ -595,17 +642,34 @@ defmodule Interfaz.Fuente do
 
   @doc "Comando `report_person`. `por` es el usuario que hace el reporte."
   def reportar_persona(documento, nombre, edad, zona, estado, por) do
-    case Epicenter.GestorPersona.reportar_persona(documento, nombre, edad, zona, estado, por) do
-      {:ok, persona} -> {:ok, "Persona #{persona.nombre} reportada."}
-      {:error, motivo} -> {:error, mensaje_error(motivo)}
-    end
+    Autorizacion.ejecutar(por, :registrar_persona, zona, fn usuario ->
+      case Epicenter.GestorPersona.reportar_persona(
+             documento,
+             nombre,
+             edad,
+             zona,
+             estado,
+             usuario.nombre_usuario
+           ) do
+        {:ok, persona} -> {:ok, "Persona #{persona.nombre} reportada."}
+        {:error, motivo} -> {:error, mensaje_error(motivo)}
+      end
+    end)
   end
 
   @doc "Comando `update_person`: el cambio queda en el historial."
   def cambiar_estado_persona(documento, estado, por) do
-    case Epicenter.GestorPersona.cambiar_estado(documento, estado, por) do
-      {:ok, persona} -> {:ok, "Estado de #{persona.nombre} actualizado."}
-      {:error, motivo} -> {:error, mensaje_error(motivo)}
+    with {:ok, persona} <- Epicenter.GestorPersona.obtener_por_documento(documento) do
+      Autorizacion.ejecutar(por, :actualizar_persona, persona.codigo_zona, fn usuario ->
+        case Epicenter.GestorPersona.cambiar_estado(
+               documento,
+               estado,
+               usuario.nombre_usuario
+             ) do
+          {:ok, persona_actualizada} -> {:ok, "Estado de #{persona_actualizada.nombre} actualizado."}
+          {:error, motivo} -> {:error, mensaje_error(motivo)}
+        end
+      end)
     end
   end
 
@@ -631,19 +695,25 @@ defmodule Interfaz.Fuente do
   end
 
   @doc "Comando `send_family_message`."
-  def enviar_mensaje(remitente, documento, contenido) do
-    case Epicenter.GestorMensaje.enviar(remitente, documento, contenido) do
-      {:ok, _mensaje} -> {:ok, "Mensaje enviado."}
-      {:error, motivo} -> {:error, mensaje_error(motivo)}
-    end
+  def enviar_mensaje(usuario, documento, contenido) do
+    Autorizacion.ejecutar(usuario, :enviar_mensaje, nil, fn actor ->
+      remitente = actor.nombre_completo || actor.nombre_usuario
+
+      case Epicenter.GestorMensaje.enviar(remitente, documento, contenido) do
+        {:ok, _mensaje} -> {:ok, "Mensaje enviado."}
+        {:error, motivo} -> {:error, mensaje_error(motivo)}
+      end
+    end)
   end
 
   @doc "Comando `mark_message`: `:entregado` o `:pendiente`."
-  def marcar_mensaje(codigo, estado) do
-    case Epicenter.GestorMensaje.marcar(codigo, estado) do
-      {:ok, mensaje} -> {:ok, "Mensaje marcado como #{InterfazWeb.UI.t(mensaje.estado)}."}
-      {:error, motivo} -> {:error, mensaje_error(motivo)}
-    end
+  def marcar_mensaje(codigo, estado, usuario) do
+    Autorizacion.ejecutar(usuario, :marcar_mensaje, nil, fn _actor ->
+      case Epicenter.GestorMensaje.marcar(codigo, estado) do
+        {:ok, mensaje} -> {:ok, "Mensaje marcado como #{InterfazWeb.UI.t(mensaje.estado)}."}
+        {:error, motivo} -> {:error, mensaje_error(motivo)}
+      end
+    end)
   end
 
   defp persona_a_mapa(persona) do
@@ -704,7 +774,7 @@ defmodule Interfaz.Fuente do
   end
 
   @doc "Comando `report_pet`."
-  def reportar_mascota(p) do
+  def reportar_mascota(p, usuario) do
     datos = %{
       tipo: p["reporte"],
       especie: p["especie"],
@@ -716,10 +786,12 @@ defmodule Interfaz.Fuente do
       caracteristicas: p["caracteristicas"]
     }
 
-    case Epicenter.GestorMascota.registro(datos) do
-      {:ok, mascota} -> {:ok, "Mascota #{InterfazWeb.UI.t(mascota.tipo)} reportada."}
-      {:error, motivo} -> {:error, mensaje_error(motivo)}
-    end
+    Autorizacion.ejecutar(usuario, :reportar_mascota, datos.zona, fn _actor ->
+      case Epicenter.GestorMascota.registro(datos) do
+        {:ok, mascota} -> {:ok, "Mascota #{InterfazWeb.UI.t(mascota.tipo)} reportada."}
+        {:error, motivo} -> {:error, mensaje_error(motivo)}
+      end
+    end)
   end
 
   @doc """
@@ -734,19 +806,37 @@ defmodule Interfaz.Fuente do
   end
 
   @doc "Comando `match_pets`: marca como posible coincidencia las parejas de 70 o más."
-  def buscar_coincidencias do
-    case Epicenter.GestorMascota.marcar_coincidencias() do
-      {:ok, []} -> {:ok, "No hay parejas nuevas con 70 puntos o más para marcar."}
-      {:ok, [_una]} -> {:ok, "Se marcó 1 posible coincidencia."}
-      {:ok, parejas} -> {:ok, "Se marcaron #{length(parejas)} posibles coincidencias."}
-      {:error, motivo} -> {:error, mensaje_error(motivo)}
-    end
+  def buscar_coincidencias(usuario, codigo_zona) do
+    Autorizacion.ejecutar(usuario, :validar_coincidencias_mascotas, codigo_zona, fn _actor ->
+      case Epicenter.GestorMascota.marcar_coincidencias(codigo_zona) do
+        {:ok, []} -> {:ok, "No hay parejas nuevas con 70 puntos o más para marcar."}
+        {:ok, [_una]} -> {:ok, "Se marcó 1 posible coincidencia."}
+        {:ok, parejas} -> {:ok, "Se marcaron #{length(parejas)} posibles coincidencias."}
+        {:error, motivo} -> {:error, mensaje_error(motivo)}
+      end
+    end)
   end
 
   @doc "Comando `confirm_match`: cierra ambos reportes."
-  def confirmar_coincidencia(id_perdida, id_encontrada) do
-    case Epicenter.GestorMascota.confirmar_coincidencia(id_perdida, id_encontrada) do
-      {:ok, _par} -> {:ok, "Coincidencia confirmada. Ambos reportes quedaron resueltos."}
+  def confirmar_coincidencia(id_perdida, id_encontrada, usuario, codigo_zona) do
+    with {:ok, mascotas} <- Epicenter.GestorMascota.listar(),
+         perdida when not is_nil(perdida) <- Enum.find(mascotas, &(&1.id == id_perdida)),
+         encontrada when not is_nil(encontrada) <- Enum.find(mascotas, &(&1.id == id_encontrada)),
+         true <- perdida.zona == codigo_zona and encontrada.zona == codigo_zona do
+      Autorizacion.ejecutar(
+        usuario,
+        :validar_coincidencias_mascotas,
+        codigo_zona,
+        fn _actor ->
+          case Epicenter.GestorMascota.confirmar_coincidencia(id_perdida, id_encontrada) do
+            {:ok, _par} -> {:ok, "Coincidencia confirmada. Ambos reportes quedaron resueltos."}
+            {:error, motivo} -> {:error, mensaje_error(motivo)}
+          end
+        end
+      )
+    else
+      false -> {:error, "Las mascotas deben pertenecer a la zona autorizada."}
+      nil -> {:error, "Mascota no encontrada."}
       {:error, motivo} -> {:error, mensaje_error(motivo)}
     end
   end

@@ -25,7 +25,12 @@ defmodule InterfazWeb.ActividadLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} usuario={@usuario} activo={@activo}>
+    <Layouts.app
+      flash={@flash}
+      usuario={@usuario}
+      activo={@activo}
+      zonas_por_codigo={@zonas_por_codigo}
+    >
       <.encabezado
         titulo="Usuarios y actividad"
         subtitulo="Quién está conectado y qué operaciones ha realizado cada usuario."
@@ -45,7 +50,7 @@ defmodule InterfazWeb.ActividadLive do
                 Todos los usuarios
               </button>
             </li>
-            
+
             <li :for={u <- @usuarios} id={"usuario-#{u.usuario}"}>
               <button
                 phx-click="filtrar"
@@ -64,21 +69,23 @@ defmodule InterfazWeb.ActividadLive do
                 ></span>
                 <div class="min-w-0 flex-1">
                   <p class="truncate text-sm font-medium">{u.nombre}</p>
-                  
-                  <p class="text-xs text-base-content/60">{u.usuario} · {zona(u.zona)}</p>
+
+                  <p class="text-xs text-base-content/60">
+                    {u.usuario} · {zona(u.zona, @zonas_por_codigo)}
+                  </p>
                 </div>
-                 <span class="badge badge-sm badge-ghost">{t(u.rol)}</span>
+                <span class="badge badge-sm badge-ghost">{t(u.rol)}</span>
               </button>
             </li>
           </ul>
         </.panel>
-        
+
         <.panel titulo="Registro de actividad">
           <ol id="registro-actividad" class="space-y-3">
             <li :if={@actividad == []}>
               <.vacio mensaje="Este usuario no tiene actividad registrada." />
             </li>
-            
+
             <li :for={{a, i} <- Enum.with_index(@actividad)} id={"actividad-#{i}"} class="flex gap-3">
               <.icon
                 name={if a.resultado == :ok, do: "hero-check-circle", else: "hero-x-circle"}
@@ -89,7 +96,7 @@ defmodule InterfazWeb.ActividadLive do
               />
               <div class="min-w-0 flex-1">
                 <p class="break-all font-mono text-sm">{a.accion}</p>
-                
+
                 <p class="text-xs text-base-content/60">
                   {a.fecha} · {a.usuario}<span :if={a.detalle}> · {a.detalle}</span>
                 </p>

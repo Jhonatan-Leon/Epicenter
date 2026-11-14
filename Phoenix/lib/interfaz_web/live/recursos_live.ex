@@ -23,6 +23,12 @@ defmodule InterfazWeb.RecursosLive do
   def handle_event("abrir", %{"modal" => modal} = params, socket) do
     modal = String.to_existing_atom(modal)
     datos = if params["codigo"], do: %{"recurso" => params["codigo"]}, else: %{}
+
+    datos =
+      if modal == :recurso,
+        do: Map.put_new(datos, "zona", socket.assigns.usuario.zona),
+        else: datos
+
     {:noreply, socket |> assign(:modal, modal) |> assign(:form, to_form(datos, as: modal))}
   end
 
@@ -36,7 +42,8 @@ defmodule InterfazWeb.RecursosLive do
        p["cantidad"],
        p["unidad"],
        p["ubicacion"],
-       p["categoria"]
+       p["categoria"],
+       p["zona"]
      ])}
   end
 
@@ -69,12 +76,17 @@ defmodule InterfazWeb.RecursosLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} usuario={@usuario} activo={@activo}>
+    <Layouts.app
+      flash={@flash}
+      usuario={@usuario}
+      activo={@activo}
+      zonas_por_codigo={@zonas_por_codigo}
+    >
       <.encabezado
         titulo="Recursos y centros de apoyo"
         subtitulo="Inventario por centro, entradas, salidas y transferencias."
       >
-        <:acciones :if={Sesion.coordina?(@usuario)}>
+        <:acciones :if={Sesion.gestiona?(@usuario)}>
           <button
             id="nuevo-recurso"
             class="btn btn-primary btn-sm"
@@ -83,7 +95,7 @@ defmodule InterfazWeb.RecursosLive do
           >
             <.icon name="hero-plus" class="size-4" /> Registrar recurso
           </button>
-          
+
           <button
             id="nuevo-movimiento"
             class="btn btn-sm"
@@ -92,7 +104,7 @@ defmodule InterfazWeb.RecursosLive do
           >
             <.icon name="hero-arrows-up-down" class="size-4" /> Entrada / salida
           </button>
-          
+
           <button
             id="nueva-transferencia"
             class="btn btn-sm"
@@ -103,7 +115,7 @@ defmodule InterfazWeb.RecursosLive do
           </button>
         </:acciones>
       </.encabezado>
-      
+
       <.form
         for={@filtros}
         id="filtros-recursos"
@@ -119,18 +131,18 @@ defmodule InterfazWeb.RecursosLive do
             options={opciones(Fuente.tipos_necesidad())}
           />
         </div>
-        
+
         <div class="w-48">
           <.input
             field={@filtros[:zona]}
             type="select"
             label="Zona"
             prompt="Todas"
-            options={Enum.map(Fuente.zonas(), &{&1.nombre, &1.codigo})}
+            options={@opciones_zonas}
           />
         </div>
       </.form>
-      
+
       <div id="inventario" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <.vacio :if={@recursos == []} mensaje="No hay recursos con esos filtros." />
         <article
@@ -144,17 +156,17 @@ defmodule InterfazWeb.RecursosLive do
           <div class="flex items-start justify-between gap-2">
             <div>
               <p class="text-xs text-base-content/60">{r.codigo} · {t(r.categoria)}</p>
-              
+
               <h3 class="font-semibold">{r.nombre}</h3>
             </div>
-            
+
             <span :if={r.cantidad < r.minimo} class="badge badge-sm badge-error badge-soft">Bajo mínimo</span>
           </div>
-          
+
           <p class="mt-3 text-3xl font-semibold tabular-nums">
             {r.cantidad} <span class="text-sm font-normal text-base-content/60">{r.unidad}</span>
           </p>
-          
+
           <progress
             class={[
               "progress mt-2 h-2 w-full",
@@ -164,11 +176,16 @@ defmodule InterfazWeb.RecursosLive do
             max={r.minimo * 3}
           ></progress>
           <div class="mt-3 flex items-center justify-between text-xs text-base-content/60">
-            <span><.icon name="hero-map-pin" class="size-3.5" /> {r.ubicacion} · {zona(r.zona)}</span>
+            <span>
+              <.icon name="hero-map-pin" class="size-3.5" /> {r.ubicacion} · {zona(
+                r.zona,
+                @zonas_por_codigo
+              )}
+            </span>
             <span>mínimo {r.minimo}</span>
           </div>
-          
-          <div :if={Sesion.coordina?(@usuario)} class="mt-3 flex gap-2 border-t border-base-300 pt-3">
+
+          <div :if={Sesion.gestiona?(@usuario)} class="mt-3 flex gap-2 border-t border-base-300 pt-3">
             <button
               class="btn btn-xs btn-ghost"
               phx-click="abrir"
@@ -184,7 +201,7 @@ defmodule InterfazWeb.RecursosLive do
           </div>
         </article>
       </div>
-      
+
       <.panel titulo="Historial de movimientos" class="mt-6">
         <div class="overflow-x-auto">
           <table id="tabla-movimientos" class="table table-sm">
@@ -195,31 +212,31 @@ defmodule InterfazWeb.RecursosLive do
                 </th><th>Usuario</th>
               </tr>
             </thead>
-            
+
             <tbody>
               <tr :for={m <- @movimientos} id={"movimiento-#{m.id}"}>
                 <td class="whitespace-nowrap tabular-nums text-base-content/70">{m.fecha}</td>
-                
+
                 <td><.insignia valor={m.tipo} /></td>
-                
+
                 <td>{m.recurso}</td>
-                
+
                 <td class={[
                   "text-right tabular-nums",
                   m.tipo == :rechazo && "line-through text-base-content/50"
                 ]}>
                   {m.cantidad}
                 </td>
-                
+
                 <td class="min-w-56">{m.detalle}</td>
-                
+
                 <td>{m.usuario}</td>
               </tr>
             </tbody>
           </table>
         </div>
       </.panel>
-      
+
       <.modal id="modal-recurso" titulo="Registrar recurso" abierto={@modal == :recurso}>
         <.form for={@form} id="form-recurso" phx-submit="guardar">
           <div class="grid grid-cols-2 gap-3">
@@ -245,11 +262,17 @@ defmodule InterfazWeb.RecursosLive do
               placeholder="centro_acopio_1"
               required
             />
+            <.input
+              field={@form[:zona]}
+              type="select"
+              label="Zona"
+              options={@opciones_zonas}
+            />
           </div>
-           <.botones_form texto="Registrar" />
+          <.botones_form texto="Registrar" />
         </.form>
       </.modal>
-      
+
       <.modal
         id="modal-movimiento"
         titulo="Registrar entrada o salida"
@@ -270,7 +293,7 @@ defmodule InterfazWeb.RecursosLive do
               options={Enum.map(Fuente.recursos(), &{"#{&1.codigo} · #{&1.nombre}", &1.codigo})}
             />
           </div>
-           <.input field={@form[:cantidad]} type="number" min="1" label="Cantidad" required />
+          <.input field={@form[:cantidad]} type="number" min="1" label="Cantidad" required />
           <.input
             field={@form[:detalle]}
             label="Detalle"
@@ -279,7 +302,7 @@ defmodule InterfazWeb.RecursosLive do
           /> <.botones_form />
         </.form>
       </.modal>
-      
+
       <.modal
         id="modal-transferencia"
         titulo="Transferir entre centros"
@@ -301,7 +324,7 @@ defmodule InterfazWeb.RecursosLive do
             <.input field={@form[:origen]} type="select" label="Origen" options={ubicaciones()} />
             <.input field={@form[:destino]} label="Destino" placeholder="albergue_2" required />
           </div>
-           <.input field={@form[:cantidad]} type="number" min="1" label="Cantidad" required />
+          <.input field={@form[:cantidad]} type="number" min="1" label="Cantidad" required />
           <.botones_form texto="Transferir" />
         </.form>
       </.modal>

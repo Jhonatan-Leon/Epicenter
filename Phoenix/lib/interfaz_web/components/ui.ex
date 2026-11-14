@@ -88,12 +88,7 @@ defmodule InterfazWeb.UI do
   end
 
   @doc "Nombre legible de una zona a partir de su código."
-  def zona(codigo) do
-    case Enum.find(Interfaz.Fuente.zonas(), &(&1.codigo == codigo)) do
-      nil -> codigo
-      z -> z.nombre
-    end
-  end
+  def zona(codigo, zonas), do: Map.get(zonas, codigo, codigo)
 
   # ---------------------------------------------------------------------------
   # Insignias
@@ -173,7 +168,6 @@ defmodule InterfazWeb.UI do
     <div class="sx-card sx-foco sx-inclinar sx-indicador px-4 pb-10 pt-4 sm:px-5 sm:pt-5">
       <div class="flex items-start justify-between gap-2">
         <p class="sx-etiqueta pt-1">{@titulo}</p>
-
         <span class={["sx-anillo", @tono]}><.icon name={@icono} class="size-4" /></span>
       </div>
 
@@ -241,10 +235,10 @@ defmodule InterfazWeb.UI do
     <section class={["sx-card sx-foco", @class]}>
       <header class="flex flex-wrap items-center justify-between gap-2 border-b border-base-content/10 px-4 py-3">
         <h2 class="sx-panel-titulo">{@titulo}</h2>
-        
+
         <div :if={@acciones != []} class="flex flex-wrap gap-2">{render_slot(@acciones)}</div>
       </header>
-      
+
       <div class="p-4">{render_slot(@inner_block)}</div>
     </section>
     """
@@ -266,7 +260,7 @@ defmodule InterfazWeb.UI do
 
         <p :if={@subtitulo} class="mt-3 max-w-2xl text-sm text-base-content/70">{@subtitulo}</p>
       </div>
-      
+
       <div :if={@acciones != []} class="flex flex-wrap gap-2">{render_slot(@acciones)}</div>
     </div>
     """
@@ -291,7 +285,7 @@ defmodule InterfazWeb.UI do
       <div class="modal-box max-w-lg">
         <div class="mb-4 flex items-center justify-between">
           <h3 class="text-lg font-semibold">{@titulo}</h3>
-          
+
           <button
             type="button"
             class="btn btn-ghost btn-sm btn-square"
@@ -301,9 +295,9 @@ defmodule InterfazWeb.UI do
             <.icon name="hero-x-mark" class="size-5" />
           </button>
         </div>
-         {render_slot(@inner_block)}
+        {render_slot(@inner_block)}
       </div>
-      
+
       <div class="modal-backdrop" phx-click={@al_cerrar}></div>
     </div>
     """
