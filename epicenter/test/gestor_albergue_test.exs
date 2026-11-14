@@ -5,16 +5,17 @@ defmodule Epicenter.GestorAlbergueTest do
   alias Epicenter.Persistencia
 
   setup do
-    ruta = Path.expand("../lib/Datos/Albergue.json", __DIR__)
+    codigo_zona = Persistencia.carga_zonas() |> Map.keys() |> hd()
+    ruta = Persistencia.ruta_datos("Albergue.json")
     contenido_original = File.read!(ruta)
     File.write!(ruta, "[]")
 
     on_exit(fn -> File.write!(ruta, contenido_original) end)
-    :ok
+    {:ok, codigo_zona: codigo_zona}
   end
 
-  test "crea, consulta, actualiza y elimina un albergue persistido" do
-    assert {:ok, albergue} = GestorAlbergue.registro("Refugio", "zona-1", 10)
+  test "crea, consulta, actualiza y elimina un albergue persistido", %{codigo_zona: zona} do
+    assert {:ok, albergue} = GestorAlbergue.registro("Refugio", zona, 10)
     assert {:ok, [^albergue]} = GestorAlbergue.listar()
     assert {:ok, ^albergue} = GestorAlbergue.obtener(albergue.codigo)
 

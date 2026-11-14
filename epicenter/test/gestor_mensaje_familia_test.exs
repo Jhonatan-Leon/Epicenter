@@ -5,19 +5,29 @@ defmodule Epicenter.GestorMensajeFamiliaTest do
 
   setup do
     rutas = [
-      Path.expand("../lib/Datos/Mensaje.json", __DIR__),
-      Path.expand("../lib/Datos/Persona.json", __DIR__)
+      Epicenter.Persistencia.ruta_datos("Mensaje.json"),
+      Epicenter.Persistencia.ruta_datos("Persona.json")
     ]
 
     contenidos = Enum.map(rutas, &File.read!/1)
     Enum.each(rutas, &File.write!(&1, "[]"))
 
     on_exit(fn ->
-      Enum.zip(rutas, contenidos) |> Enum.each(fn {ruta, contenido} -> File.write!(ruta, contenido) end)
+      Enum.zip(rutas, contenidos)
+      |> Enum.each(fn {ruta, contenido} -> File.write!(ruta, contenido) end)
     end)
 
-    {:ok, _} = GestorPersona.reportar_persona("1094887123", "Andrés Gómez", 34, "zona_norte", "en_albergue")
-    {:ok, _} = GestorPersona.reportar_persona("41923554", "María López", 67, "centro", "sin_informacion")
+    {:ok, _} =
+      GestorPersona.reportar_persona(
+        "1094887123",
+        "Andrés Gómez",
+        34,
+        "zona_norte",
+        "en_albergue"
+      )
+
+    {:ok, _} =
+      GestorPersona.reportar_persona("41923554", "María López", 67, "centro", "sin_informacion")
 
     :ok
   end
@@ -25,7 +35,11 @@ defmodule Epicenter.GestorMensajeFamiliaTest do
   describe "enviar/3" do
     test "crea un mensaje pendiente con fecha, remitente, destinatario y contenido" do
       assert {:ok, mensaje} =
-               GestorMensaje.enviar("Carmen Gómez (hermana)", "1094887123", " Te estamos buscando ")
+               GestorMensaje.enviar(
+                 "Carmen Gómez (hermana)",
+                 "1094887123",
+                 " Te estamos buscando "
+               )
 
       assert mensaje.remitente == "Carmen Gómez (hermana)"
       assert mensaje.destinatario == "1094887123"

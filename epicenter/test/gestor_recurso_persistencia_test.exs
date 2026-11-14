@@ -5,16 +5,18 @@ defmodule Epicenter.GestorRecursoPersistenciaTest do
   alias Epicenter.Persistencia
 
   setup do
+    codigo_zona = Persistencia.carga_zonas() |> Map.keys() |> hd()
+
     rutas = [
-      Path.expand("../lib/Datos/Recurso.json", __DIR__),
-      Path.expand("../lib/Datos/Mensaje.json", __DIR__),
-      Path.expand("../lib/Datos/Inventario.json", __DIR__),
-      Path.expand("../lib/Datos/Albergue.json", __DIR__),
-      Path.expand("../lib/Datos/CentroApoyo.json", __DIR__),
-      Path.expand("../lib/Datos/Historial.json", __DIR__),
-      Path.expand("../lib/Datos/Mascota.json", __DIR__),
-      Path.expand("../lib/Datos/Necesidad.json", __DIR__),
-      Path.expand("../lib/Datos/Persona.json", __DIR__)
+      Persistencia.ruta_datos("Recurso.json"),
+      Persistencia.ruta_datos("Mensaje.json"),
+      Persistencia.ruta_datos("Inventario.json"),
+      Persistencia.ruta_datos("Albergue.json"),
+      Persistencia.ruta_datos("CentroApoyo.json"),
+      Persistencia.ruta_datos("Historial.json"),
+      Persistencia.ruta_datos("Mascota.json"),
+      Persistencia.ruta_datos("Necesidad.json"),
+      Persistencia.ruta_datos("Persona.json")
     ]
 
     contenidos = Enum.map(rutas, &File.read!/1)
@@ -25,35 +27,56 @@ defmodule Epicenter.GestorRecursoPersistenciaTest do
       |> Enum.each(fn {ruta, contenido} -> File.write!(ruta, contenido) end)
     end)
 
-    :ok
+    {:ok, codigo_zona: codigo_zona}
   end
 
-  test "el CRUD de recursos guarda cada cambio en su documento" do
-    assert {:ok, recurso} = GestorRecurso.registro_recurso("Agua", "hidratación", 15, "litros")
+  test "registra recursos y persiste entradas y salidas de inventario", %{
+    codigo_zona: zona
+  } do
+    assert {:ok, recurso} =
+             GestorRecurso.registrar(
+               %{
+                 nombre: "Agua",
+                 categoria: :agua,
+                 unidad_medida: "litros",
+                 cantidad: 15,
+                 minimo: 3,
+                 ubicacion: "Centro",
+                 codigo_zona: zona
+               },
+               "Ana"
+             )
+
     assert {:ok, ^recurso} = GestorRecurso.obtener(recurso.codigo)
 
-    actualizado = %{recurso | cantidad_disponible: 25}
-    assert {:ok, ^actualizado} = GestorRecurso.actualizar(recurso.codigo, actualizado)
-    assert {:ok, [^actualizado]} = Persistencia.cargar_recurso()
+    assert {:ok, %{cantidad_disponible: 25}} =
+             GestorRecurso.registrar_entrada(recurso.codigo, 10, "Ana")
 
-    assert {:ok, ^actualizado} = GestorRecurso.eliminar(recurso.codigo)
-    assert {:ok, []} == GestorRecurso.listar()
+    assert {:ok, %{cantidad_disponible: 20}} =
+             GestorRecurso.registrar_salida(recurso.codigo, 5, "Entrega", "Ana")
+
+    assert {:ok, [%{codigo: codigo, cantidad_disponible: 20}]} = Persistencia.cargar_recurso()
+    assert codigo == recurso.codigo
   end
 
-  test "completa los datos de un recurso buscando por su código" do
-    assert {:ok, recurso} = GestorRecurso.registro_recurso("Agua", "bebida")
-    assert recurso.nombre == "Agua"
-    assert recurso.categoria == "bebida"
+  test "registra categorías válidas del catálogo de necesidades", %{codigo_zona: zona} do
+    assert {:ok, recurso} =
+             GestorRecurso.registrar(
+               %{
+                 nombre: "Frazadas",
+                 categoria: "refugio",
+                 unidad_medida: "unidades",
+                 cantidad: 30,
+                 minimo: 5,
+                 ubicacion: "Bodega",
+                 codigo_zona: zona
+               },
+               "Ana"
+             )
 
-    assert {:ok, recurso_completo} =
-             GestorRecurso.completar_informacion(recurso.codigo, 30, "litros")
-
-    assert recurso_completo.codigo == recurso.codigo
-    assert recurso_completo.nombre == "Agua"
-    assert recurso_completo.categoria == "bebida"
-    assert recurso_completo.cantidad_disponible == 30
-    assert recurso_completo.unidad_medida == "litros"
-    assert {:ok, [^recurso_completo]} = GestorRecurso.listar()
+    assert recurso.categoria == :refugio
+    assert {:ok, [%{codigo: codigo, categoria: :refugio}]} = GestorRecurso.listar()
+    assert codigo == recurso.codigo
   end
 
   test "crea inventarios a través del constructor de su estructura" do
@@ -109,31 +132,21 @@ defmodule Epicenter.GestorRecursoPersistenciaTest do
     assert {:ok, [^mensaje_completado]} = Epicenter.GestorMensaje.listar()
   end
 
-  test "completa los campos opcionales del historial buscando por id" do
+  test "registra y consulta los movimientos de un recurso" do
     assert {:ok, historial} =
-             Epicenter.GestorHistorial.registro("inv-1", "Ana", "nec-1", "destino-1")
+             Epicenter.GestorHistorial.registrar(:salida, "R001", 5, "Entrega", "Ana")
 
-    fecha = DateTime.utc_now()
-
-    assert {:ok, historial_completo} =
-             Epicenter.GestorHistorial.completar_informacion(
-               historial.id,
-               :salida,
-               5,
-               fecha
-             )
-
-    assert historial_completo.id == historial.id
-    assert historial_completo.id_invetario == "inv-1"
-    assert historial_completo.id_necesidad == "nec-1"
-    assert historial_completo.tipo == :salida
-    assert historial_completo.cantidad == 5
-    assert historial_completo.fecha == fecha
-    assert {:ok, [^historial_completo]} = Epicenter.GestorHistorial.listar()
+    assert historial.codigo_recurso == "R001"
+    assert historial.tipo == :salida
+    assert historial.cantidad == 5
+    assert %DateTime{} = historial.fecha
+    assert {:ok, [^historial]} = Epicenter.GestorHistorial.de_recurso("R001")
   end
 
-  test "completa el albergue por su código y conserva sus datos iniciales" do
-    assert {:ok, albergue} = Epicenter.GestorAlbergue.registro("Refugio", "zona-1", 10)
+  test "completa el albergue por su código y conserva sus datos iniciales", %{
+    codigo_zona: zona
+  } do
+    assert {:ok, albergue} = Epicenter.GestorAlbergue.registro("Refugio", zona, 10)
 
     assert {:ok, albergue_completo} =
              Epicenter.GestorAlbergue.completar_informacion(
@@ -164,31 +177,31 @@ defmodule Epicenter.GestorRecursoPersistenciaTest do
     assert {:ok, [^centro_completo]} = Epicenter.GestorCentroApoyo.listar()
   end
 
-  test "completa una necesidad buscando por su identificador" do
-    assert {:ok, necesidad} = Epicenter.GestorNecesidad.registro("zona-1", "Ana")
-
-    assert {:ok, necesidad_completa} =
-             Epicenter.GestorNecesidad.completar_informacion(
-               necesidad.id,
+  test "registra y recupera una necesidad incluyendo sus asignaciones", %{
+    codigo_zona: zona
+  } do
+    assert {:ok, necesidad} =
+             Epicenter.GestorNecesidad.registrar(
+               zona,
+               "Ana",
                :agua,
                "Agua potable",
                20,
                :alta,
-               :pendiente,
-               "centro-1"
+               "Centro"
              )
 
-    assert necesidad_completa.id == necesidad.id
-    assert necesidad_completa.codigo_zona == "zona-1"
-    assert necesidad_completa.reportador_por == "Ana"
-    assert necesidad_completa.descripicion == "Agua potable"
-    assert necesidad_completa.cantidad == 20
-    assert {:ok, [^necesidad_completa]} = Epicenter.GestorNecesidad.listar()
+    assert {:ok, recuperada} = Epicenter.GestorNecesidad.obtener(necesidad.id)
+    assert recuperada.codigo_zona == zona
+    assert recuperada.reportado_por == "Ana"
+    assert recuperada.descripcion == "Agua potable"
+    assert recuperada.cantidad == 20
+    assert recuperada.asignaciones == []
   end
 
-  test "completa una persona buscando por su identificador" do
+  test "completa una persona buscando por su identificador", %{codigo_zona: zona} do
     assert {:ok, persona} =
-             Epicenter.GestorPersona.registro("123", :cedula, "Ana", "zona-1", "albergue-1")
+             Epicenter.GestorPersona.registro("123", :cedula, "Ana", zona, "albergue-1")
 
     assert {:ok, persona_completa} =
              Epicenter.GestorPersona.completar_informacion(
@@ -200,14 +213,16 @@ defmodule Epicenter.GestorRecursoPersistenciaTest do
 
     assert persona_completa.id == persona.id
     assert persona_completa.documento == "123"
-    assert persona_completa.codigo_zona == "zona-1"
+    assert persona_completa.codigo_zona == zona
     assert persona_completa.codigo_albergue == "albergue-1"
     assert persona_completa.edad == 30
     assert persona_completa.historial == ["registro-1"]
     assert {:ok, [^persona_completa]} = Epicenter.GestorPersona.listar()
   end
 
-  test "el CRUD de mascotas usa los campos y las transiciones de su estructura" do
+  test "el CRUD de mascotas usa los campos y las transiciones de su estructura", %{
+    codigo_zona: zona
+  } do
     datos = %{
       tipo: :perdida,
       especie: "Perro",
@@ -215,14 +230,14 @@ defmodule Epicenter.GestorRecursoPersistenciaTest do
       caracteristicas: "Mancha blanca",
       color: "Marrón",
       tamano: "mediana",
-      zona: "zona-1",
+      zona: zona,
       contacto: "555-0100"
     }
 
     assert {:ok, mascota} = Epicenter.GestorMascota.registro("mascota-1", datos)
     assert mascota.id == "mascota-1"
     assert mascota.especie == "perro"
-    assert mascota.zona == "zona-1"
+    assert mascota.zona == zona
     assert {:ok, ^mascota} = Epicenter.GestorMascota.obtener(mascota.id)
 
     assert {:ok, mascota_actualizada} =

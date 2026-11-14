@@ -89,6 +89,7 @@ defmodule InterfazWeb.CoreComponents do
           }
         }
       </script>
+      
       <div class={[
         "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
         @kind == :info && "alert-info",

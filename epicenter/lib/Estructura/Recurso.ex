@@ -1,7 +1,19 @@
 defmodule Epicenter.Recurso do
   @moduledoc """
   """
-  @categorias [:agua, :alimentos, :medicamentos, :abrigo, :higiene, :otros]
+  @categorias [
+    :agua,
+    :alimentos,
+    :medicamentos,
+    :primeros_auxilios,
+    :refugio,
+    :transporte,
+    :rescate,
+    :otra,
+    :higiene,
+    :abrigo,
+    :otros
+  ]
 
   @enforce_keys [:codigo, :nombre, :categoria, :unidad_medida, :ubicacion]
   defstruct [

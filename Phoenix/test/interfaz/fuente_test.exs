@@ -8,7 +8,9 @@ defmodule Interfaz.FuenteTest do
   describe "conectar/2" do
     test "el usuario es obligatorio, sin espacios y de 3 a 20 caracteres" do
       assert {:error, "Escribe tu usuario."} = Fuente.conectar("   ", "1234")
-      assert {:error, "El usuario no puede tener espacios."} = Fuente.conectar("ana maria", "1234")
+
+      assert {:error, "El usuario no puede tener espacios."} =
+               Fuente.conectar("ana maria", "1234")
 
       assert {:error, "El usuario debe tener entre 3 y 20 caracteres."} =
                Fuente.conectar("an", "1234")
@@ -45,7 +47,13 @@ defmodule Interfaz.FuenteTest do
                Fuente.registrar("nuevo_usuario", "1234", "Laura Gómez", "voluntario", "marte")
 
       assert {:error, "Zona no válida."} =
-               Fuente.registrar("nuevo_usuario", "1234", "Laura Gómez", "voluntario", "A1F03C9E7B2D4410")
+               Fuente.registrar(
+                 "nuevo_usuario",
+                 "1234",
+                 "Laura Gómez",
+                 "voluntario",
+                 "A1F03C9E7B2D4410"
+               )
     end
   end
 end

@@ -7,7 +7,7 @@ defmodule InterfazWeb.ZonasLive do
   on_mount {InterfazWeb.Sesion, {:pagina, :zonas}}
 
   def mount(_params, _session, socket) do
-    zonas = Fuente.zonas()
+    zonas = socket.assigns.zonas_catalogo
 
     {:ok,
      socket
@@ -33,19 +33,37 @@ defmodule InterfazWeb.ZonasLive do
 
   # Cada formulario llama a Fuente, que a su vez usa GestorZonas y guarda el JSON.
   def handle_event("guardar", %{"zona" => p}, socket) do
-    resultado = Fuente.registrar_zona(p["nombre"], p["nivel"])
+    resultado =
+      Fuente.registrar_zona(p["nombre"], p["nivel"], socket.assigns.usuario.usuario)
+
     {:noreply, responder(socket, resultado, :zona)}
   end
 
   def handle_event("guardar", %{"sector" => p}, socket) do
-    resultado = Fuente.registrar_sector(p["zona"], p["nombre"], p["nivel"], p["afectadas"])
+    resultado =
+      Fuente.registrar_sector(
+        p["zona"],
+        p["nombre"],
+        p["nivel"],
+        p["afectadas"],
+        socket.assigns.usuario.usuario
+      )
+
     {:noreply, responder(socket, resultado, p["zona"])}
   end
 
   # El selector de sector envía "codigoZona:codigoSector".
   def handle_event("guardar", %{"punto" => p}, socket) do
     [codigo_zona, codigo_sector] = String.split(p["sector"] || ":", ":", parts: 2)
-    resultado = Fuente.registrar_punto(codigo_zona, codigo_sector, p["nombre"])
+
+    resultado =
+      Fuente.registrar_punto(
+        codigo_zona,
+        codigo_sector,
+        p["nombre"],
+        socket.assigns.usuario.usuario
+      )
+
     {:noreply, responder(socket, resultado, codigo_zona)}
   end
 
@@ -53,6 +71,7 @@ defmodule InterfazWeb.ZonasLive do
   # Error: deja el modal abierto con lo que se escribió y muestra el motivo.
   defp responder(socket, {:ok, mensaje}, seleccion) do
     zonas = Fuente.zonas()
+    zonas_por_codigo = Map.new(zonas, &{&1.codigo, &1.nombre})
 
     seleccion =
       case seleccion do
@@ -62,12 +81,16 @@ defmodule InterfazWeb.ZonasLive do
 
     socket
     |> assign(:zonas, zonas)
+    |> assign(:zonas_catalogo, zonas)
+    |> assign(:zonas_por_codigo, zonas_por_codigo)
+    |> assign(:opciones_zonas, Enum.map(zonas, &{&1.nombre, &1.codigo}))
     |> assign(:seleccion, seleccion)
     |> assign(:modal, nil)
     |> put_flash(:info, mensaje)
   end
 
-  defp responder(socket, {:error, mensaje}, _seleccion), do: put_flash(socket, :error, mensaje)
+  defp responder(socket, {:error, mensaje}, _seleccion),
+    do: put_flash(socket, :error, to_string(mensaje))
 
   def render(assigns) do
     zona = Enum.find(assigns.zonas, &(&1.codigo == assigns.seleccion))
@@ -78,13 +101,19 @@ defmodule InterfazWeb.ZonasLive do
     assigns = assign(assigns, zona: zona, estadisticas: estadisticas)
 
     ~H"""
-    <Layouts.app flash={@flash} usuario={@usuario} activo={@activo}>
+    <Layouts.app
+      flash={@flash}
+      usuario={@usuario}
+      activo={@activo}
+      zonas_por_codigo={@zonas_por_codigo}
+    >
       <.encabezado
         titulo="Zonas afectadas"
         subtitulo="Estructura zona → sectores → puntos de atención."
       >
         <:acciones :if={Sesion.coordina?(@usuario)}>
           <button
+            :if={Sesion.administra?(@usuario)}
             id="nueva-zona"
             class="btn btn-primary btn-sm"
             phx-click="abrir"
@@ -92,14 +121,12 @@ defmodule InterfazWeb.ZonasLive do
           >
             <.icon name="hero-plus" class="size-4" /> Zona
           </button>
-          
+
           <button id="nuevo-sector" class="btn btn-sm" phx-click="abrir" phx-value-modal="sector">Sector</button>
           <button id="nuevo-punto" class="btn btn-sm" phx-click="abrir" phx-value-modal="punto">Punto de atención</button>
         </:acciones>
       </.encabezado>
-      
       <.vacio :if={is_nil(@zona)} mensaje="Todavía no hay zonas registradas." icono="hero-map" />
-
       <div :if={@zona} class="grid gap-6 lg:grid-cols-[20rem_1fr]" data-sx-nivel={@zona.nivel}>
         <nav id="lista-zonas" class="space-y-2" aria-label="Zonas">
           <button
@@ -117,15 +144,15 @@ defmodule InterfazWeb.ZonasLive do
           >
             <div>
               <p class="font-medium">{z.nombre}</p>
-              
+
               <p class="text-xs text-base-content/60">
                 {length(z.sectores)} sectores · {z.afectadas} afectadas
               </p>
             </div>
-             <.insignia valor={z.nivel} />
+            <.insignia valor={z.nivel} />
           </button>
         </nav>
-        
+
         <div class="space-y-6">
           <div id="estadisticas-zona" class="sx-escalonar grid grid-cols-2 gap-4 2xl:grid-cols-4">
             <.indicador titulo="Personas afectadas" valor={@zona.afectadas} icono="hero-users" />
@@ -148,10 +175,10 @@ defmodule InterfazWeb.ZonasLive do
               tono="text-success"
             />
           </div>
-          
+
           <.panel titulo={"Estructura de #{@zona.nombre}"}>
             <:acciones><.insignia valor={@zona.nivel} /></:acciones>
-            
+
             <.vacio
               :if={@zona.sectores == []}
               mensaje="Esta zona aún no tiene sectores registrados."
@@ -169,17 +196,17 @@ defmodule InterfazWeb.ZonasLive do
                     <span class="font-medium">{s.nombre}</span>
                     <span class="text-xs text-base-content/60">{s.codigo}</span>
                   </div>
-                  
+
                   <div class="flex items-center gap-3 text-xs text-base-content/70">
                     {s.afectadas} afectadas <.insignia valor={s.nivel} />
                   </div>
                 </div>
-                
+
                 <ul class="px-4 py-2">
                   <li :if={s.puntos == []} class="py-1 text-sm text-base-content/50">
                     Sin puntos de atención
                   </li>
-                  
+
                   <li
                     :for={p <- s.puntos}
                     id={"punto-#{p.codigo}"}
@@ -194,7 +221,7 @@ defmodule InterfazWeb.ZonasLive do
           </.panel>
         </div>
       </div>
-      
+
       <.modal id="modal-zona" titulo="Registrar zona" abierto={@modal == :zona}>
         <.form for={@form} id="form-zona" phx-submit="guardar">
           <.input field={@form[:nombre]} label="Nombre" placeholder="Norte" required />
@@ -205,10 +232,10 @@ defmodule InterfazWeb.ZonasLive do
             options={opciones(Fuente.niveles())}
           />
           <p class="text-xs text-base-content/60">El código de la zona lo genera el sistema.</p>
-           <.botones_form texto="Registrar" />
+          <.botones_form texto="Registrar" />
         </.form>
       </.modal>
-      
+
       <.modal id="modal-sector" titulo="Registrar sector" abierto={@modal == :sector}>
         <.form for={@form} id="form-sector" phx-submit="guardar">
           <.input
@@ -216,8 +243,7 @@ defmodule InterfazWeb.ZonasLive do
             type="select"
             label="Zona"
             options={Enum.map(@zonas, &{&1.nombre, &1.codigo})}
-          />
-          <.input field={@form[:nombre]} label="Nombre" placeholder="Laureles" required />
+          /> <.input field={@form[:nombre]} label="Nombre" placeholder="Laureles" required />
           <div class="grid grid-cols-2 gap-3">
             <.input
               field={@form[:nivel]}
@@ -233,11 +259,12 @@ defmodule InterfazWeb.ZonasLive do
               required
             />
           </div>
+
           <p class="text-xs text-base-content/60">El código del sector lo genera el sistema.</p>
-           <.botones_form />
+          <.botones_form />
         </.form>
       </.modal>
-      
+
       <.modal id="modal-punto" titulo="Registrar punto de atención" abierto={@modal == :punto}>
         <.form for={@form} id="form-punto" phx-submit="guardar">
           <.input
@@ -249,10 +276,9 @@ defmodule InterfazWeb.ZonasLive do
                 {"#{z.nombre} · #{s.nombre}", "#{z.codigo}:#{s.codigo}"}
               end
             }
-          />
-          <.input field={@form[:nombre]} label="Nombre" placeholder="Carpa Cruz Roja" required />
+          /> <.input field={@form[:nombre]} label="Nombre" placeholder="Carpa Cruz Roja" required />
           <p class="text-xs text-base-content/60">El código del punto lo genera el sistema.</p>
-           <.botones_form />
+          <.botones_form />
         </.form>
       </.modal>
     </Layouts.app>

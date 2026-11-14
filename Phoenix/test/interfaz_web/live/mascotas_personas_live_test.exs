@@ -5,14 +5,40 @@ defmodule InterfazWeb.MascotasPersonasLiveTest do
 
   import Phoenix.LiveViewTest
 
-  @datos Path.expand("../../../../epicenter/lib/Datos", __DIR__)
   @archivos ~w(Mascota.json Persona.json Mensaje.json)
+  @usuarios "Usuario.json"
   @norte "B7D24E901FA3C665"
 
   setup do
-    originales = for a <- @archivos, do: {a, File.read!(Path.join(@datos, a))}
-    for a <- @archivos, do: File.write!(Path.join(@datos, a), "[]")
-    on_exit(fn -> for {a, contenido} <- originales, do: File.write!(Path.join(@datos, a), contenido) end)
+    ruta_datos = Path.dirname(Epicenter.Persistencia.ruta_datos("Usuario.json"))
+    originales = for a <- @archivos, do: {a, File.read!(Path.join(ruta_datos, a))}
+    ruta_usuarios = Path.join(ruta_datos, @usuarios)
+    usuarios_originales = File.read!(ruta_usuarios)
+    for a <- @archivos, do: File.write!(Path.join(ruta_datos, a), "[]")
+
+    usuarios =
+      Jason.decode!(usuarios_originales)
+      |> Enum.reject(&(&1["nombre_usuario"] == "laura"))
+
+    File.write!(
+      ruta_usuarios,
+      Jason.encode!([
+        %{
+          "nombre_usuario" => "laura",
+          "contrasena" => "clave",
+          "rol" => "coordinar",
+          "nombre_completo" => "Laura Gómez",
+          "zona_principal" => @norte
+        }
+        | usuarios
+      ])
+    )
+
+    on_exit(fn ->
+      for {a, contenido} <- originales, do: File.write!(Path.join(ruta_datos, a), contenido)
+      File.write!(ruta_usuarios, usuarios_originales)
+    end)
+
     :ok
   end
 
@@ -61,14 +87,25 @@ defmodule InterfazWeb.MascotasPersonasLiveTest do
 
     test "buscar coincidencias las marca y confirmar cierra ambos reportes", %{conn: conn} do
       {:ok, view, _} = live(conectado(conn), ~p"/mascotas")
-      datos = %{especie: "gato", color: "gris", tamano: "pequeno", contacto: "311", caracteristicas: "ojos verdes"}
+
+      datos = %{
+        especie: "gato",
+        color: "gris",
+        tamano: "pequeno",
+        contacto: "311",
+        caracteristicas: "ojos verdes"
+      }
+
       reportar_mascota(view, "perdida", Map.put(datos, :nombre, "Michi"))
       reportar_mascota(view, "encontrada", datos)
 
       assert view |> element("#buscar-coincidencias") |> render_click() =~
                "Se marcó 1 posible coincidencia."
 
-      {:ok, [perdida]} = Epicenter.GestorMascota.consultar(estado: :posible_coincidencia, especie: "gato") |> primeras_perdidas()
+      {:ok, [perdida]} =
+        Epicenter.GestorMascota.consultar(estado: :posible_coincidencia, especie: "gato")
+        |> primeras_perdidas()
+
       encontrada = perdida.coincidencia_con
 
       view |> element("#confirmar-#{perdida.id}-#{encontrada}") |> render_click()
@@ -81,7 +118,12 @@ defmodule InterfazWeb.MascotasPersonasLiveTest do
       {:ok, view, _} = live(conectado(conn), ~p"/mascotas")
 
       html =
-        reportar_mascota(view, "perdida", %{especie: "perro", color: " ", tamano: "grande", contacto: "300"})
+        reportar_mascota(view, "perdida", %{
+          especie: "perro",
+          color: " ",
+          tamano: "grande",
+          contacto: "300"
+        })
 
       assert html =~ "Escribe el color."
     end
@@ -97,7 +139,13 @@ defmodule InterfazWeb.MascotasPersonasLiveTest do
       html =
         view
         |> form("#form-persona",
-          persona: %{documento: "1094", nombre: "Andrés Gómez", edad: "34", zona: @norte, estado: "reportada"}
+          persona: %{
+            documento: "1094",
+            nombre: "Andrés Gómez",
+            edad: "34",
+            zona: @norte,
+            estado: "reportada"
+          }
         )
         |> render_submit()
 
@@ -125,7 +173,14 @@ defmodule InterfazWeb.MascotasPersonasLiveTest do
 
     test "no deja reportar dos veces el mismo documento", %{conn: conn} do
       {:ok, view, _} = live(conectado(conn), ~p"/personas")
-      persona = %{documento: "555", nombre: "Ana Ruiz", edad: "40", zona: @norte, estado: "reportada"}
+
+      persona = %{
+        documento: "555",
+        nombre: "Ana Ruiz",
+        edad: "40",
+        zona: @norte,
+        estado: "reportada"
+      }
 
       view |> element("#reportar-persona") |> render_click()
       view |> form("#form-persona", persona: persona) |> render_submit()

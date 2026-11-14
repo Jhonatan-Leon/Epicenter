@@ -62,22 +62,57 @@ defmodule InterfazWeb.Sesion do
   def coordina?(%{rol: rol}), do: rol in [:coordinador, :administrador]
   def coordina?(_), do: false
 
+  def administra?(%{rol: :administrador}), do: true
+  def administra?(_), do: false
+
   def on_mount({:pagina, clave}, _params, session, socket) do
     case session["usuario"] do
-      nil ->
-        {:halt, redirect(socket, to: ~p"/conectar")}
+      %{usuario: nombre_usuario} when is_binary(nombre_usuario) ->
+        case Epicenter.GestorUsuario.obtener(nombre_usuario) do
+          {:ok, usuario_backend} ->
+            zonas = Interfaz.Fuente.zonas()
+            zonas_por_codigo = Map.new(zonas, &{&1.codigo, &1.nombre})
+            usuario = usuario_sesion(usuario_backend, zonas)
 
-      usuario ->
-        usuario = %{usuario | rol: String.to_existing_atom(to_string(usuario.rol))}
+            if Enum.any?(navegacion(usuario.rol), &(&1.clave == clave)) do
+              {:cont,
+               socket
+               |> assign(:usuario, usuario)
+               |> assign(:activo, clave)
+               |> assign(:zonas_catalogo, zonas)
+               |> assign(:zonas_por_codigo, zonas_por_codigo)
+               |> assign(:opciones_zonas, Enum.map(zonas, &{&1.nombre, &1.codigo}))}
+            else
+              {:halt,
+               socket
+               |> put_flash(:error, "Tu rol no tiene acceso a esa sección.")
+               |> redirect(to: ~p"/")}
+            end
 
-        if Enum.any?(navegacion(usuario.rol), &(&1.clave == clave)) do
-          {:cont, socket |> assign(:usuario, usuario) |> assign(:activo, clave)}
-        else
-          {:halt,
-           socket
-           |> put_flash(:error, "Tu rol no tiene acceso a esa sección.")
-           |> redirect(to: ~p"/")}
+          {:error, _razon} ->
+            {:halt, redirect(socket, to: ~p"/conectar")}
         end
+
+      _sin_usuario ->
+        {:halt, redirect(socket, to: ~p"/conectar")}
     end
   end
+
+  defp usuario_sesion(usuario_backend, zonas) do
+    zona =
+      Enum.find(zonas, fn zona ->
+        usuario_backend.zona_principal in [zona.codigo, zona.nombre]
+      end)
+
+    %{
+      usuario: usuario_backend.nombre_usuario,
+      nombre: usuario_backend.nombre_completo || usuario_backend.nombre_usuario,
+      rol: rol_interfaz(usuario_backend.rol),
+      zona: if(zona, do: zona.codigo)
+    }
+  end
+
+  defp rol_interfaz(:coordinar), do: :coordinador
+  defp rol_interfaz(rol) when rol in [:ciudadano, :voluntario, :administrador], do: rol
+  defp rol_interfaz(_rol), do: :ciudadano
 end

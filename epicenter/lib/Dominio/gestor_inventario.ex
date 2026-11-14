@@ -2,8 +2,7 @@ defmodule Epicenter.GestorInventario do
   def listar, do: Epicenter.Persistencia.cargar_inventarios()
 
   def registro(codigo_recurso, codigo_centro, zonas, cantidad_disponible) do
-    with {:ok, inventario} <-
-           Epicenter.Inventario.nuevo(
+    with {:ok, inventario} <- Epicenter.Inventario.nuevo(
              codigo_recurso,
              codigo_centro,
              zonas,
@@ -24,10 +23,8 @@ defmodule Epicenter.GestorInventario do
   def completar_informacion(id, zonas, cantidad_disponible) do
     with {:ok, inventarios} <- listar(),
          {:ok, inventario} <- buscar_inventario(inventarios, id),
-         {:ok, inventario_actualizado} <-
-           Epicenter.Inventario.completar_inventario(inventario, zonas, cantidad_disponible) do
-      inventarios_actualizados =
-        Enum.map(inventarios, fn existente ->
+         {:ok, inventario_actualizado} <- Epicenter.Inventario.completar_inventario(inventario, zonas, cantidad_disponible) do
+      inventarios_actualizados = Enum.map(inventarios, fn existente ->
           if existente.id == id, do: inventario_actualizado, else: existente
         end)
 

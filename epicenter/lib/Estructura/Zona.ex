@@ -2,7 +2,7 @@ defmodule Epicenter.Zona do
   @niveles [:critico, :alto, :medio, :bajo]
 
   @enforce_keys [:codigo, :nombre, :nivel]
-    defstruct [:codigo, :nombre, :nivel, sectores: []]
+  defstruct [:codigo, :nombre, :nivel, sectores: []]
 
   def nuevo(_codigo, "", _nivel), do: {:error, :nombre_vacio}
 
@@ -50,5 +50,4 @@ defmodule Epicenter.Zona do
 
   defp contar_puntos([]), do: 0
   defp contar_puntos([sector | resto]), do: length(sector.puntos) + contar_puntos(resto)
-
 end

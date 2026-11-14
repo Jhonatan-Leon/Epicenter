@@ -26,10 +26,7 @@ defmodule Epicenter.Genserver do
     do: GenServer.call(__MODULE__, {:eliminar, nombre_usuario})
 
   @impl true
-  def init(_opts) do
-    datos_iniciales = Epicenter.GestorUsuario.listar()
-    {:ok, datos_iniciales}
-  end
+  def init(_opts), do: {:ok, nil}
 
   @impl true
   def handle_call(:listar, _from, state) do

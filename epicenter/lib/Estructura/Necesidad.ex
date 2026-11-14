@@ -107,5 +107,4 @@ defmodule Epicenter.Necesidad do
   end
 
   def asignar_recurso(_necesidad, _codigo_recurso, _cantidad), do: {:error, :cantidad_invalida}
-  
 end

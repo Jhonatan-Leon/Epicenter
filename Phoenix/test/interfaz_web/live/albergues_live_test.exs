@@ -5,17 +5,17 @@ defmodule InterfazWeb.AlberguesLiveTest do
 
   import Phoenix.LiveViewTest
 
-  @datos Path.expand("../../../../epicenter/lib/Datos", __DIR__)
+  alias InterfazWeb.DatosPrueba
+
   @archivos ~w(Albergue.json Persona.json)
   @norte "B7D24E901FA3C665"
 
   setup do
-    originales = for a <- @archivos, do: {a, File.read!(Path.join(@datos, a))}
-    for a <- @archivos, do: File.write!(Path.join(@datos, a), "[]")
-    on_exit(fn -> for {a, contenido} <- originales, do: File.write!(Path.join(@datos, a), contenido) end)
+    DatosPrueba.preparar(@archivos, [DatosPrueba.usuario("laura", "administrador", "Norte")])
 
     for {doc, nombre} <- [{"111", "Ana Ruiz"}, {"222", "Luis Pérez"}] do
-      {:ok, _} = Epicenter.GestorPersona.reportar_persona(doc, nombre, "30", @norte, "reportada", "laura")
+      {:ok, _} =
+        Epicenter.GestorPersona.reportar_persona(doc, nombre, "30", @norte, "reportada", "laura")
     end
 
     :ok
@@ -24,7 +24,7 @@ defmodule InterfazWeb.AlberguesLiveTest do
   defp abrir(conn) do
     conn =
       init_test_session(conn,
-        usuario: %{usuario: "laura", nombre: "Laura Gómez", rol: :coordinador, zona: @norte}
+        usuario: %{usuario: "laura", nombre: "Laura Gómez", rol: :administrador, zona: @norte}
       )
 
     {:ok, view, _html} = live(conn, ~p"/albergues")
@@ -41,7 +41,10 @@ defmodule InterfazWeb.AlberguesLiveTest do
 
   defp movimiento(view, codigo, tipo, documento) do
     view |> element("##{tipo}-#{codigo}") |> render_click()
-    view |> form("#form-movimiento-albergue", movimiento: %{documento: documento}) |> render_submit()
+
+    view
+    |> form("#form-movimiento-albergue", movimiento: %{documento: documento})
+    |> render_submit()
   end
 
   test "registrar un albergue lo guarda sin pedir código", %{conn: conn} do

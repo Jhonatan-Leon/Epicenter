@@ -21,7 +21,8 @@ defmodule Epicenter.GestorHistorial do
   # Movimientos de un solo recurso.
   def de_recurso(codigo_recurso) do
     with {:ok, movimientos} <- listar() do
-      {:ok, Enum.filter(movimientos, fn movimiento -> movimiento.codigo_recurso == codigo_recurso end)}
+      {:ok,
+       Enum.filter(movimientos, fn movimiento -> movimiento.codigo_recurso == codigo_recurso end)}
     end
   end
 

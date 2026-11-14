@@ -84,7 +84,12 @@ defmodule InterfazWeb.NecesidadesLive do
 
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} usuario={@usuario} activo={@activo}>
+    <Layouts.app
+      flash={@flash}
+      usuario={@usuario}
+      activo={@activo}
+      zonas_por_codigo={@zonas_por_codigo}
+    >
       <.encabezado
         titulo="Necesidades puntuales"
         subtitulo="Ordenadas por prioridad: las críticas se atienden primero."
@@ -95,7 +100,7 @@ defmodule InterfazWeb.NecesidadesLive do
           </button>
         </:acciones>
       </.encabezado>
-      
+
       <.form
         for={@filtros}
         id="filtros-necesidades"
@@ -107,7 +112,7 @@ defmodule InterfazWeb.NecesidadesLive do
           type="select"
           label="Zona"
           prompt="Todas"
-          options={Enum.map(Fuente.zonas(), &{&1.nombre, &1.codigo})}
+          options={@opciones_zonas}
         />
         <.input
           field={@filtros[:tipo]}
@@ -135,50 +140,50 @@ defmodule InterfazWeb.NecesidadesLive do
           <button :if={@filtrando?} type="button" class="btn btn-ghost btn-sm" phx-click="limpiar">Limpiar</button>
         </div>
       </.form>
-      
+
       <div class="sx-card overflow-x-auto">
         <table id="tabla-necesidades" class="table">
           <thead>
             <tr>
               <th>Prioridad</th>
-              
+
               <th>Necesidad</th>
-              
+
               <th>Zona</th>
-              
+
               <th class="text-right">Cantidad</th>
-              
+
               <th>Estado</th>
-              
+
               <th><span class="sr-only">Acciones</span></th>
             </tr>
           </thead>
-          
+
           <tbody>
             <tr :if={@necesidades == []}>
               <td colspan="6"><.vacio mensaje="No hay necesidades con esos filtros." /></td>
             </tr>
-            
+
             <tr :for={n <- @necesidades} id={"necesidad-#{n.id}"} class="hover:bg-base-200/60">
               <td><.insignia valor={n.prioridad} /></td>
-              
+
               <td class="min-w-56">
                 <p class="font-medium">
                   {t(n.tipo)} <span class="text-xs font-normal text-base-content/50">{n.id}</span>
                 </p>
-                
+
                 <p class="text-xs text-base-content/60">{n.descripcion} · reportó {n.responsable}</p>
               </td>
-              
-              <td class="whitespace-nowrap">{zona(n.zona)}</td>
-              
+
+              <td class="whitespace-nowrap">{zona(n.zona, @zonas_por_codigo)}</td>
+
               <td class="text-right tabular-nums">{n.cantidad}</td>
-              
+
               <td><.insignia valor={n.estado} /></td>
-              
+
               <td class="text-right">
                 <div
-                  :if={Sesion.gestiona?(@usuario) and n.estado not in [:atendida, :cancelada]}
+                  :if={Sesion.coordina?(@usuario) and n.estado not in [:atendida, :cancelada]}
                   class="flex justify-end gap-1"
                 >
                   <button
@@ -189,7 +194,7 @@ defmodule InterfazWeb.NecesidadesLive do
                   >
                     Asignar
                   </button>
-                  
+
                   <div class="dropdown dropdown-end">
                     <button
                       tabindex="0"
@@ -198,7 +203,7 @@ defmodule InterfazWeb.NecesidadesLive do
                     >
                       <.icon name="hero-ellipsis-vertical" class="size-4" />
                     </button>
-                    
+
                     <ul
                       tabindex="0"
                       class="dropdown-content menu z-10 w-44 sx-card sx-foco p-1 shadow"
@@ -216,7 +221,7 @@ defmodule InterfazWeb.NecesidadesLive do
           </tbody>
         </table>
       </div>
-      
+
       <.modal id="modal-necesidad" titulo="Registrar necesidad" abierto={@modal == :nueva}>
         <.form for={@form} id="form-necesidad" phx-submit="guardar">
           <div class="grid grid-cols-2 gap-3">
@@ -237,16 +242,23 @@ defmodule InterfazWeb.NecesidadesLive do
               field={@form[:prioridad]}
               type="select"
               label="Prioridad"
-              options={opciones(Fuente.prioridades())}
+              options={
+                opciones(
+                  if(Sesion.coordina?(@usuario),
+                    do: Fuente.prioridades(),
+                    else: Enum.reject(Fuente.prioridades(), &(&1 == :critica))
+                  )
+                )
+              }
             />
             <.input
               field={@form[:zona]}
               type="select"
               label="Zona"
-              options={Enum.map(Fuente.zonas(), &{&1.nombre, &1.codigo})}
+              options={@opciones_zonas}
             />
           </div>
-          
+
           <.input
             field={@form[:descripcion]}
             type="textarea"
@@ -257,7 +269,7 @@ defmodule InterfazWeb.NecesidadesLive do
           /> <.botones_form texto="Registrar" />
         </.form>
       </.modal>
-      
+
       <.modal
         :if={@necesidad}
         id="modal-asignar"
@@ -266,10 +278,12 @@ defmodule InterfazWeb.NecesidadesLive do
       >
         <div class="mb-4 rounded-box bg-base-200 p-3 text-sm">
           <p class="font-medium">{t(@necesidad.tipo)} · {@necesidad.cantidad} requeridos</p>
-          
-          <p class="text-base-content/70">{@necesidad.descripcion} — {zona(@necesidad.zona)}</p>
+
+          <p class="text-base-content/70">
+            {@necesidad.descripcion} — {zona(@necesidad.zona, @zonas_por_codigo)}
+          </p>
         </div>
-        
+
         <.form for={@form} id="form-asignar" phx-submit="guardar">
           <.input
             field={@form[:recurso]}
@@ -286,7 +300,7 @@ defmodule InterfazWeb.NecesidadesLive do
           <p class="text-xs text-base-content/60">
             Si otra solicitud toma el mismo recurso al mismo tiempo, el sistema solo confirma lo que haya en inventario.
           </p>
-           <.botones_form texto="Asignar" />
+          <.botones_form texto="Asignar" />
         </.form>
       </.modal>
     </Layouts.app>
