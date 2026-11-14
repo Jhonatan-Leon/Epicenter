@@ -23,6 +23,32 @@ defmodule InterfazWeb.SesionControllerTest do
 
   defp registrar(conn, datos), do: post(conn, ~p"/registrar", registro: datos)
 
+  test "una sesión de un usuario que ya no existe se borra en vez de redirigir sin fin", %{
+    conn: conn
+  } do
+    conn =
+      conn
+      |> init_test_session(
+        usuario: %{usuario: "borrado", nombre: "X", rol: :ciudadano, zona: nil}
+      )
+      |> get(~p"/conectar")
+
+    # Muestra el formulario (no redirige a "/") y quita el usuario de la sesión.
+    assert html_response(conn, 200) =~ ~s(name="acceso[usuario]")
+    assert get_session(conn, :usuario) == nil
+  end
+
+  test "con una sesión válida /conectar lleva al inicio", %{conn: conn} do
+    conn =
+      conn
+      |> init_test_session(
+        usuario: %{usuario: "ANA", nombre: "Ana", rol: :coordinador, zona: nil}
+      )
+      |> get(~p"/conectar")
+
+    assert redirected_to(conn) == ~p"/"
+  end
+
   test "la pantalla de conexión solo pide usuario y contraseña", %{conn: conn} do
     html = html_response(get(conn, ~p"/conectar"), 200)
 

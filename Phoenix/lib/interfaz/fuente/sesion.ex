@@ -65,6 +65,10 @@ defmodule Interfaz.Fuente.Sesion do
   @doc "Tipos de usuario que puede elegir alguien que se registra."
   def roles_registro, do: [:ciudadano, :voluntario]
 
+  @doc "¿La sesión guardada en el navegador es de un usuario que todavía existe?"
+  def sesion_valida?(%{usuario: usuario}) when is_binary(usuario), do: usuario_existe?(usuario)
+  def sesion_valida?(_sesion), do: false
+
   @doc "Comando `disconnect`."
   def desconectar(_usuario), do: :ok
 

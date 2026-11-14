@@ -3,11 +3,15 @@ defmodule InterfazWeb.SesionController do
 
   alias Interfaz.Fuente
 
+  # Si la sesión es de un usuario que ya no existe (por ejemplo, después de
+  # reiniciar los datos), se quita de la sesión (sin borrar el token CSRF
+  # del formulario); si no, "/" y "/conectar" se redirigirían
+  # el uno al otro sin fin.
   def new(conn, _params) do
-    if get_session(conn, :usuario) do
+    if Fuente.Sesion.sesion_valida?(get_session(conn, :usuario)) do
       redirect(conn, to: ~p"/")
     else
-      mostrar_conexion(conn)
+      conn |> delete_session(:usuario) |> mostrar_conexion()
     end
   end
 

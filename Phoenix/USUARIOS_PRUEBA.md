@@ -1,14 +1,32 @@
-# Usuarios de prueba
+# Cuentas para la sustentación
 
-Cuentas creadas para probar la interfaz por rol. Todas son de prueba.
+Datos de demostración de Armenia, Quindío (`epicenter/lib/Datos/*.json`).
 
-| Usuario | Contraseña | Rol | Zona |
-|---|---|---|---|
-| `coord_prueba` | `prueba123` | coordinador (`coordinar`) | Centro |
-| `volu_prueba` | `prueba123` | voluntario | Centro |
-| `ciud_prueba` | `prueba123` | ciudadano | Centro |
+## Administradores (colaboradores del proyecto) · contraseña `1111`
 
-- `ciud_prueba` y `volu_prueba` se registraron desde la pantalla de conexión.
-- `coord_prueba` se agregó directo en `epicenter/lib/Datos/Usuario.json`, porque el
-  registro solo permite elegir ciudadano o voluntario.
-- El administrador de prueba es la cuenta que ya existía en el proyecto.
+| Usuario | Nombre | Zona |
+|---|---|---|
+| `Ruzten` | Steven Sánchez | Centro |
+| `Jhonatan` | Jhonatan León | Norte |
+| `Diana` | Diana Gaona | Sur |
+
+## Resto de cuentas · contraseña `1234`
+
+| Usuario | Rol | Zona |
+|---|---|---|
+| `laura.restrepo` | coordinador | Centro |
+| `andres.giraldo` | coordinador | Norte |
+| `paula.osorio` | coordinador | Sur |
+| `camilo.arango` | coordinador | Occidente |
+| `natalia.ramirez` | coordinador | Oriente |
+| `carlos.mejia` | voluntario | Centro |
+| `julian.cardona` | voluntario | Norte |
+| `valentina.ospina` | voluntario | Sur |
+| `sofia.henao` | voluntario | Occidente |
+| `maria.lopez` | ciudadano | Centro |
+| `diego.salazar` | ciudadano | Norte |
+| `jorge.castano` | ciudadano | Sur |
+| `luisa.franco` | ciudadano | Occidente |
+| `ana.quintero` | ciudadano | Oriente |
+
+Un coordinador solo puede operar en su zona; el administrador, en todas.
