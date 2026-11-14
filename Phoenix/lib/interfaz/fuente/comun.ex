@@ -96,6 +96,14 @@ defmodule Interfaz.Fuente.Comun do
     sin_existencias: "No hay suficientes unidades en inventario.",
     mismo_destino: "El destino debe ser distinto de la ubicación actual.",
     recurso_no_encontrado: "El recurso no existe.",
+    categoria_incompatible: "Ese recurso no es de la misma categoría que la necesidad.",
+    tipo_movimiento_invalido: "Tipo de movimiento no válido.",
+    zona_destino_requerida: "Elige la zona del destino.",
+    # Generales
+    datos_invalidos: "Los datos no son válidos.",
+    filtro_invalido: "Filtro no válido.",
+    filtros_invalidos: "Filtros no válidos.",
+    operacion_no_soportada: "Operación no disponible.",
     # Personas y mensajes
     documento_vacio: "Escribe el documento o una referencia.",
     documento_duplicado: "Ya hay una persona reportada con ese documento.",
@@ -126,5 +134,11 @@ defmodule Interfaz.Fuente.Comun do
 
   # La lógica a veces responde con texto ("Persona no encontrada"): se muestra tal cual.
   def traducir(motivo) when is_binary(motivo), do: motivo
+
+  # Error de Persistencia al leer un JSON: se nombra el archivo, sin volcar su contenido.
+  def traducir(%{archivo: archivo, etapa: etapa}),
+    do:
+      "No se pudo leer #{Path.basename(to_string(archivo))} (#{etapa}). Revisa que el archivo sea un JSON válido."
+
   def traducir(motivo), do: "No se pudo completar: #{inspect(motivo)}"
 end

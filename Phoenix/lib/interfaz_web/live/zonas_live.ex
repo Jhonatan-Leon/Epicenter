@@ -95,12 +95,11 @@ defmodule InterfazWeb.ZonasLive do
     |> assign(:zonas_por_codigo, zonas_por_codigo)
     |> assign(:opciones_zonas, Enum.map(zonas, &{&1.nombre, &1.codigo}))
     |> seleccionar(seleccion)
-    |> assign(:modal, nil)
-    |> put_flash(:info, mensaje)
+    |> InterfazWeb.Respuesta.mostrar({:ok, mensaje})
   end
 
   defp responder(socket, {:error, mensaje}, _seleccion),
-    do: put_flash(socket, :error, to_string(mensaje))
+    do: InterfazWeb.Respuesta.mostrar(socket, {:error, mensaje})
 
   def render(assigns) do
     ~H"""

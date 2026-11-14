@@ -17,5 +17,9 @@ defmodule InterfazWeb.Respuesta do
     |> put_flash(:info, mensaje)
   end
 
-  def mostrar(socket, {:error, mensaje}), do: put_flash(socket, :error, to_string(mensaje))
+  def mostrar(socket, {:error, mensaje}) do
+    socket
+    |> clear_flash(:info)
+    |> put_flash(:error, to_string(mensaje))
+  end
 end

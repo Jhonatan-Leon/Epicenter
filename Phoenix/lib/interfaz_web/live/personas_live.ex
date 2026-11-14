@@ -105,12 +105,11 @@ defmodule InterfazWeb.PersonasLive do
     socket
     |> buscar(socket.assigns.busqueda.params)
     |> seleccionar(documento)
-    |> assign(:modal, nil)
-    |> put_flash(:info, mensaje)
+    |> InterfazWeb.Respuesta.mostrar({:ok, mensaje})
   end
 
   defp responder(socket, {:error, mensaje}, _documento),
-    do: put_flash(socket, :error, to_string(mensaje))
+    do: InterfazWeb.Respuesta.mostrar(socket, {:error, mensaje})
 
   defp buscar(socket, b) do
     socket

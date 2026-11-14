@@ -186,7 +186,7 @@ defmodule InterfazWeb.Gestiones.Necesidades do
 
       <.vacio
         :if={@opciones_recursos == []}
-        mensaje="No hay recursos registrados para asignar."
+        mensaje={"No hay recursos de #{String.downcase(t(@necesidad.tipo))} con existencias para asignar."}
         icono="hero-cube"
       />
       <.form :if={@opciones_recursos != []} for={@form} id="form-asignar" phx-submit="guardar">

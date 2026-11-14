@@ -80,10 +80,11 @@ defmodule InterfazWeb.NecesidadesLive do
 
   defp usuario(socket), do: socket.assigns.usuario.usuario
 
-  # Primero los recursos de la misma zona y con existencias.
+  # Solo recursos de la misma categoría que la necesidad (la lógica lo exige)
+  # y con existencias; primero los de la misma zona.
   defp opciones_recursos(necesidad) do
     Recursos.recursos()
-    |> Enum.filter(&(&1.cantidad > 0))
+    |> Enum.filter(&(&1.categoria == necesidad.tipo and &1.cantidad > 0))
     |> Enum.sort_by(&(&1.zona != necesidad.zona))
     |> Enum.map(
       &{"#{&1.codigo} · #{&1.nombre} — #{&1.cantidad} #{&1.unidad} en #{&1.ubicacion}", &1.codigo}

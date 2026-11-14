@@ -61,11 +61,10 @@ defmodule InterfazWeb.MascotasLive do
   defp responder(socket, {:ok, mensaje}) do
     socket
     |> filtrar(socket.assigns.filtros.params)
-    |> assign(:modal, nil)
-    |> put_flash(:info, mensaje)
+    |> InterfazWeb.Respuesta.mostrar({:ok, mensaje})
   end
 
-  defp responder(socket, {:error, mensaje}), do: put_flash(socket, :error, to_string(mensaje))
+  defp responder(socket, {:error, mensaje}), do: InterfazWeb.Respuesta.mostrar(socket, {:error, mensaje})
 
   defp filtrar(socket, f) do
     lista = Mascotas.consultar(f)
