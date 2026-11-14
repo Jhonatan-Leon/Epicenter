@@ -177,11 +177,16 @@ defmodule Epicenter.GestorMascota do
   de 70 o más. Cada reporte queda en una sola pareja y guarda en
   `coincidencia_con` el id de la otra. Devuelve `{:ok, parejas_marcadas}`.
   """
-  def marcar_coincidencias do
+  def marcar_coincidencias, do: marcar_coincidencias(nil)
+
+  def marcar_coincidencias(codigo_zona) when is_nil(codigo_zona) or is_binary(codigo_zona) do
     with {:ok, mascotas} <- listar() do
       parejas =
         mascotas
-        |> Enum.filter(&(&1.estado == :activa))
+        |> Enum.filter(fn mascota ->
+          mascota.estado == :activa and
+            (is_nil(codigo_zona) or mascota.zona == codigo_zona)
+        end)
         |> calcular_coincidencias()
         |> seleccionar_para_marcar()
 

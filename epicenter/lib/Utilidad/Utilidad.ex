@@ -13,6 +13,9 @@ defmodule Utilidad do
     {:error, "La cantidad no puede ser negativa"}
   end
 
+  def verificar_cantidad(cantidad) when is_number(cantidad), do: :ok
+  def verificar_cantidad(_cantidad), do: {:error, "La cantidad debe ser un número"}
+
   # def verificar_zona(codigo_zona) do
   #   zonas = Epicenter.Zona.listar_zonas(Epicenter.Zona)
 

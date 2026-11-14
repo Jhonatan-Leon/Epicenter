@@ -10,6 +10,7 @@ defmodule Epicenter.GenserverRecurso do
     registrar_salida: 4,
     asignar_a_necesidad: 4,
     transferir: 4,
+    transferir: 5,
     de_zona: 1,
     criticos: 0
   ]
@@ -31,6 +32,9 @@ defmodule Epicenter.GenserverRecurso do
 
   def transferir(codigo, cantidad, destino, usuario),
     do: solicitar(:transferir, [codigo, cantidad, destino, usuario])
+
+  def transferir(codigo, cantidad, destino, codigo_zona, usuario),
+    do: solicitar(:transferir, [codigo, cantidad, destino, codigo_zona, usuario])
 
   def de_zona(codigo_zona), do: solicitar(:de_zona, [codigo_zona])
   def criticos, do: solicitar(:criticos, [])

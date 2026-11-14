@@ -6,7 +6,7 @@ defmodule Epicenter.GestorUsuarioTest do
   alias Epicenter.Usuario
 
   setup do
-    ruta = Path.expand("../lib/Datos/Usuario.json", __DIR__)
+    ruta = Persistencia.ruta_datos("Usuario.json")
     contenido_original = File.read!(ruta)
     File.write!(ruta, "[]")
 

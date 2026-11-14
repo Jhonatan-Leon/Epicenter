@@ -4,7 +4,7 @@ defmodule Epicenter.GenserverTest do
   alias Epicenter.Persistencia
 
   setup do
-    ruta = Path.expand("../lib/Datos/Usuario.json", __DIR__)
+    ruta = Persistencia.ruta_datos("Usuario.json")
     contenido_original = File.read!(ruta)
     File.write!(ruta, "[]")
 

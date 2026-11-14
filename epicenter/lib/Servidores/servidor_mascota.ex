@@ -14,7 +14,7 @@ defmodule Epicenter.GenserverMascota do
     consultar: 0,
     consultar: 1,
     coincidencias_posibles: 0,
-    marcar_coincidencias: 0,
+    marcar_coincidencias: 1,
     confirmar_coincidencia: 2,
     umbral_candidata: 0,
     umbral_marcar: 0,
@@ -41,6 +41,7 @@ defmodule Epicenter.GenserverMascota do
   def consultar(filtros), do: solicitar(:consultar, [filtros])
   def coincidencias_posibles, do: solicitar(:coincidencias_posibles, [])
   def marcar_coincidencias, do: solicitar(:marcar_coincidencias, [])
+  def marcar_coincidencias(codigo_zona), do: solicitar(:marcar_coincidencias, [codigo_zona])
 
   def confirmar_coincidencia(id_perdida, id_encontrada),
     do: solicitar(:confirmar_coincidencia, [id_perdida, id_encontrada])

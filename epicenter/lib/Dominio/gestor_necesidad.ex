@@ -3,6 +3,10 @@ defmodule Epicenter.GestorNecesidad do
 
   def listar, do: Epicenter.Persistencia.cargar_necesidades()
 
+  def obtener(id) do
+    with {:ok, necesidades} <- listar(), do: buscar_necesidad(necesidades, id)
+  end
+
   # Comando register_need, Los datos pueden llegar como texto ("agua", "30")
   def registrar(
         codigo_zona,

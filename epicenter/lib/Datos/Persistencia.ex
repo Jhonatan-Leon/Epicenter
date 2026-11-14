@@ -1,25 +1,16 @@
 defmodule Epicenter.Persistencia do
-  @path_usuarios Path.join(__DIR__, "Usuario.json")
-  @path_recursos Path.join(__DIR__, "Recurso.json")
-  @path_albergues Path.join(__DIR__, "Albergue.json")
-  @path_centros_apoyo Path.join(__DIR__, "CentroApoyo.json")
-  @path_historiales Path.join(__DIR__, "Historial.json")
-  @path_inventarios Path.join(__DIR__, "Inventario.json")
-  @path_mascotas Path.join(__DIR__, "Mascota.json")
-  @path_mensajes Path.join(__DIR__, "Mensaje.json")
-  @path_necesidades Path.join(__DIR__, "Necesidad.json")
-  @path_personas Path.join(__DIR__, "Persona.json")
-
-  @path_zonas Path.join(__DIR__, "Zonas.json")
   alias Epicenter.{Zona, Sector, PuntoAtencion}
 
   @moduledoc """
   Modulo para cargar y guardar las estructuras desde documentos JSON.
   Zona, PuntoAtencion y Sector no se persisten aquí.
+
+  La carpeta de datos puede configurarse con `:ruta_datos` en la aplicación
+  `:epicenter`; si no se configura, se usa esta carpeta.
   """
 
   def carga_usuarios do
-    cargar_archivo(@path_usuarios, Epicenter.Usuario)
+    cargar_archivo(ruta_datos("Usuario.json"), Epicenter.Usuario)
   end
 
   def map_a_struct(usuario) do
@@ -33,14 +24,14 @@ defmodule Epicenter.Persistencia do
   end
 
   def cargar_recurso do
-    cargar_archivo(@path_recursos, Epicenter.Recurso)
+    cargar_archivo(ruta_datos("Recurso.json"), Epicenter.Recurso)
   end
 
   def recurso_a_struct(recurso) do
     %Epicenter.Recurso{
       codigo: recurso["codigo"],
       nombre: recurso["nombre"],
-      categoria: recurso["categoria"],
+      categoria: a_atomo_existente(recurso["categoria"]),
       unidad_medida: recurso["unidad_medida"],
       ubicacion: recurso["ubicacion"],
       codigo_zona: recurso["codigo_zona"],
@@ -49,10 +40,10 @@ defmodule Epicenter.Persistencia do
     }
   end
 
-  def guardar_recursos(recursos), do: guardar_documento(recursos, @path_recursos)
+  def guardar_recursos(recursos), do: guardar_documento(recursos, ruta_datos("Recurso.json"))
 
-  def cargar_albergues, do: cargar_archivo(@path_albergues, Epicenter.Albergue)
-  def guardar_albergues(albergues), do: guardar_documento(albergues, @path_albergues)
+  def cargar_albergues, do: cargar_archivo(ruta_datos("Albergue.json"), Epicenter.Albergue)
+  def guardar_albergues(albergues), do: guardar_documento(albergues, ruta_datos("Albergue.json"))
 
   def albergue_a_struct(albergue) do
     %Epicenter.Albergue{
@@ -67,9 +58,10 @@ defmodule Epicenter.Persistencia do
   end
 
   def cargar_centros_apoyo,
-    do: cargar_archivo(@path_centros_apoyo, Epicenter.CentroApoyo)
+    do: cargar_archivo(ruta_datos("CentroApoyo.json"), Epicenter.CentroApoyo)
 
-  def guardar_centros_apoyo(centros), do: guardar_documento(centros, @path_centros_apoyo)
+  def guardar_centros_apoyo(centros),
+    do: guardar_documento(centros, ruta_datos("CentroApoyo.json"))
 
   def centro_apoyo_a_struct(centro) do
     %Epicenter.CentroApoyo{
@@ -81,9 +73,10 @@ defmodule Epicenter.Persistencia do
   end
 
   def cargar_historiales,
-    do: cargar_archivo(@path_historiales, Epicenter.Historial)
+    do: cargar_archivo(ruta_datos("Historial.json"), Epicenter.Historial)
 
-  def guardar_historiales(historiales), do: guardar_documento(historiales, @path_historiales)
+  def guardar_historiales(historiales),
+    do: guardar_documento(historiales, ruta_datos("Historial.json"))
 
   def historial_a_struct(historial) do
     %Epicenter.Historial{
@@ -98,9 +91,10 @@ defmodule Epicenter.Persistencia do
   end
 
   def cargar_inventarios,
-    do: cargar_archivo(@path_inventarios, Epicenter.Inventario)
+    do: cargar_archivo(ruta_datos("Inventario.json"), Epicenter.Inventario)
 
-  def guardar_inventarios(inventarios), do: guardar_documento(inventarios, @path_inventarios)
+  def guardar_inventarios(inventarios),
+    do: guardar_documento(inventarios, ruta_datos("Inventario.json"))
 
   def inventario_a_struct(inventario) do
     %Epicenter.Inventario{
@@ -112,8 +106,8 @@ defmodule Epicenter.Persistencia do
     }
   end
 
-  def cargar_mascotas, do: cargar_archivo(@path_mascotas, Epicenter.Mascota)
-  def guardar_mascotas(mascotas), do: guardar_documento(mascotas, @path_mascotas)
+  def cargar_mascotas, do: cargar_archivo(ruta_datos("Mascota.json"), Epicenter.Mascota)
+  def guardar_mascotas(mascotas), do: guardar_documento(mascotas, ruta_datos("Mascota.json"))
 
   def mascota_a_struct(registro) do
     datos = %{
@@ -137,8 +131,8 @@ defmodule Epicenter.Persistencia do
     end
   end
 
-  def cargar_mensajes, do: cargar_archivo(@path_mensajes, Epicenter.Mensaje)
-  def guardar_mensajes(mensajes), do: guardar_documento(mensajes, @path_mensajes)
+  def cargar_mensajes, do: cargar_archivo(ruta_datos("Mensaje.json"), Epicenter.Mensaje)
+  def guardar_mensajes(mensajes), do: guardar_documento(mensajes, ruta_datos("Mensaje.json"))
 
   def mensaje_a_struct(mensaje) do
     %Epicenter.Mensaje{
@@ -152,9 +146,10 @@ defmodule Epicenter.Persistencia do
   end
 
   def cargar_necesidades,
-    do: cargar_archivo(@path_necesidades, Epicenter.Necesidad)
+    do: cargar_archivo(ruta_datos("Necesidad.json"), Epicenter.Necesidad)
 
-  def guardar_necesidades(necesidades), do: guardar_documento(necesidades, @path_necesidades)
+  def guardar_necesidades(necesidades),
+    do: guardar_documento(necesidades, ruta_datos("Necesidad.json"))
 
   def necesidad_a_struct(necesidad) do
     %Epicenter.Necesidad{
@@ -166,12 +161,18 @@ defmodule Epicenter.Persistencia do
       cantidad: necesidad["cantidad"],
       prioridad: a_atomo_existente(necesidad["prioridad"]),
       estado: a_atomo_existente(necesidad["estado"]),
-      destino: necesidad["destino"]
+      destino: necesidad["destino"],
+      asignaciones: Map.get(necesidad, "asignaciones", []) |> Enum.map(&asignacion_a_mapa/1)
     }
   end
 
-  def cargar_personas, do: cargar_archivo(@path_personas, Epicenter.Persona)
-  def guardar_personas(personas), do: guardar_documento(personas, @path_personas)
+  def cargar_personas, do: cargar_archivo(ruta_datos("Persona.json"), Epicenter.Persona)
+  def guardar_personas(personas), do: guardar_documento(personas, ruta_datos("Persona.json"))
+
+  def ruta_datos(archivo) when is_binary(archivo) do
+    ruta = Application.get_env(:epicenter, :ruta_datos, __DIR__)
+    Path.join(ruta, archivo)
+  end
 
   def persona_a_struct(persona) do
     %Epicenter.Persona{
@@ -352,6 +353,15 @@ defmodule Epicenter.Persistencia do
 
   defp a_atomo_existente(valor), do: valor
 
+  defp asignacion_a_mapa(%{"recurso" => recurso, "cantidad" => cantidad}),
+    do: %{recurso: recurso, cantidad: cantidad}
+
+  defp asignacion_a_mapa(%{recurso: recurso, cantidad: cantidad}),
+    do: %{recurso: recurso, cantidad: cantidad}
+
+  defp asignacion_a_mapa(asignacion),
+    do: raise(ArgumentError, "asignación de necesidad inválida: #{inspect(asignacion)}")
+
   # El historial de una persona se guarda como lista de mapas; al cargarlo se
   # recuperan los átomos y las fechas. Lo que no tenga esa forma se deja igual.
   defp historial_a_lista(entradas) when is_list(entradas),
@@ -404,14 +414,14 @@ defmodule Epicenter.Persistencia do
       end)
 
     {:ok, data} = Jason.encode(list, pretty: true)
-    File.write!(@path_usuarios, data)
+    File.write!(ruta_datos("Usuario.json"), data)
     usuarios
   end
 
   def guardar_zonas(zonas) do
     lista = Enum.map(Map.values(zonas), fn zona -> zona_a_mapa(zona) end)
     {:ok, data} = Jason.encode(lista, pretty: true)
-    File.write!(@path_zonas, data)
+    File.write!(ruta_datos("Zonas.json"), data)
     zonas
   end
 
@@ -437,7 +447,7 @@ defmodule Epicenter.Persistencia do
   defp punto_a_mapa(punto), do: %{codigo: punto.codigo, nombre: punto.nombre}
 
   def carga_zonas do
-    case File.read(@path_zonas) do
+    case File.read(ruta_datos("Zonas.json")) do
       {:ok, contenido} ->
         lista = JSON.decode!(contenido)
         Map.new(lista, fn mapa -> {mapa["codigo"], mapa_a_zona(mapa)} end)

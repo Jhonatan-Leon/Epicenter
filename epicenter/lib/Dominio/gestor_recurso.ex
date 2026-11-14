@@ -1,4 +1,4 @@
-defmodule Recurso do
+defmodule Epicenter.GestorRecurso do
   @moduledoc """
     administración de recursos disponibles, cantidad disponible, ubicación y unidad de medida
     implementación de lógica pura
@@ -76,6 +76,8 @@ defmodule Recurso do
     with {:ok, cantidad} <- convertir_a_entero(cantidad),
          {:ok, recursos} <- listar(),
          {:ok, recurso} <- buscar_recurso(recursos, codigo),
+         {:ok, necesidad} <- GestorNecesidad.obtener(id_necesidad),
+         :ok <- verificar_categoria(recurso, necesidad),
          {:ok, recurso} <-
            retirar_o_rechazar(recurso, cantidad, "#{id_necesidad} pidió #{cantidad}", usuario),
          {:ok, _necesidad} <- GestorNecesidad.asignar_recurso(id_necesidad, codigo, cantidad) do
@@ -95,15 +97,23 @@ defmodule Recurso do
 
   # Pasa unidades de una ubicación a otra
   def transferir(codigo, cantidad, destino, usuario) do
+    with {:ok, recursos} <- listar(),
+         {:ok, codigo_zona} <- inferir_zona_destino(recursos, destino) do
+      transferir(codigo, cantidad, destino, codigo_zona, usuario)
+    end
+  end
+
+  def transferir(codigo, cantidad, destino, codigo_zona, usuario) do
     with {:ok, cantidad} <- convertir_a_entero(cantidad),
          {:ok, recursos} <- listar(),
          {:ok, origen} <- buscar_recurso(recursos, codigo),
          :ok <- verificar_destino(origen, destino),
+         :ok <- verificar_zona(codigo_zona),
          {:ok, origen} <-
            retirar_o_rechazar(origen, cantidad, "Transferencia a #{destino}", usuario) do
       recursos
       |> reemplazar(origen)
-      |> llevar_a_destino(origen, cantidad, destino)
+      |> llevar_a_destino(origen, cantidad, destino, codigo_zona)
       |> Persistencia.guardar_recursos()
 
       GestorHistorial.registrar(
@@ -123,6 +133,25 @@ defmodule Recurso do
       {:ok, Enum.filter(recursos, fn recurso -> recurso.codigo_zona == codigo_zona end)}
     end
   end
+
+  def consultar_disponibilidad(zona, codigo_recurso, codigos_zona, inventarios)
+      when is_list(codigos_zona) and is_list(inventarios) do
+    if zona in codigos_zona do
+      cantidad =
+        inventarios
+        |> Enum.filter(fn inventario ->
+          zona in inventario.zonas and inventario.codigo_recurso == codigo_recurso
+        end)
+        |> Enum.reduce(0, &(&1.cantidad_disponible + &2))
+
+      {:ok, cantidad}
+    else
+      {:error, "La zona no existe"}
+    end
+  end
+
+  def consultar_disponibilidad(_zona, _codigo_recurso, _codigos_zona, _inventarios),
+    do: {:error, "Las listas de zonas o inventarios no son válidas"}
 
   def criticos do
     with {:ok, recursos} <- listar() do
@@ -144,10 +173,12 @@ defmodule Recurso do
   end
 
   # Si el destino ya tiene ese recurso se le suma, si no, se crea alla
-  defp llevar_a_destino(recursos, origen, cantidad, destino) do
+  defp llevar_a_destino(recursos, origen, cantidad, destino, codigo_zona) do
     existente =
       Enum.find(recursos, fn recurso ->
-        recurso.nombre == origen.nombre and recurso.ubicacion == destino
+        recurso.nombre == origen.nombre and recurso.categoria == origen.categoria and
+          recurso.unidad_medida == origen.unidad_medida and recurso.ubicacion == destino and
+          recurso.codigo_zona == codigo_zona
       end)
 
     case existente do
@@ -161,7 +192,7 @@ defmodule Recurso do
             cantidad: cantidad,
             minimo: origen.minimo,
             ubicacion: destino,
-            codigo_zona: origen.codigo_zona
+            codigo_zona: codigo_zona
           })
 
         [nuevo | recursos]
@@ -174,6 +205,31 @@ defmodule Recurso do
 
   defp verificar_destino(%Recurso{ubicacion: destino}, destino), do: {:error, :mismo_destino}
   defp verificar_destino(_origen, _destino), do: :ok
+
+  defp verificar_categoria(%Recurso{categoria: categoria}, %Epicenter.Necesidad{tipo: tipo})
+       when categoria == tipo,
+       do: :ok
+
+  defp verificar_categoria(_recurso, _necesidad), do: {:error, :categoria_incompatible}
+
+  defp verificar_zona(codigo_zona) do
+    if Map.has_key?(Persistencia.carga_zonas(), codigo_zona),
+      do: :ok,
+      else: {:error, :zona_no_existe}
+  end
+
+  defp inferir_zona_destino(recursos, destino) do
+    zonas =
+      recursos
+      |> Enum.filter(&(&1.ubicacion == destino))
+      |> Enum.map(& &1.codigo_zona)
+      |> Enum.uniq()
+
+    case zonas do
+      [codigo_zona] when is_binary(codigo_zona) -> {:ok, codigo_zona}
+      _ -> {:error, :zona_destino_requerida}
+    end
+  end
 
   defp buscar_recurso(recursos, codigo) do
     case Enum.find(recursos, fn recurso -> recurso.codigo == codigo end) do

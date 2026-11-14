@@ -15,7 +15,7 @@ defmodule Epicenter.GestorMascotaCoincidenciasTest do
   }
 
   setup do
-    ruta = Path.expand("../lib/Datos/Mascota.json", __DIR__)
+    ruta = Epicenter.Persistencia.ruta_datos("Mascota.json")
     original = File.read!(ruta)
     File.write!(ruta, "[]")
 
