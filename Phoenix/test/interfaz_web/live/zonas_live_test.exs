@@ -75,7 +75,7 @@ defmodule InterfazWeb.ZonasLiveTest do
       |> render_submit()
 
     assert html =~ "Zona Zona de prueba registrada."
-    assert Enum.any?(Interfaz.Fuente.zonas(), &(&1.nombre == "Zona de prueba"))
+    assert Enum.any?(Interfaz.Fuente.Zonas.zonas(), &(&1.nombre == "Zona de prueba"))
   end
 
   test "no deja repetir el nombre de una zona", %{conn: conn} do
@@ -96,7 +96,7 @@ defmodule InterfazWeb.ZonasLiveTest do
     )
     |> render_submit()
 
-    centro = Enum.find(Interfaz.Fuente.zonas(), &(&1.codigo == @centro))
+    centro = Enum.find(Interfaz.Fuente.Zonas.zonas(), &(&1.codigo == @centro))
     assert Enum.any?(centro.sectores, &(&1.nombre == "Sector de prueba"))
   end
 

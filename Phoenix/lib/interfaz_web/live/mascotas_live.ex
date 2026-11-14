@@ -1,7 +1,9 @@
 defmodule InterfazWeb.MascotasLive do
   use InterfazWeb, :live_view
 
-  alias Interfaz.Fuente
+  import InterfazWeb.Gestiones.Mascotas
+
+  alias Interfaz.Fuente.{Catalogos, Mascotas}
   alias InterfazWeb.Sesion
 
   on_mount {InterfazWeb.Sesion, {:pagina, :mascotas}}
@@ -28,14 +30,14 @@ defmodule InterfazWeb.MascotasLive do
 
   # Cada acción llama a Fuente, que usa Epicenter.GestorMascota y guarda Mascota.json.
   def handle_event("guardar", %{"mascota" => p}, socket),
-    do: {:noreply, responder(socket, Fuente.reportar_mascota(p, socket.assigns.usuario.usuario))}
+    do: {:noreply, responder(socket, Mascotas.reportar(p, socket.assigns.usuario.usuario))}
 
   def handle_event("buscar_coincidencias", _, socket),
     do:
       {:noreply,
        responder(
          socket,
-         Fuente.buscar_coincidencias(
+         Mascotas.buscar_coincidencias(
            socket.assigns.usuario.usuario,
            socket.assigns.usuario.zona
          )
@@ -46,7 +48,7 @@ defmodule InterfazWeb.MascotasLive do
       {:noreply,
        responder(
          socket,
-         Fuente.confirmar_coincidencia(
+         Mascotas.confirmar_coincidencia(
            a,
            b,
            socket.assigns.usuario.usuario,
@@ -66,11 +68,11 @@ defmodule InterfazWeb.MascotasLive do
   defp responder(socket, {:error, mensaje}), do: put_flash(socket, :error, to_string(mensaje))
 
   defp filtrar(socket, f) do
-    lista = Fuente.consultar_mascotas(f)
+    lista = Mascotas.consultar(f)
 
     socket
-    |> assign(:todas, Fuente.mascotas())
-    |> assign(:coincidencias, Fuente.coincidencias())
+    |> assign(:todas, Mascotas.mascotas())
+    |> assign(:coincidencias, Mascotas.coincidencias())
     |> assign(:perdidas, Enum.filter(lista, &(&1.reporte == :perdida)))
     |> assign(:encontradas, Enum.filter(lista, &(&1.reporte == :encontrada)))
     |> assign(:filtros, to_form(f, as: :filtro))
@@ -81,46 +83,6 @@ defmodule InterfazWeb.MascotasLive do
       %{nombre: nombre} when is_binary(nombre) -> nombre
       _sin_nombre -> "Sin nombre"
     end
-  end
-
-  attr :m, :map, required: true
-  attr :zonas_por_codigo, :map, required: true
-
-  defp tarjeta(assigns) do
-    ~H"""
-    <article id={"mascota-#{@m.id}"} class="sx-card sx-foco p-4">
-      <div class="flex items-start justify-between gap-2">
-        <div class="flex items-center gap-3">
-          <span class="grid size-10 place-items-center rounded-full bg-base-200">
-            <.icon
-              name={if @m.especie == :gato, do: "hero-sparkles", else: "hero-heart"}
-              class="size-5 text-primary"
-            />
-          </span>
-
-          <div>
-            <p class="font-semibold">{@m.nombre || "Sin nombre"}</p>
-
-            <p class="text-xs text-base-content/60">
-              {@m.id} · {t(@m.especie)} · {zona(@m.zona, @zonas_por_codigo)}
-            </p>
-          </div>
-        </div>
-        <.insignia valor={@m.estado} />
-      </div>
-
-      <div class="mt-3 flex flex-wrap gap-1.5 text-xs">
-        <span class="badge badge-sm badge-outline">Color: {@m.color}</span>
-        <span class="badge badge-sm badge-outline">Tamaño: {t(@m.tamano)}</span>
-      </div>
-
-      <p class="mt-2 text-sm text-base-content/80">{@m.caracteristicas}</p>
-
-      <p class="mt-2 text-xs text-base-content/60">
-        <.icon name="hero-phone" class="size-3.5" /> {@m.contacto}
-      </p>
-    </article>
-    """
   end
 
   def render(assigns) do
@@ -240,7 +202,7 @@ defmodule InterfazWeb.MascotasLive do
             type="select"
             label="Especie"
             prompt="Todas"
-            options={opciones(Fuente.especies())}
+            options={opciones(Catalogos.especies())}
           />
         </div>
 
@@ -260,7 +222,7 @@ defmodule InterfazWeb.MascotasLive do
             type="select"
             label="Estado"
             prompt="Todos"
-            options={opciones(Fuente.estados_mascota())}
+            options={opciones(Catalogos.estados_mascota())}
           />
         </div>
       </.form>
@@ -275,7 +237,7 @@ defmodule InterfazWeb.MascotasLive do
 
           <div class="space-y-3">
             <.vacio :if={@perdidas == []} mensaje="Sin reportes con esos filtros." />
-            <.tarjeta :for={m <- @perdidas} m={m} zonas_por_codigo={@zonas_por_codigo} />
+            <.tarjeta_mascota :for={m <- @perdidas} mascota={m} zonas_por_codigo={@zonas_por_codigo} />
           </div>
         </section>
 
@@ -288,7 +250,7 @@ defmodule InterfazWeb.MascotasLive do
 
           <div class="space-y-3">
             <.vacio :if={@encontradas == []} mensaje="Sin reportes con esos filtros." />
-            <.tarjeta :for={m <- @encontradas} m={m} zonas_por_codigo={@zonas_por_codigo} />
+            <.tarjeta_mascota :for={m <- @encontradas} mascota={m} zonas_por_codigo={@zonas_por_codigo} />
           </div>
         </section>
       </div>
@@ -306,14 +268,14 @@ defmodule InterfazWeb.MascotasLive do
               field={@form[:especie]}
               type="select"
               label="Especie"
-              options={opciones(Fuente.especies())}
+              options={opciones(Catalogos.especies())}
             /> <.input field={@form[:nombre]} label="Nombre (si se conoce)" placeholder="Luna" />
             <.input field={@form[:color]} label="Color" required />
             <.input
               field={@form[:tamano]}
               type="select"
               label="Tamaño"
-              options={opciones(Fuente.tamanos())}
+              options={opciones(Catalogos.tamanos())}
             />
             <.input
               field={@form[:zona]}

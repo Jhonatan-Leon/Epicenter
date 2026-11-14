@@ -11,9 +11,9 @@ defmodule InterfazWeb.SesionController do
     end
   end
 
-  # Paso 1: usuario y contraseña. Las validaciones están en Interfaz.Fuente.
+  # Paso 1: usuario y contraseña. Las validaciones están en Interfaz.Fuente.Sesion.
   def create(conn, %{"acceso" => %{"usuario" => usuario, "contrasena" => contrasena}}) do
-    case Fuente.conectar(usuario, contrasena) do
+    case Fuente.Sesion.conectar(usuario, contrasena) do
       {:ok, sesion} ->
         entrar(conn, sesion, "Bienvenido, #{sesion.nombre}.")
 
@@ -43,7 +43,7 @@ defmodule InterfazWeb.SesionController do
 
   # Paso 2: solo para usuarios nuevos: nombre completo, tipo de usuario y zona principal.
   def registrar(conn, %{"registro" => datos}) do
-    case Fuente.registrar(
+    case Fuente.Sesion.registrar(
            datos["usuario"],
            datos["contrasena"],
            datos["nombre_completo"],
@@ -63,7 +63,7 @@ defmodule InterfazWeb.SesionController do
   def registrar(conn, _params), do: redirect(conn, to: ~p"/conectar")
 
   def delete(conn, _params) do
-    if usuario = get_session(conn, :usuario), do: Fuente.desconectar(usuario)
+    if usuario = get_session(conn, :usuario), do: Fuente.Sesion.desconectar(usuario)
 
     conn
     |> configure_session(drop: true)

@@ -53,16 +53,16 @@ defmodule InterfazWeb.AlberguesLiveTest do
     refute has_element?(view, "#form-albergue input[name='albergue[codigo]']")
 
     assert registrar_albergue(view, "Coliseo", "2") =~ "Albergue Coliseo registrado."
-    assert [%{nombre: "Coliseo", capacidad: 2, ocupacion: 0}] = Interfaz.Fuente.albergues()
+    assert [%{nombre: "Coliseo", capacidad: 2, ocupacion: 0}] = Interfaz.Fuente.Albergues.albergues()
   end
 
   test "ingreso, albergue lleno y salida", %{conn: conn} do
     view = abrir(conn)
     registrar_albergue(view, "Coliseo", "1")
-    [%{codigo: codigo}] = Interfaz.Fuente.albergues()
+    [%{codigo: codigo}] = Interfaz.Fuente.Albergues.albergues()
 
     assert movimiento(view, codigo, "ingreso", "111") =~ "Ingreso registrado en Coliseo."
-    assert [%{ocupacion: 1, ocupantes: ["111"]}] = Interfaz.Fuente.albergues()
+    assert [%{ocupacion: 1, ocupantes: ["111"]}] = Interfaz.Fuente.Albergues.albergues()
 
     # La persona queda "en albergue" en su historial.
     {:ok, %{estado: :en_albergue}} = Epicenter.GestorPersona.obtener_por_documento("111")
@@ -71,26 +71,26 @@ defmodule InterfazWeb.AlberguesLiveTest do
     assert has_element?(view, "#ingreso-#{codigo}[disabled]")
 
     assert movimiento(view, codigo, "salida", "111") =~ "Salida registrada de Coliseo."
-    assert [%{ocupacion: 0}] = Interfaz.Fuente.albergues()
+    assert [%{ocupacion: 0}] = Interfaz.Fuente.Albergues.albergues()
   end
 
   test "la lógica no deja superar la capacidad", %{conn: conn} do
     abrir(conn) |> registrar_albergue("Escuela", "1")
-    [%{codigo: codigo}] = Interfaz.Fuente.albergues()
+    [%{codigo: codigo}] = Interfaz.Fuente.Albergues.albergues()
 
-    assert {:ok, _} = Interfaz.Fuente.registrar_ingreso(codigo, "111", "laura")
+    assert {:ok, _} = Interfaz.Fuente.Albergues.registrar_ingreso(codigo, "111", "laura")
 
     assert {:error, "El albergue está lleno: no hay cupos disponibles."} =
-             Interfaz.Fuente.registrar_ingreso(codigo, "222", "laura")
+             Interfaz.Fuente.Albergues.registrar_ingreso(codigo, "222", "laura")
   end
 
   test "el ranking ordena por ocupación", %{conn: conn} do
     view = abrir(conn)
     registrar_albergue(view, "Grande", "10")
     registrar_albergue(view, "Pequeño", "1")
-    pequeno = Enum.find(Interfaz.Fuente.albergues(), &(&1.nombre == "Pequeño"))
-    {:ok, _} = Interfaz.Fuente.registrar_ingreso(pequeno.codigo, "111", "laura")
+    pequeno = Enum.find(Interfaz.Fuente.Albergues.albergues(), &(&1.nombre == "Pequeño"))
+    {:ok, _} = Interfaz.Fuente.Albergues.registrar_ingreso(pequeno.codigo, "111", "laura")
 
-    assert [%{nombre: "Pequeño"}, %{nombre: "Grande"}] = Interfaz.Fuente.reporte_albergues()
+    assert [%{nombre: "Pequeño"}, %{nombre: "Grande"}] = Interfaz.Fuente.Albergues.reporte()
   end
 end

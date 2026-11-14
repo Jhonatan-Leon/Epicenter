@@ -31,14 +31,14 @@
               field={@form[:rol]}
               type="select"
               label="Tipo de usuario"
-              options={InterfazWeb.UI.opciones(Interfaz.Fuente.roles_registro())}
+              options={InterfazWeb.Formato.opciones(Interfaz.Fuente.Sesion.roles_registro())}
             />
             <.input
               field={@form[:zona]}
               type="select"
               label="Zona principal"
               prompt="Elige tu zona"
-              options={Enum.map(Interfaz.Fuente.zonas(), & &1.nombre)}
+              options={Enum.map(Interfaz.Fuente.Zonas.zonas(), & &1.nombre)}
               required
             />
             <.button variant="primary" class="btn btn-primary mt-4 w-full">

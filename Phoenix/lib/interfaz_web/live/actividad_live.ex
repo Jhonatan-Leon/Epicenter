@@ -1,7 +1,7 @@
 defmodule InterfazWeb.ActividadLive do
   use InterfazWeb, :live_view
 
-  alias Interfaz.Fuente
+  alias Interfaz.Fuente.Actividad
 
   on_mount {InterfazWeb.Sesion, {:pagina, :actividad}}
 
@@ -9,16 +9,16 @@ defmodule InterfazWeb.ActividadLive do
     {:ok,
      socket
      |> assign(:page_title, "Usuarios y actividad")
-     |> assign(:usuarios, Fuente.usuarios())
+     |> assign(:usuarios, Actividad.usuarios())
      |> assign(:filtro, "")
-     |> assign(:actividad, Fuente.actividad())}
+     |> assign(:actividad, Actividad.actividad())}
   end
 
   def handle_event("filtrar", %{"usuario" => usuario}, socket) do
     actividad =
       if usuario == "",
-        do: Fuente.actividad(),
-        else: Enum.filter(Fuente.actividad(), &(&1.usuario == usuario))
+        do: Actividad.actividad(),
+        else: Enum.filter(Actividad.actividad(), &(&1.usuario == usuario))
 
     {:noreply, socket |> assign(:filtro, usuario) |> assign(:actividad, actividad)}
   end

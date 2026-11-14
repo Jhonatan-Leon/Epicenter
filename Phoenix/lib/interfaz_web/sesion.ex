@@ -70,7 +70,7 @@ defmodule InterfazWeb.Sesion do
       %{usuario: nombre_usuario} when is_binary(nombre_usuario) ->
         case Epicenter.GestorUsuario.obtener(nombre_usuario) do
           {:ok, usuario_backend} ->
-            zonas = Interfaz.Fuente.zonas()
+            zonas = Interfaz.Fuente.Zonas.zonas()
             zonas_por_codigo = Map.new(zonas, &{&1.codigo, &1.nombre})
             usuario = usuario_sesion(usuario_backend, zonas)
 

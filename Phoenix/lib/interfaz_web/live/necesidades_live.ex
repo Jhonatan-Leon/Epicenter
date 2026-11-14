@@ -1,13 +1,18 @@
 defmodule InterfazWeb.NecesidadesLive do
+  @moduledoc """
+  Página de necesidades. Los datos vienen de `Interfaz.Fuente.Necesidades`
+  (ya ordenados por prioridad) y el dibujo de `InterfazWeb.Gestiones.Necesidades`.
+  """
   use InterfazWeb, :live_view
 
-  alias Interfaz.Fuente
-  alias InterfazWeb.{Accion, Sesion}
+  import InterfazWeb.Gestiones.Necesidades
+
+  alias Interfaz.Fuente.{Catalogos, Necesidades, Recursos}
+  alias InterfazWeb.{Respuesta, Sesion}
 
   on_mount {InterfazWeb.Sesion, {:pagina, :necesidades}}
 
   @filtros_vacios %{"zona" => "", "tipo" => "", "prioridad" => "", "estado" => ""}
-  @orden %{critica: 0, alta: 1, media: 2, baja: 3}
 
   def mount(_params, _session, socket) do
     {:ok,
@@ -15,71 +20,74 @@ defmodule InterfazWeb.NecesidadesLive do
      |> assign(:page_title, "Necesidades")
      |> assign(:modal, nil)
      |> assign(:necesidad, nil)
+     |> assign(:opciones_recursos, [])
      |> assign(:form, to_form(%{}, as: :necesidad))
-     |> filtrar(@filtros_vacios)}
+     |> assign(:filtros_actuales, @filtros_vacios)
+     |> cargar()}
+  end
+
+  defp cargar(socket) do
+    filtros = socket.assigns.filtros_actuales
+
+    socket
+    |> assign(:necesidades, Necesidades.necesidades(filtros))
+    |> assign(:filtros, to_form(filtros, as: :filtro))
+    |> assign(:filtrando?, filtros != @filtros_vacios)
   end
 
   def handle_event("filtrar", %{"filtro" => filtros}, socket),
-    do: {:noreply, filtrar(socket, filtros)}
+    do: {:noreply, socket |> assign(:filtros_actuales, filtros) |> cargar()}
 
-  def handle_event("limpiar", _, socket), do: {:noreply, filtrar(socket, @filtros_vacios)}
+  def handle_event("limpiar", _params, socket),
+    do: {:noreply, socket |> assign(:filtros_actuales, @filtros_vacios) |> cargar()}
 
-  def handle_event("nueva", _, socket) do
-    form =
-      to_form(%{"zona" => socket.assigns.usuario.zona, "prioridad" => "media"}, as: :necesidad)
-
-    {:noreply, socket |> assign(:modal, :nueva) |> assign(:form, form)}
+  def handle_event("nueva", _params, socket) do
+    datos = %{"zona" => socket.assigns.usuario.zona, "prioridad" => "media"}
+    {:noreply, socket |> assign(:modal, :nueva) |> assign(:form, to_form(datos, as: :necesidad))}
   end
 
+  # Los recursos se piden solo al abrir el modal de asignar, no en cada render.
   def handle_event("asignar", %{"id" => id}, socket) do
-    necesidad = Enum.find(Fuente.necesidades(), &(&1.id == id))
-    form = to_form(%{"cantidad" => necesidad.cantidad}, as: :asignacion)
+    case Enum.find(socket.assigns.necesidades, &(&1.id == id)) do
+      nil ->
+        {:noreply, put_flash(socket, :error, "La necesidad ya no existe.")}
 
-    {:noreply,
-     socket |> assign(:modal, :asignar) |> assign(:necesidad, necesidad) |> assign(:form, form)}
+      necesidad ->
+        {:noreply,
+         socket
+         |> assign(:modal, :asignar)
+         |> assign(:necesidad, necesidad)
+         |> assign(:opciones_recursos, opciones_recursos(necesidad))
+         |> assign(:form, to_form(%{"cantidad" => necesidad.faltante}, as: :asignacion))}
+    end
   end
 
-  def handle_event("cerrar_modal", _, socket), do: {:noreply, assign(socket, :modal, nil)}
+  def handle_event("cerrar_modal", _params, socket), do: {:noreply, assign(socket, :modal, nil)}
 
-  def handle_event("guardar", %{"necesidad" => p}, socket) do
-    {:noreply,
-     Accion.enviar(socket, "register_need", [
-       p["tipo"],
-       p["cantidad"],
-       p["prioridad"],
-       p["zona"],
-       p["descripcion"]
-     ])}
-  end
+  def handle_event("guardar", %{"necesidad" => datos}, socket),
+    do: responder(socket, Necesidades.registrar(datos, usuario(socket)))
 
-  def handle_event("guardar", %{"asignacion" => p}, socket) do
-    {:noreply,
-     Accion.enviar(socket, "assign_resource", [
-       socket.assigns.necesidad.id,
-       p["recurso"],
-       p["cantidad"]
-     ])}
+  def handle_event("guardar", %{"asignacion" => datos}, socket) do
+    id = socket.assigns.necesidad.id
+    responder(socket, Necesidades.asignar_recurso(id, datos["recurso"], datos["cantidad"], usuario(socket)))
   end
 
   def handle_event("cambiar_estado", %{"id" => id, "estado" => estado}, socket),
-    do: {:noreply, Accion.enviar(socket, "update_need", [id, estado])}
+    do: responder(socket, Necesidades.cambiar_estado(id, estado, usuario(socket)))
 
-  defp filtrar(socket, filtros) do
-    coincide = fn n, campo, valor -> valor == "" or to_string(Map.fetch!(n, campo)) == valor end
+  defp responder(socket, resultado),
+    do: {:noreply, socket |> Respuesta.mostrar(resultado) |> cargar()}
 
-    lista =
-      Fuente.necesidades()
-      |> Enum.filter(fn n ->
-        coincide.(n, :zona, filtros["zona"]) and coincide.(n, :tipo, filtros["tipo"]) and
-          coincide.(n, :prioridad, filtros["prioridad"]) and
-          coincide.(n, :estado, filtros["estado"])
-      end)
-      |> Enum.sort_by(&{@orden[&1.prioridad], &1.id})
+  defp usuario(socket), do: socket.assigns.usuario.usuario
 
-    socket
-    |> assign(:necesidades, lista)
-    |> assign(:filtros, to_form(filtros, as: :filtro))
-    |> assign(:filtrando?, filtros != @filtros_vacios)
+  # Primero los recursos de la misma zona y con existencias.
+  defp opciones_recursos(necesidad) do
+    Recursos.recursos()
+    |> Enum.filter(&(&1.cantidad > 0))
+    |> Enum.sort_by(&(&1.zona != necesidad.zona))
+    |> Enum.map(
+      &{"#{&1.codigo} · #{&1.nombre} — #{&1.cantidad} #{&1.unidad} en #{&1.ubicacion}", &1.codigo}
+    )
   end
 
   def render(assigns) do
@@ -107,202 +115,55 @@ defmodule InterfazWeb.NecesidadesLive do
         phx-change="filtrar"
         class="mb-4 grid grid-cols-2 items-end gap-3 sx-card sx-foco p-4 md:grid-cols-5"
       >
-        <.input
-          field={@filtros[:zona]}
-          type="select"
-          label="Zona"
-          prompt="Todas"
-          options={@opciones_zonas}
-        />
+        <.input field={@filtros[:zona]} type="select" label="Zona" prompt="Todas" options={@opciones_zonas} />
         <.input
           field={@filtros[:tipo]}
           type="select"
           label="Tipo"
           prompt="Todos"
-          options={opciones(Fuente.tipos_necesidad())}
+          options={opciones(Catalogos.tipos_necesidad())}
         />
         <.input
           field={@filtros[:prioridad]}
           type="select"
           label="Prioridad"
           prompt="Todas"
-          options={opciones(Fuente.prioridades())}
+          options={opciones(Catalogos.prioridades())}
         />
         <.input
           field={@filtros[:estado]}
           type="select"
           label="Estado"
           prompt="Todos"
-          options={opciones(Fuente.estados_necesidad())}
+          options={opciones(Catalogos.estados_necesidad())}
         />
         <div class="col-span-2 mb-2 flex items-center justify-between gap-2 md:col-span-1">
           <span class="text-sm text-base-content/70">{length(@necesidades)} resultados</span>
-          <button :if={@filtrando?} type="button" class="btn btn-ghost btn-sm" phx-click="limpiar">Limpiar</button>
+          <button :if={@filtrando?} type="button" class="btn btn-ghost btn-sm" phx-click="limpiar">
+            Limpiar
+          </button>
         </div>
       </.form>
 
-      <div class="sx-card overflow-x-auto">
-        <table id="tabla-necesidades" class="table">
-          <thead>
-            <tr>
-              <th>Prioridad</th>
+      <.tabla_necesidades
+        necesidades={@necesidades}
+        zonas_por_codigo={@zonas_por_codigo}
+        coordina={Sesion.coordina?(@usuario)}
+      />
 
-              <th>Necesidad</th>
-
-              <th>Zona</th>
-
-              <th class="text-right">Cantidad</th>
-
-              <th>Estado</th>
-
-              <th><span class="sr-only">Acciones</span></th>
-            </tr>
-          </thead>
-
-          <tbody>
-            <tr :if={@necesidades == []}>
-              <td colspan="6"><.vacio mensaje="No hay necesidades con esos filtros." /></td>
-            </tr>
-
-            <tr :for={n <- @necesidades} id={"necesidad-#{n.id}"} class="hover:bg-base-200/60">
-              <td><.insignia valor={n.prioridad} /></td>
-
-              <td class="min-w-56">
-                <p class="font-medium">
-                  {t(n.tipo)} <span class="text-xs font-normal text-base-content/50">{n.id}</span>
-                </p>
-
-                <p class="text-xs text-base-content/60">{n.descripcion} · reportó {n.responsable}</p>
-              </td>
-
-              <td class="whitespace-nowrap">{zona(n.zona, @zonas_por_codigo)}</td>
-
-              <td class="text-right tabular-nums">{n.cantidad}</td>
-
-              <td><.insignia valor={n.estado} /></td>
-
-              <td class="text-right">
-                <div
-                  :if={Sesion.coordina?(@usuario) and n.estado not in [:atendida, :cancelada]}
-                  class="flex justify-end gap-1"
-                >
-                  <button
-                    id={"asignar-#{n.id}"}
-                    class="btn btn-xs btn-primary btn-soft"
-                    phx-click="asignar"
-                    phx-value-id={n.id}
-                  >
-                    Asignar
-                  </button>
-
-                  <div class="dropdown dropdown-end">
-                    <button
-                      tabindex="0"
-                      class="btn btn-xs btn-ghost btn-square"
-                      aria-label="Cambiar estado"
-                    >
-                      <.icon name="hero-ellipsis-vertical" class="size-4" />
-                    </button>
-
-                    <ul
-                      tabindex="0"
-                      class="dropdown-content menu z-10 w-44 sx-card sx-foco p-1 shadow"
-                    >
-                      <li :for={e <- [:en_atencion, :atendida, :cancelada] -- [n.estado]}>
-                        <button phx-click="cambiar_estado" phx-value-id={n.id} phx-value-estado={e}>
-                          Marcar {String.downcase(t(e))}
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <.modal id="modal-necesidad" titulo="Registrar necesidad" abierto={@modal == :nueva}>
-        <.form for={@form} id="form-necesidad" phx-submit="guardar">
-          <div class="grid grid-cols-2 gap-3">
-            <.input
-              field={@form[:tipo]}
-              type="select"
-              label="Tipo"
-              options={opciones(Fuente.tipos_necesidad())}
-            />
-            <.input
-              field={@form[:cantidad]}
-              type="number"
-              min="1"
-              label="Cantidad requerida"
-              required
-            />
-            <.input
-              field={@form[:prioridad]}
-              type="select"
-              label="Prioridad"
-              options={
-                opciones(
-                  if(Sesion.coordina?(@usuario),
-                    do: Fuente.prioridades(),
-                    else: Enum.reject(Fuente.prioridades(), &(&1 == :critica))
-                  )
-                )
-              }
-            />
-            <.input
-              field={@form[:zona]}
-              type="select"
-              label="Zona"
-              options={@opciones_zonas}
-            />
-          </div>
-
-          <.input
-            field={@form[:descripcion]}
-            type="textarea"
-            label="Descripción"
-            rows="2"
-            placeholder="Punto de atención sector 3"
-            required
-          /> <.botones_form texto="Registrar" />
-        </.form>
-      </.modal>
-
-      <.modal
-        :if={@necesidad}
-        id="modal-asignar"
-        titulo={"Asignar recurso a #{@necesidad.id}"}
+      <.form_necesidad
+        form={@form}
+        abierto={@modal == :nueva}
+        opciones_zonas={@opciones_zonas}
+        coordina={Sesion.coordina?(@usuario)}
+      />
+      <.form_asignar
+        form={@form}
         abierto={@modal == :asignar}
-      >
-        <div class="mb-4 rounded-box bg-base-200 p-3 text-sm">
-          <p class="font-medium">{t(@necesidad.tipo)} · {@necesidad.cantidad} requeridos</p>
-
-          <p class="text-base-content/70">
-            {@necesidad.descripcion} — {zona(@necesidad.zona, @zonas_por_codigo)}
-          </p>
-        </div>
-
-        <.form for={@form} id="form-asignar" phx-submit="guardar">
-          <.input
-            field={@form[:recurso]}
-            type="select"
-            label="Recurso"
-            options={
-              for r <- Fuente.recursos(),
-                  do:
-                    {"#{r.codigo} · #{r.nombre} — #{r.cantidad} #{r.unidad} en #{r.ubicacion}",
-                     r.codigo}
-            }
-          />
-          <.input field={@form[:cantidad]} type="number" min="1" label="Cantidad a asignar" required />
-          <p class="text-xs text-base-content/60">
-            Si otra solicitud toma el mismo recurso al mismo tiempo, el sistema solo confirma lo que haya en inventario.
-          </p>
-          <.botones_form texto="Asignar" />
-        </.form>
-      </.modal>
+        necesidad={@necesidad}
+        opciones_recursos={@opciones_recursos}
+        zonas_por_codigo={@zonas_por_codigo}
+      />
     </Layouts.app>
     """
   end

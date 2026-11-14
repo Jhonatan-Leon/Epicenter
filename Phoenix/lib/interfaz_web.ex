@@ -81,7 +81,11 @@ defmodule InterfazWeb do
       import Phoenix.HTML
       # Core UI components
       import InterfazWeb.CoreComponents
-      import InterfazWeb.UI
+      # Diseño atómico: textos, átomos, moléculas y organismos
+      import InterfazWeb.Formato
+      import InterfazWeb.Atomos
+      import InterfazWeb.Moleculas
+      import InterfazWeb.Organismos
 
       # Common modules used in templates
       alias Phoenix.LiveView.JS

@@ -50,9 +50,9 @@ defmodule InterfazWeb.RecursosLiveTest do
     assert registrar_agua(view) =~ "Recurso R001 · Agua potable registrado."
 
     assert [%{codigo: "R001", cantidad: 50, minimo: 40, zona: @norte}] =
-             Interfaz.Fuente.recursos()
+             Interfaz.Fuente.Recursos.recursos()
 
-    assert [%{tipo: :entrada, recurso: "R001", cantidad: 50}] = Interfaz.Fuente.movimientos()
+    assert [%{tipo: :entrada, recurso: "R001", cantidad: 50}] = Interfaz.Fuente.Recursos.movimientos()
     assert has_element?(view, "#recurso-R001")
   end
 
@@ -70,8 +70,8 @@ defmodule InterfazWeb.RecursosLiveTest do
       |> render_submit()
 
     assert html =~ "No hay suficientes unidades en inventario."
-    assert [%{cantidad: 50}] = Interfaz.Fuente.recursos()
-    assert [%{tipo: :rechazo} | _] = Interfaz.Fuente.movimientos()
+    assert [%{cantidad: 50}] = Interfaz.Fuente.Recursos.recursos()
+    assert [%{tipo: :rechazo} | _] = Interfaz.Fuente.Recursos.movimientos()
 
     html =
       view
@@ -81,7 +81,7 @@ defmodule InterfazWeb.RecursosLiveTest do
       |> render_submit()
 
     assert html =~ "Salida registrada"
-    assert [%{cantidad: 20}] = Interfaz.Fuente.recursos()
+    assert [%{cantidad: 20}] = Interfaz.Fuente.Recursos.recursos()
   end
 
   test "transferir crea el recurso en el destino", %{conn: conn} do
@@ -103,6 +103,6 @@ defmodule InterfazWeb.RecursosLiveTest do
              %{ubicacion: "centro_acopio_1", cantidad: 40},
              %{ubicacion: "albergue_2", cantidad: 10}
            ] =
-             Interfaz.Fuente.recursos()
+             Interfaz.Fuente.Recursos.recursos()
   end
 end

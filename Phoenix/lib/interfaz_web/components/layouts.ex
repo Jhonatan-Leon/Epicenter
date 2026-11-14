@@ -60,7 +60,7 @@ defmodule InterfazWeb.Layouts do
               <p class="text-sm font-semibold leading-tight">{@usuario.nombre}</p>
 
               <p class="sx-etiqueta mt-0.5">
-                {InterfazWeb.UI.t(@usuario.rol)} · {InterfazWeb.UI.zona(
+                {InterfazWeb.Formato.t(@usuario.rol)} · {InterfazWeb.Formato.zona(
                   @usuario.zona,
                   @zonas_por_codigo
                 )}
@@ -120,7 +120,7 @@ defmodule InterfazWeb.Layouts do
               <span class="sx-punto"></span> Sesión activa
             </p>
 
-            <p class="mt-1.5 font-medium">{@usuario.usuario} · {InterfazWeb.UI.t(@usuario.rol)}</p>
+            <p class="mt-1.5 font-medium">{@usuario.usuario} · {InterfazWeb.Formato.t(@usuario.rol)}</p>
           </div>
         </aside>
       </div>

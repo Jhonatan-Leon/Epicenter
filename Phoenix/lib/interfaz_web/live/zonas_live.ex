@@ -1,7 +1,7 @@
 defmodule InterfazWeb.ZonasLive do
   use InterfazWeb, :live_view
 
-  alias Interfaz.Fuente
+  alias Interfaz.Fuente.{Catalogos, Resumen, Zonas}
   alias InterfazWeb.Sesion
 
   on_mount {InterfazWeb.Sesion, {:pagina, :zonas}}
@@ -13,7 +13,7 @@ defmodule InterfazWeb.ZonasLive do
      socket
      |> assign(:page_title, "Zonas")
      |> assign(:zonas, zonas)
-     |> assign(:seleccion, primera_zona(zonas))
+     |> seleccionar(primera_zona(zonas))
      |> assign(:modal, nil)
      |> assign(:form, to_form(%{}, as: :zona))}
   end
@@ -21,8 +21,18 @@ defmodule InterfazWeb.ZonasLive do
   defp primera_zona([]), do: nil
   defp primera_zona([zona | _resto]), do: zona.codigo
 
+  # Las estadísticas se calculan solo cuando cambia la zona elegida, no en cada render.
+  defp seleccionar(socket, codigo) do
+    zona = Enum.find(socket.assigns.zonas, &(&1.codigo == codigo))
+
+    socket
+    |> assign(:seleccion, codigo)
+    |> assign(:zona, zona)
+    |> assign(:estadisticas, zona && Resumen.estadisticas_zona(zona.codigo))
+  end
+
   def handle_event("seleccionar", %{"codigo" => codigo}, socket),
-    do: {:noreply, assign(socket, :seleccion, codigo)}
+    do: {:noreply, seleccionar(socket, codigo)}
 
   def handle_event("abrir", %{"modal" => modal}, socket) do
     modal = String.to_existing_atom(modal)
@@ -34,14 +44,14 @@ defmodule InterfazWeb.ZonasLive do
   # Cada formulario llama a Fuente, que a su vez usa GestorZonas y guarda el JSON.
   def handle_event("guardar", %{"zona" => p}, socket) do
     resultado =
-      Fuente.registrar_zona(p["nombre"], p["nivel"], socket.assigns.usuario.usuario)
+      Zonas.registrar_zona(p["nombre"], p["nivel"], socket.assigns.usuario.usuario)
 
     {:noreply, responder(socket, resultado, :zona)}
   end
 
   def handle_event("guardar", %{"sector" => p}, socket) do
     resultado =
-      Fuente.registrar_sector(
+      Zonas.registrar_sector(
         p["zona"],
         p["nombre"],
         p["nivel"],
@@ -57,7 +67,7 @@ defmodule InterfazWeb.ZonasLive do
     [codigo_zona, codigo_sector] = String.split(p["sector"] || ":", ":", parts: 2)
 
     resultado =
-      Fuente.registrar_punto(
+      Zonas.registrar_punto(
         codigo_zona,
         codigo_sector,
         p["nombre"],
@@ -70,7 +80,7 @@ defmodule InterfazWeb.ZonasLive do
   # Éxito: recarga las zonas del JSON, cierra el modal y deja seleccionada la zona tocada.
   # Error: deja el modal abierto con lo que se escribió y muestra el motivo.
   defp responder(socket, {:ok, mensaje}, seleccion) do
-    zonas = Fuente.zonas()
+    zonas = Zonas.zonas()
     zonas_por_codigo = Map.new(zonas, &{&1.codigo, &1.nombre})
 
     seleccion =
@@ -84,7 +94,7 @@ defmodule InterfazWeb.ZonasLive do
     |> assign(:zonas_catalogo, zonas)
     |> assign(:zonas_por_codigo, zonas_por_codigo)
     |> assign(:opciones_zonas, Enum.map(zonas, &{&1.nombre, &1.codigo}))
-    |> assign(:seleccion, seleccion)
+    |> seleccionar(seleccion)
     |> assign(:modal, nil)
     |> put_flash(:info, mensaje)
   end
@@ -93,13 +103,6 @@ defmodule InterfazWeb.ZonasLive do
     do: put_flash(socket, :error, to_string(mensaje))
 
   def render(assigns) do
-    zona = Enum.find(assigns.zonas, &(&1.codigo == assigns.seleccion))
-
-    estadisticas =
-      if zona, do: Fuente.estadisticas_zona(zona.codigo), else: nil
-
-    assigns = assign(assigns, zona: zona, estadisticas: estadisticas)
-
     ~H"""
     <Layouts.app
       flash={@flash}
@@ -229,7 +232,7 @@ defmodule InterfazWeb.ZonasLive do
             field={@form[:nivel]}
             type="select"
             label="Nivel de afectación"
-            options={opciones(Fuente.niveles())}
+            options={opciones(Catalogos.niveles())}
           />
           <p class="text-xs text-base-content/60">El código de la zona lo genera el sistema.</p>
           <.botones_form texto="Registrar" />
@@ -249,7 +252,7 @@ defmodule InterfazWeb.ZonasLive do
               field={@form[:nivel]}
               type="select"
               label="Nivel"
-              options={opciones(Fuente.niveles())}
+              options={opciones(Catalogos.niveles())}
             />
             <.input
               field={@form[:afectadas]}

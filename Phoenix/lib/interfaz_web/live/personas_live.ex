@@ -1,7 +1,7 @@
 defmodule InterfazWeb.PersonasLive do
   use InterfazWeb, :live_view
 
-  alias Interfaz.Fuente
+  alias Interfaz.Fuente.{Catalogos, Mensajes, Personas}
   alias InterfazWeb.Sesion
 
   on_mount {InterfazWeb.Sesion, {:pagina, :personas}}
@@ -47,7 +47,7 @@ defmodule InterfazWeb.PersonasLive do
   # y guarda Persona.json / Mensaje.json. Quien hace el cambio queda en el historial.
   def handle_event("guardar", %{"persona" => p}, socket) do
     resultado =
-      Fuente.reportar_persona(
+      Personas.reportar(
         p["documento"],
         p["nombre"],
         p["edad"],
@@ -63,7 +63,7 @@ defmodule InterfazWeb.PersonasLive do
     documento = socket.assigns.persona.documento
 
     resultado =
-      Fuente.cambiar_estado_persona(documento, p["estado"], socket.assigns.usuario.usuario)
+      Personas.cambiar_estado(documento, p["estado"], socket.assigns.usuario.usuario)
 
     {:noreply, responder(socket, resultado, documento)}
   end
@@ -72,7 +72,7 @@ defmodule InterfazWeb.PersonasLive do
     documento = socket.assigns.persona.documento
 
     resultado =
-      Fuente.enviar_mensaje(
+      Mensajes.enviar(
         socket.assigns.usuario.usuario,
         documento,
         p["contenido"] || ""
@@ -95,7 +95,7 @@ defmodule InterfazWeb.PersonasLive do
   end
 
   def handle_event("marcar", %{"id" => id, "estado" => estado}, socket) do
-    resultado = Fuente.marcar_mensaje(id, estado, socket.assigns.usuario.usuario)
+    resultado = Mensajes.marcar(id, estado, socket.assigns.usuario.usuario)
     {:noreply, responder(socket, resultado, socket.assigns.persona.documento)}
   end
 
@@ -114,15 +114,15 @@ defmodule InterfazWeb.PersonasLive do
 
   defp buscar(socket, b) do
     socket
-    |> assign(:personas, Fuente.buscar_personas(b))
+    |> assign(:personas, Personas.buscar(b))
     |> assign(:busqueda, to_form(b, as: :busqueda))
   end
 
   defp seleccionar(socket, nil), do: socket |> assign(:persona, nil) |> assign(:mensajes, [])
 
   defp seleccionar(socket, documento) do
-    persona = Enum.find(Fuente.personas(), &(&1.documento == documento))
-    socket |> assign(:persona, persona) |> assign(:mensajes, Fuente.mensajes_de(documento))
+    persona = Enum.find(Personas.personas(), &(&1.documento == documento))
+    socket |> assign(:persona, persona) |> assign(:mensajes, Mensajes.de_persona(documento))
   end
 
   def render(assigns) do
@@ -177,7 +177,7 @@ defmodule InterfazWeb.PersonasLive do
                 type="select"
                 label="Estado"
                 prompt="Todos"
-                options={opciones(Fuente.estados_persona())}
+                options={opciones(Catalogos.estados_persona())}
               />
             </div>
           </.form>
@@ -345,7 +345,7 @@ defmodule InterfazWeb.PersonasLive do
               field={@form[:estado]}
               type="select"
               label="Estado"
-              options={opciones(Fuente.estados_persona())}
+              options={opciones(Catalogos.estados_persona())}
             />
           </div>
           <.botones_form texto="Reportar" />
@@ -363,7 +363,7 @@ defmodule InterfazWeb.PersonasLive do
             field={@form[:estado]}
             type="select"
             label="Nuevo estado"
-            options={opciones(Fuente.estados_persona())}
+            options={opciones(Catalogos.estados_persona())}
           />
           <p class="text-xs text-base-content/60">El cambio queda en el historial de la persona.</p>
           <.botones_form texto="Actualizar" />

@@ -1,7 +1,7 @@
 defmodule InterfazWeb.ResumenLive do
   use InterfazWeb, :live_view
 
-  alias Interfaz.Fuente
+  alias Interfaz.Fuente.{Albergues, Necesidades, Recursos, Resumen}
 
   on_mount {InterfazWeb.Sesion, {:pagina, :resumen}}
 
@@ -9,12 +9,12 @@ defmodule InterfazWeb.ResumenLive do
     {:ok,
      socket
      |> assign(:page_title, "Resumen")
-     |> assign(:resumen, Fuente.resumen())
-     |> assign(:pendientes, Enum.take(Fuente.necesidades_pendientes(), 5))
-     |> assign(:criticos, Fuente.recursos_criticos())
+     |> assign(:resumen, Resumen.resumen())
+     |> assign(:pendientes, Enum.take(Necesidades.pendientes(), 5))
+     |> assign(:criticos, Recursos.criticos())
      |> assign(
        :albergues,
-       Enum.sort_by(Fuente.albergues(), &(&1.ocupacion / &1.capacidad), :desc)
+       Enum.sort_by(Albergues.albergues(), &(&1.ocupacion / &1.capacidad), :desc)
      )
      |> assign(:zonas, socket.assigns.zonas_catalogo)}
   end
