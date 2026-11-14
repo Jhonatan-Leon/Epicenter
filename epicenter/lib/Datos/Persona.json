@@ -1,1 +1,41 @@
-[]
+[
+  {
+    "id": "A023144D4E67AFC6",
+    "nombre": "Henry Stickman",
+    "estado": "reportada",
+    "codigo_zona": "C58E13A6B0F94D72",
+    "documento": "109236483",
+    "edad": 12,
+    "codigo_albergue": null,
+    "historial": [
+      {
+        "estado": "reportada",
+        "fecha": "2026-11-12T16:37:04.635000Z",
+        "por": "Ruzten"
+      }
+    ],
+    "tipo_documento": null
+  },
+  {
+    "id": "572B8F8A58603DDB",
+    "nombre": "Ruben Sanchez",
+    "estado": "localizada",
+    "codigo_zona": "B7D24E901FA3C665",
+    "documento": "1092458430",
+    "edad": 18,
+    "codigo_albergue": null,
+    "historial": [
+      {
+        "estado": "sin_informacion",
+        "fecha": "2026-11-12T16:24:34.025000Z",
+        "por": "Ruzten"
+      },
+      {
+        "estado": "localizada",
+        "fecha": "2026-11-12T16:38:28.474000Z",
+        "por": "Ruzten"
+      }
+    ],
+    "tipo_documento": null
+  }
+]

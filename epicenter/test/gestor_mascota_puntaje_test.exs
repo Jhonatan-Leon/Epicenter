@@ -89,12 +89,7 @@ defmodule Epicenter.GestorMascotaPuntajeTest do
       exacta = mascota("E1", %{tipo: :encontrada})
 
       parcial =
-        mascota("E2", %{
-          tipo: :encontrada,
-          tamano: "grande",
-          zona: "zona_sur",
-          caracteristicas: ""
-        })
+        mascota("E2", %{tipo: :encontrada, tamano: "grande", zona: "zona_sur", caracteristicas: ""})
 
       bajo =
         mascota("E3", %{

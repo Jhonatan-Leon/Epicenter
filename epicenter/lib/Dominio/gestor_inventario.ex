@@ -3,7 +3,11 @@ defmodule Epicenter.GestorInventario do
 
   def registro(codigo_recurso, codigo_centro, zonas, cantidad_disponible) do
     with {:ok, inventario} <-
+<<<<<<< HEAD
            Epicenter.Inventario.nuevo(
+=======
+           Epicenter.Invetnario.nuevo(
+>>>>>>> 0cd590291dc76d769310dda61e654940ee4b42d8
              codigo_recurso,
              codigo_centro,
              zonas,
@@ -15,7 +19,11 @@ defmodule Epicenter.GestorInventario do
   end
 
   def registro(codigo_recurso, codigo_centro) do
+<<<<<<< HEAD
     with {:ok, inventario} <- Epicenter.Inventario.nuevo(codigo_recurso, codigo_centro),
+=======
+    with {:ok, inventario} <- Epicenter.Invetnario.nuevo(codigo_recurso, codigo_centro),
+>>>>>>> 0cd590291dc76d769310dda61e654940ee4b42d8
          {:ok, inventario} <- crear(inventario) do
       {:ok, inventario}
     end
@@ -25,7 +33,11 @@ defmodule Epicenter.GestorInventario do
     with {:ok, inventarios} <- listar(),
          {:ok, inventario} <- buscar_inventario(inventarios, id),
          {:ok, inventario_actualizado} <-
+<<<<<<< HEAD
            Epicenter.Inventario.completar_inventario(inventario, zonas, cantidad_disponible) do
+=======
+           Epicenter.Invetnario.completar_inventario(inventario, zonas, cantidad_disponible) do
+>>>>>>> 0cd590291dc76d769310dda61e654940ee4b42d8
       inventarios_actualizados =
         Enum.map(inventarios, fn existente ->
           if existente.id == id, do: inventario_actualizado, else: existente
@@ -45,7 +57,11 @@ defmodule Epicenter.GestorInventario do
     end
   end
 
+<<<<<<< HEAD
   def crear(%Epicenter.Inventario{} = inventario) do
+=======
+  def crear(%Epicenter.Invetnario{} = inventario) do
+>>>>>>> 0cd590291dc76d769310dda61e654940ee4b42d8
     with {:ok, inventarios} <- listar() do
       if Enum.any?(inventarios, &(&1.id == inventario.id)) do
         {:error, "El inventario ya existe"}
@@ -58,7 +74,11 @@ defmodule Epicenter.GestorInventario do
 
   def crear(_), do: {:error, "El inventario no es válido"}
 
+<<<<<<< HEAD
   def actualizar(id, %Epicenter.Inventario{id: id} = inventario) do
+=======
+  def actualizar(id, %Epicenter.Invetnario{id: id} = inventario) do
+>>>>>>> 0cd590291dc76d769310dda61e654940ee4b42d8
     with {:ok, inventarios} <- listar() do
       if Enum.any?(inventarios, &(&1.id == id)) do
         Epicenter.Persistencia.guardar_inventarios(

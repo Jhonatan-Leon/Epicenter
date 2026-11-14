@@ -1,0 +1,91 @@
+<div class="sx-portada flex min-h-screen flex-col" data-escena="portada">
+  <header class="flex items-center justify-between gap-4 px-6 py-6 sm:px-10">
+    <div class="flex items-center gap-2.5">
+      <Layouts.marca />
+    </div>
+
+    <Layouts.boton_movimiento />
+  </header>
+
+  <main class="flex flex-1 items-center justify-center px-6 pb-20">
+    <div class="sx-escalonar w-full max-w-sm">
+<%= if @nuevo do %>
+        <h1 class="sx-portada-titulo">Completa tu registro</h1>
+
+        <p class="mt-2 text-sm text-base-content/65">
+          No encontramos a <span class="font-semibold text-base-content">{@form[:usuario].value}</span>.
+          Completa tus datos para crear la cuenta.
+        </p>
+
+        <div class="sx-card mt-8 p-6">
+          <.form for={@form} id="form-registro" action={~p"/registrar"} class="space-y-1">
+            <.input field={@form[:usuario]} type="hidden" />
+            <.input field={@form[:contrasena]} type="hidden" />
+            <.input
+              field={@form[:nombre_completo]}
+              label="Nombre completo"
+              placeholder="Nombres y apellidos"
+              autocomplete="name"
+              required
+            />
+            <.input
+              field={@form[:rol]}
+              type="select"
+              label="Tipo de usuario"
+              options={InterfazWeb.UI.opciones(Interfaz.Fuente.roles_registro())}
+            />
+            <.input
+              field={@form[:zona]}
+              type="select"
+              label="Zona principal"
+              prompt="Elige tu zona"
+              options={Enum.map(Interfaz.Fuente.zonas(), & &1.nombre)}
+              required
+            />
+
+            <.button variant="primary" class="btn btn-primary mt-4 w-full">
+              Crear cuenta <.icon name="hero-arrow-right" class="size-4" />
+            </.button>
+          </.form>
+        </div>
+
+        <p class="mt-4 text-center text-xs text-base-content/55">
+          Coordinador y administrador los asigna la administración.
+          <.link href={~p"/conectar"} class="link">Volver</.link>
+        </p>
+      <% else %>
+        <h1 class="sx-portada-titulo">Conectarse</h1>
+
+        <p class="mt-2 text-sm text-base-content/65">
+          Coordinación de la emergencia, en un solo lugar.
+        </p>
+
+        <div class="sx-card mt-8 p-6">
+          <.form for={@form} id="form-conectar" action={~p"/conectar"} class="space-y-1">
+            <.input field={@form[:usuario]} label="Usuario" autocomplete="username" required />
+            <.input
+              field={@form[:contrasena]}
+              type="password"
+              label="Contraseña"
+              autocomplete="current-password"
+              required
+            />
+
+            <.button variant="primary" class="btn btn-primary mt-4 w-full">
+              Conectar <.icon name="hero-arrow-right" class="size-4" />
+            </.button>
+          </.form>
+        </div>
+
+        <p class="mt-4 text-center text-xs text-base-content/55">
+          Si es tu primera vez, te pediremos tu nombre, tu tipo de usuario y tu zona.
+        </p>
+      <% end %>
+    </div>
+  </main>
+
+  <footer class="px-6 pb-6 text-center text-xs text-base-content/45">
+    Programación III · Universidad del Quindío · 2026-2
+  </footer>
+</div>
+<Layouts.flash_group flash={@flash} />

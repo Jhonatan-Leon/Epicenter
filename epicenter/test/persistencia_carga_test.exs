@@ -10,23 +10,14 @@ defmodule Epicenter.PersistenciaCargaTest do
           %{
             "codigo" => "recurso-1",
             "nombre" => "Agua",
-            "categoria" => "agua",
+            "categoria" => "bebida",
             "unidad_medida" => "litros",
-            "ubicacion" => "centro-1",
             "cantidad_disponible" => 12
           }
         ])
       )
 
-    assert {:ok,
-            [
-              %Epicenter.Recurso{
-                codigo: "recurso-1",
-                categoria: :agua,
-                ubicacion: "centro-1",
-                cantidad_disponible: 12
-              }
-            ]} =
+    assert {:ok, [%Epicenter.Recurso{codigo: "recurso-1", cantidad_disponible: 12}]} =
              Persistencia.cargar_archivo(ruta, Epicenter.Recurso)
   end
 

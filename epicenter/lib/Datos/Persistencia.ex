@@ -44,12 +44,9 @@ defmodule Epicenter.Persistencia do
     %Epicenter.Recurso{
       codigo: recurso["codigo"],
       nombre: recurso["nombre"],
-      categoria: a_atomo_existente(recurso["categoria"]),
+      categoria: recurso["categoria"],
       unidad_medida: recurso["unidad_medida"],
-      ubicacion: recurso["ubicacion"],
-      codigo_zona: recurso["codigo_zona"],
-      cantidad_disponible: Map.get(recurso, "cantidad_disponible", 0),
-      minimo: Map.get(recurso, "minimo", 0)
+      cantidad_disponible: Map.get(recurso, "cantidad_disponible", 0)
     }
   end
 
@@ -64,9 +61,9 @@ defmodule Epicenter.Persistencia do
       nombre: albergue["nombre"],
       codigo_zona: albergue["codigo_zona"],
       capacidad: albergue["capacidad"],
-      ocupantes: if(is_list(albergue["ocupantes"]), do: albergue["ocupantes"], else: []),
-      recursos: albergue["recursos"] || [],
-      necesidades: albergue["necesidades"] || []
+      ocupantes: albergue["ocupantes"],
+      recursos: albergue["recursos"],
+      necesidades: albergue["necesidades"]
     }
   end
 
@@ -92,22 +89,23 @@ defmodule Epicenter.Persistencia do
   def historial_a_struct(historial) do
     %Epicenter.Historial{
       id: historial["id"],
-      tipo: a_atomo_existente(historial["tipo"]),
-      codigo_recurso: historial["codigo_recurso"],
-      cantidad: historial["cantidad"],
-      detalle: historial["detalle"],
+      id_invetario: historial["id_invetario"],
       usuario: historial["usuario"],
+      id_necesidad: historial["id_necesidad"],
+      codigo_destino: historial["codigo_destino"],
+      tipo: a_atomo_existente(historial["tipo"]),
+      cantidad: historial["cantidad"],
       fecha: a_datetime(historial["fecha"])
     }
   end
 
   def cargar_inventarios,
-    do: cargar_archivo(@path_inventarios, Epicenter.Inventario)
+    do: cargar_archivo(@path_inventarios, Epicenter.Invetnario)
 
   def guardar_inventarios(inventarios), do: guardar_documento(inventarios, @path_inventarios)
 
   def inventario_a_struct(inventario) do
-    %Epicenter.Inventario{
+    %Epicenter.Invetnario{
       id: inventario["id"],
       zonas: inventario["zonas"],
       codigo_recurso: inventario["codigo_recurso"],
@@ -164,23 +162,14 @@ defmodule Epicenter.Persistencia do
     %Epicenter.Necesidad{
       id: necesidad["id"],
       codigo_zona: necesidad["codigo_zona"],
-      reportado_por: necesidad["reportado_por"],
+      reportador_por: necesidad["reportador_por"],
       tipo: a_atomo_existente(necesidad["tipo"]),
-      descripcion: necesidad["descripcion"],
+      descripicion: necesidad["descripicion"],
       cantidad: necesidad["cantidad"],
       prioridad: a_atomo_existente(necesidad["prioridad"]),
       estado: a_atomo_existente(necesidad["estado"]),
-      destino: necesidad["destino"],
-      asignaciones: asignaciones_a_lista(necesidad["asignaciones"])
+      destino: necesidad["destino"]
     }
-  end
-
-  defp asignaciones_a_lista(nil), do: []
-
-  defp asignaciones_a_lista(asignaciones) do
-    Enum.map(asignaciones, fn asignacion ->
-      %{recurso: asignacion["recurso"], cantidad: asignacion["cantidad"]}
-    end)
   end
 
   def cargar_personas, do: cargar_archivo(@path_personas, Epicenter.Persona)
@@ -280,7 +269,7 @@ defmodule Epicenter.Persistencia do
     do: {:ok, &map_a_struct/1, [:nombre_usuario, :contrasena]}
 
   defp especificacion(Epicenter.Recurso),
-    do: {:ok, &recurso_a_struct/1, [:codigo, :nombre, :categoria, :unidad_medida, :ubicacion]}
+    do: {:ok, &recurso_a_struct/1, [:codigo, :nombre, :categoria]}
 
   defp especificacion(Epicenter.Albergue),
     do: {:ok, &albergue_a_struct/1, [:codigo, :nombre, :codigo_zona, :capacidad]}
@@ -289,9 +278,10 @@ defmodule Epicenter.Persistencia do
     do: {:ok, &centro_apoyo_a_struct/1, [:codigo, :nombre, :tipo]}
 
   defp especificacion(Epicenter.Historial),
-    do: {:ok, &historial_a_struct/1, [:id, :tipo, :codigo_recurso, :cantidad]}
+    do:
+      {:ok, &historial_a_struct/1, [:id, :id_invetario, :usuario, :id_necesidad, :codigo_destino]}
 
-  defp especificacion(Epicenter.Inventario),
+  defp especificacion(Epicenter.Invetnario),
     do: {:ok, &inventario_a_struct/1, [:id, :codigo_recurso, :codigo_centro]}
 
   defp especificacion(Epicenter.Mascota),
@@ -301,7 +291,7 @@ defmodule Epicenter.Persistencia do
     do: {:ok, &mensaje_a_struct/1, [:codigo, :remitente, :destinatario, :contenido, :fecha_envio]}
 
   defp especificacion(Epicenter.Necesidad),
-    do: {:ok, &necesidad_a_struct/1, [:id, :codigo_zona, :reportado_por]}
+    do: {:ok, &necesidad_a_struct/1, [:id, :codigo_zona, :reportador_por]}
 
   defp especificacion(Epicenter.Persona),
     do: {:ok, &persona_a_struct/1, [:id, :documento, :nombre, :codigo_zona]}

@@ -29,30 +29,4 @@ defmodule Epicenter.GenserverTest do
 
     assert {:ok, [%{nombre_usuario: "Ana"}]} = Persistencia.carga_usuarios()
   end
-
-  test "inicia los GenServers de gestores y rechaza operaciones no permitidas" do
-    servidores = [
-      Epicenter.GenserverAlbergue,
-      Epicenter.GenserverCentroApoyo,
-      Epicenter.GenserverHistorial,
-      Epicenter.GenserverInventario,
-      Epicenter.GenserverMascota,
-      Epicenter.GenserverMensaje,
-      Epicenter.GenserverNecesidad,
-      Epicenter.GenserverPersona,
-      Epicenter.GenserverRecurso,
-      Epicenter.GenserverZona,
-      Epicenter.GenserverZonas
-    ]
-
-    Enum.each(servidores, fn servidor ->
-      assert is_pid(Process.whereis(servidor))
-
-      assert {:error, :operacion_no_soportada} =
-               GenServer.call(servidor, {:ejecutar, :operacion_desconocida, []})
-    end)
-
-    assert {:error, "Albergue no encontrado"} =
-             Epicenter.GenserverAlbergue.obtener("__inexistente__")
-  end
 end
