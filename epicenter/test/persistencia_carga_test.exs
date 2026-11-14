@@ -12,13 +12,49 @@ defmodule Epicenter.PersistenciaCargaTest do
             "nombre" => "Agua",
             "categoria" => "bebida",
             "unidad_medida" => "litros",
-            "cantidad_disponible" => 12
+            "ubicacion" => "Centro Norte",
+            "codigo_zona" => "zona-norte",
+            "cantidad_disponible" => 12,
+            "minimo" => 3
           }
         ])
       )
 
-    assert {:ok, [%Epicenter.Recurso{codigo: "recurso-1", cantidad_disponible: 12}]} =
+    assert {:ok,
+            [
+              %Epicenter.Recurso{
+                codigo: "recurso-1",
+                ubicacion: "Centro Norte",
+                codigo_zona: "zona-norte",
+                cantidad_disponible: 12,
+                minimo: 3
+              }
+            ]} =
              Persistencia.cargar_archivo(ruta, Epicenter.Recurso)
+  end
+
+  test "carga recursos antiguos sin ubicación ni mínimo" do
+    ruta =
+      crear_archivo_temporal(
+        Jason.encode!([
+          %{
+            "codigo" => "recurso-antiguo",
+            "nombre" => "Agua",
+            "categoria" => "bebida",
+            "unidad_medida" => "litros"
+          }
+        ])
+      )
+
+    assert {:ok,
+            [
+              %Epicenter.Recurso{
+                codigo: "recurso-antiguo",
+                ubicacion: nil,
+                minimo: 0,
+                cantidad_disponible: 0
+              }
+            ]} = Persistencia.cargar_archivo(ruta, Epicenter.Recurso)
   end
 
   test "carga mascotas usando sus campos y conserva el estado del reporte" do

@@ -20,16 +20,12 @@ defmodule Epicenter.Usuario do
 
   def verificar_rol(rol) do
     if rol in @rol_verificar do
-    if rol in @rol_verificar do
       rol
     else
       :ciudadano
     end
   end
 
-  def completar_usuario(%__MODULE__{} = usuario, nombre_completo, zona_principal) do
-    {:ok, %__MODULE__{usuario | nombre_completo: nombre_completo, zona_principal: zona_principal}}
-  end
   def completar_usuario(%__MODULE__{} = usuario, nombre_completo, zona_principal) do
     {:ok, %__MODULE__{usuario | nombre_completo: nombre_completo, zona_principal: zona_principal}}
   end

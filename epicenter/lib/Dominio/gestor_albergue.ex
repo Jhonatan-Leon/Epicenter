@@ -2,21 +2,15 @@ defmodule Epicenter.GestorAlbergue do
   def listar, do: Epicenter.Persistencia.cargar_albergues()
 
   def registro(nombre, codigo_zona, capacidad) do
-<<<<<<< HEAD
     with :ok <- zona_existe(codigo_zona),
          {:ok, albergues} <- listar(),
          {:ok, albergue} <-
            Epicenter.Albergue.nuevo(generar_codigo(albergues), nombre, codigo_zona, capacidad) do
       Epicenter.Persistencia.guardar_albergues([albergue | albergues])
-=======
-    with {:ok, albergue} <- Epicenter.Albergue.nuevo(nombre, codigo_zona, capacidad),
-         {:ok, albergue} <- crear(albergue) do
->>>>>>> 0cd590291dc76d769310dda61e654940ee4b42d8
       {:ok, albergue}
     end
   end
 
-<<<<<<< HEAD
   # Registrar el ingreso de las personas al albergue
   def registrar_ingreso(codigo, documento, por \\ "sistema") do
     with {:ok, albergues} <- listar(),
@@ -43,8 +37,6 @@ defmodule Epicenter.GestorAlbergue do
     with {:ok, albergue} <- obtener(codigo), do: {:ok, Epicenter.Albergue.cupos(albergue)}
   end
 
-=======
->>>>>>> 0cd590291dc76d769310dda61e654940ee4b42d8
   def completar_informacion(codigo, ocupantes, recursos, necesidades) do
     with {:ok, albergues} <- listar(),
          {:ok, albergue} <- buscar_albergue(albergues, codigo),
@@ -119,7 +111,6 @@ defmodule Epicenter.GestorAlbergue do
       albergue -> {:ok, albergue}
     end
   end
-<<<<<<< HEAD
 
   def reporte_ocupacion do
     with {:ok, albergues} <- listar() do
@@ -152,6 +143,5 @@ defmodule Epicenter.GestorAlbergue do
     codigo = Utilidad.generar_codigo_unico()
     if Enum.any?(albergues, &(&1.codigo == codigo)), do: generar_codigo(albergues), else: codigo
   end
-=======
->>>>>>> 0cd590291dc76d769310dda61e654940ee4b42d8
+
 end

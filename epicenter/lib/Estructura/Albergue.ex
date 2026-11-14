@@ -22,6 +22,16 @@ defmodule Epicenter.Albergue do
 
   def nuevo(_codigo, _nombre, _zona, _capacidad), do: {:error, :capacidad_invalida}
 
+  def completar_albergue(%__MODULE__{} = albergue, ocupantes, recursos, necesidades) do
+    {:ok,
+     %__MODULE__{
+       albergue
+       | ocupantes: ocupantes,
+         recursos: recursos,
+         necesidades: necesidades
+     }}
+  end
+
   def ocupacion(%__MODULE__{ocupantes: ocupantes}), do: length(ocupantes)
   def cupos(%__MODULE__{capacidad: capacidad} = a), do: capacidad - ocupacion(a)
   def porcentaje(%__MODULE__{capacidad: capacidad} = a), do: div(ocupacion(a) * 100, capacidad)

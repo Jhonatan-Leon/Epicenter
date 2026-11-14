@@ -29,23 +29,19 @@ defmodule Epicenter.GestorUsuario do
     Esta funcion permite registrar un nuevo usuario, verificando que el nombre de usuario no esté en uso. Si el registro es exitoso, se devuelve un tuple con :ok y el nuevo usuario, de lo contrario se devuelve un tuple con :error y un mensaje de error.
   """
   def registro(usuarios, usuario, password) do
-    case Epicenter.Usuario.nuevo(usuario, password, :ciudadano) do
-      {:ok, nuevo_usuario} ->
-        with {:ok, usuarios_guardados} <- Epicenter.Persistencia.carga_usuarios() do
-          usuarios =
-            (usuarios ++ usuarios_guardados)
-            |> Enum.uniq_by(& &1.nombre_usuario)
+    {:ok, nuevo_usuario} = Epicenter.Usuario.nuevo(usuario, password, :ciudadano)
 
-          if Enum.any?(usuarios, fn u -> u.nombre_usuario == usuario end) do
-            {:error, "El nombre de usuario ya está en uso"}
-          else
-            Epicenter.Persistencia.guardar_usuarios([nuevo_usuario | usuarios])
-            {:ok, nuevo_usuario}
-          end
+    with {:ok, usuarios_guardados} <- Epicenter.Persistencia.carga_usuarios() do
+        usuarios =
+          (usuarios ++ usuarios_guardados)
+          |> Enum.uniq_by(& &1.nombre_usuario)
+
+        if Enum.any?(usuarios, fn u -> u.nombre_usuario == usuario end) do
+          {:error, "El nombre de usuario ya está en uso"}
+        else
+          Epicenter.Persistencia.guardar_usuarios([nuevo_usuario | usuarios])
+          {:ok, nuevo_usuario}
         end
-
-      {:error, mensaje} ->
-        {:error, mensaje}
     end
   end
 
