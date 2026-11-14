@@ -1,72 +1,121 @@
 [
   {
-    "rol": "voluntario",
-    "contrasena": "prueba123",
-    "nombre_completo": "Voluntario Prueba",
-    "nombre_usuario": "volu_prueba",
-    "zona_principal": "Centro"
-  },
-  {
-    "rol": "ciudadano",
-    "contrasena": "prueba123",
-    "nombre_completo": "Ciudadano Prueba",
-    "nombre_usuario": "ciud_prueba",
-    "zona_principal": "Centro"
-  },
-  {
-    "rol": "voluntario",
-    "contrasena": "asuyugdaiuhwsdasubd",
-    "nombre_completo": "asnoijdsa oisajdioasjd",
-    "nombre_usuario": "t6rfxasyiudgiuasgdb",
-    "zona_principal": "Occidente"
-  },
-  {
-    "rol": "ciudadano",
-    "contrasena": "1234",
-    "nombre_completo": "hola hola",
-    "nombre_usuario": "Hola77",
-    "zona_principal": "Occidente"
-  },
-  {
-    "rol": "ciudadano",
-    "contrasena": "1234",
-    "nombre_completo": "juan di",
-    "nombre_usuario": "juand",
-    "zona_principal": "Occidente"
-  },
-  {
-    "rol": "voluntario",
-    "contrasena": "676767",
-    "nombre_completo": "Elpi Ton Perez",
-    "nombre_usuario": "ElpiTon67",
-    "zona_principal": "B7D24E901FA3C665"
-  },
-  {
-    "rol": "ciudadano",
-    "contrasena": "6767",
-    "nombre_completo": null,
-    "nombre_usuario": "ElverGalarga",
-    "zona_principal": null
-  },
-  {
-    "rol": "administrador",
-    "contrasena": "123456",
-    "nombre_completo": "Steven Sanchez",
     "nombre_usuario": "Ruzten",
+    "contrasena": "1111",
+    "rol": "administrador",
+    "nombre_completo": "Steven Sánchez",
     "zona_principal": "Centro"
   },
   {
-    "rol": "ciudadano",
-    "contrasena": "ClaveSegura",
-    "nombre_completo": null,
-    "nombre_usuario": "ANA",
-    "zona_principal": null
+    "nombre_usuario": "Jhonatan",
+    "contrasena": "1111",
+    "rol": "administrador",
+    "nombre_completo": "Jhonatan León",
+    "zona_principal": "Norte"
   },
   {
-    "nombre_usuario": "coord_prueba",
-    "contrasena": "prueba123",
+    "nombre_usuario": "Diana",
+    "contrasena": "1111",
+    "rol": "administrador",
+    "nombre_completo": "Diana Gaona",
+    "zona_principal": "Sur"
+  },
+  {
+    "nombre_usuario": "laura.restrepo",
+    "contrasena": "1234",
     "rol": "coordinar",
-    "nombre_completo": "Coordinador Prueba",
+    "nombre_completo": "Laura Restrepo",
     "zona_principal": "Centro"
+  },
+  {
+    "nombre_usuario": "andres.giraldo",
+    "contrasena": "1234",
+    "rol": "coordinar",
+    "nombre_completo": "Andrés Giraldo",
+    "zona_principal": "Norte"
+  },
+  {
+    "nombre_usuario": "paula.osorio",
+    "contrasena": "1234",
+    "rol": "coordinar",
+    "nombre_completo": "Paula Osorio",
+    "zona_principal": "Sur"
+  },
+  {
+    "nombre_usuario": "camilo.arango",
+    "contrasena": "1234",
+    "rol": "coordinar",
+    "nombre_completo": "Camilo Arango",
+    "zona_principal": "Occidente"
+  },
+  {
+    "nombre_usuario": "natalia.ramirez",
+    "contrasena": "1234",
+    "rol": "coordinar",
+    "nombre_completo": "Natalia Ramírez",
+    "zona_principal": "Oriente"
+  },
+  {
+    "nombre_usuario": "carlos.mejia",
+    "contrasena": "1234",
+    "rol": "voluntario",
+    "nombre_completo": "Carlos Mejía",
+    "zona_principal": "Centro"
+  },
+  {
+    "nombre_usuario": "valentina.ospina",
+    "contrasena": "1234",
+    "rol": "voluntario",
+    "nombre_completo": "Valentina Ospina",
+    "zona_principal": "Sur"
+  },
+  {
+    "nombre_usuario": "julian.cardona",
+    "contrasena": "1234",
+    "rol": "voluntario",
+    "nombre_completo": "Julián Cardona",
+    "zona_principal": "Norte"
+  },
+  {
+    "nombre_usuario": "sofia.henao",
+    "contrasena": "1234",
+    "rol": "voluntario",
+    "nombre_completo": "Sofía Henao",
+    "zona_principal": "Occidente"
+  },
+  {
+    "nombre_usuario": "maria.lopez",
+    "contrasena": "1234",
+    "rol": "ciudadano",
+    "nombre_completo": "María López",
+    "zona_principal": "Centro"
+  },
+  {
+    "nombre_usuario": "jorge.castano",
+    "contrasena": "1234",
+    "rol": "ciudadano",
+    "nombre_completo": "Jorge Castaño",
+    "zona_principal": "Sur"
+  },
+  {
+    "nombre_usuario": "luisa.franco",
+    "contrasena": "1234",
+    "rol": "ciudadano",
+    "nombre_completo": "Luisa Franco",
+    "zona_principal": "Occidente"
+  },
+  {
+    "nombre_usuario": "diego.salazar",
+    "contrasena": "1234",
+    "rol": "ciudadano",
+    "nombre_completo": "Diego Salazar",
+    "zona_principal": "Norte"
+  },
+  {
+    "nombre_usuario": "ana.quintero",
+    "contrasena": "1234",
+    "rol": "ciudadano",
+    "nombre_completo": "Ana Quintero",
+    "zona_principal": "Oriente"
   }
 ]

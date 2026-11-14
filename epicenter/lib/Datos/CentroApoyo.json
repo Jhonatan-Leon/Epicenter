@@ -1,1 +1,32 @@
-[]
+[
+  {
+    "codigo": "4513D41ED84D237D",
+    "nombre": "Centro de acopio Bomberos Armenia",
+    "tipo": "centro_acopio",
+    "codigo_zona": "A1F03C9E7B2D4410"
+  },
+  {
+    "codigo": "7589482ED8D40111",
+    "nombre": "Cruz Roja Seccional Quindío",
+    "tipo": "centro_acopio",
+    "codigo_zona": "B7D24E901FA3C665"
+  },
+  {
+    "codigo": "0F739482E16D21F2",
+    "nombre": "Hospital San Juan de Dios",
+    "tipo": "hospital",
+    "codigo_zona": "B7D24E901FA3C665"
+  },
+  {
+    "codigo": "2CF3C62882C33405",
+    "nombre": "Centro de acopio Coliseo del Sur",
+    "tipo": "centro_acopio",
+    "codigo_zona": "C58E13A6B0F94D72"
+  },
+  {
+    "codigo": "848D7104A7C7EE6C",
+    "nombre": "Bodega Defensa Civil Occidente",
+    "tipo": "centro_acopio",
+    "codigo_zona": "D06A7F2C9E31B845"
+  }
+]

@@ -1,155 +1,236 @@
 [
   {
-    "id": "MV017",
-    "usuario": "coord_prueba",
-    "fecha": "2026-11-14T22:47:13.549000Z",
-    "detalle": "Asignado a 01EEB6CAF5D6381E",
-    "cantidad": 5,
+    "id": "MV026",
+    "tipo": "salida",
+    "codigo_recurso": "R007",
+    "cantidad": 35,
+    "detalle": "Atención en el Parque Sucre",
+    "usuario": "carlos.mejia",
+    "fecha": "2026-11-11T12:20:00.000000Z"
+  },
+  {
+    "id": "MV025",
+    "tipo": "salida",
+    "codigo_recurso": "R002",
+    "cantidad": 950,
+    "detalle": "Repartición en Laureles",
+    "usuario": "julian.cardona",
+    "fecha": "2026-11-11T10:20:00.000000Z"
+  },
+  {
+    "id": "MV024",
+    "tipo": "salida",
+    "codigo_recurso": "R010",
+    "cantidad": 230,
+    "detalle": "Entrega en Estadio Centenario",
+    "usuario": "valentina.ospina",
+    "fecha": "2026-11-11T08:20:00.000000Z"
+  },
+  {
+    "id": "MV023",
     "tipo": "asignacion",
-    "codigo_recurso": "R007"
+    "codigo_recurso": "R008",
+    "cantidad": 45,
+    "detalle": "Asignado a 77C6173B8F09B797",
+    "usuario": "camilo.arango",
+    "fecha": "2026-11-11T07:20:00.000000Z"
+  },
+  {
+    "id": "MV022",
+    "tipo": "rechazo",
+    "codigo_recurso": "R006",
+    "cantidad": 30,
+    "detalle": "Laureles pidió 30; quedaban 20",
+    "usuario": "andres.giraldo",
+    "fecha": "2026-11-11T04:20:00.000000Z"
+  },
+  {
+    "id": "MV021",
+    "tipo": "asignacion",
+    "codigo_recurso": "R006",
+    "cantidad": 40,
+    "detalle": "Asignado a 957B5E0954212D63",
+    "usuario": "andres.giraldo",
+    "fecha": "2026-11-11T03:20:00.000000Z"
+  },
+  {
+    "id": "MV020",
+    "tipo": "asignacion",
+    "codigo_recurso": "R005",
+    "cantidad": 70,
+    "detalle": "Asignado a 8C3DDE2DF5C7A4D4",
+    "usuario": "andres.giraldo",
+    "fecha": "2026-11-11T02:20:00.000000Z"
+  },
+  {
+    "id": "MV019",
+    "tipo": "salida",
+    "codigo_recurso": "R009",
+    "cantidad": 280,
+    "detalle": "Entrega de cobijas en La Castellana",
+    "usuario": "julian.cardona",
+    "fecha": "2026-11-11T01:20:00.000000Z"
+  },
+  {
+    "id": "MV018",
+    "tipo": "transferencia",
+    "codigo_recurso": "R001",
+    "cantidad": 400,
+    "detalle": "Centro de acopio Bomberos Armenia a Coliseo del Café",
+    "usuario": "laura.restrepo",
+    "fecha": "2026-11-11T00:20:00.000000Z"
+  },
+  {
+    "id": "MV017",
+    "tipo": "asignacion",
+    "codigo_recurso": "R011",
+    "cantidad": 600,
+    "detalle": "Asignado a 948B4705E59F6F0E",
+    "usuario": "paula.osorio",
+    "fecha": "2026-11-10T23:20:00.000000Z"
   },
   {
     "id": "MV016",
-    "usuario": "coord_prueba",
-    "fecha": "2026-11-14T22:47:01.392000Z",
-    "detalle": "Registro en centro_prueba",
-    "cantidad": 8,
-    "tipo": "entrada",
-    "codigo_recurso": "R007"
+    "tipo": "salida",
+    "codigo_recurso": "R004",
+    "cantidad": 120,
+    "detalle": "Entrega en el barrio Brasilia",
+    "usuario": "valentina.ospina",
+    "fecha": "2026-11-10T22:20:00.000000Z"
   },
   {
     "id": "MV015",
-    "usuario": "volu_prueba",
-    "fecha": "2026-11-14T22:45:28.598000Z",
-    "detalle": "Registro en centro_prueba",
-    "cantidad": 20,
-    "tipo": "entrada",
-    "codigo_recurso": "R006"
+    "tipo": "asignacion",
+    "codigo_recurso": "R004",
+    "cantidad": 250,
+    "detalle": "Asignado a A31A54F295C41AE8",
+    "usuario": "paula.osorio",
+    "fecha": "2026-11-10T21:20:00.000000Z"
   },
   {
     "id": "MV014",
-    "usuario": "volu_prueba",
-    "fecha": "2026-11-14T22:45:26.091000Z",
-    "detalle": "Entrada de inventario",
-    "cantidad": 5,
     "tipo": "entrada",
-    "codigo_recurso": "R004"
+    "codigo_recurso": "R001",
+    "cantidad": 1500,
+    "detalle": "Entrada de inventario",
+    "usuario": "carlos.mejia",
+    "fecha": "2026-11-10T19:20:00.000000Z"
   },
   {
     "id": "MV013",
-    "usuario": "Ruzten",
-    "fecha": "2026-11-14T22:42:40.418000Z",
-    "detalle": "Asignado a 39B0397F8530736A",
-    "cantidad": 30,
     "tipo": "asignacion",
-    "codigo_recurso": "R004"
+    "codigo_recurso": "R001",
+    "cantidad": 900,
+    "detalle": "Asignado a F59A58C2180361A5",
+    "usuario": "laura.restrepo",
+    "fecha": "2026-11-10T17:20:00.000000Z"
   },
   {
     "id": "MV012",
-    "usuario": "Ruzten",
-    "fecha": "2026-11-14T22:42:39.202000Z",
-    "detalle": "39B0397F8530736A pidió 50; quedaban 40",
-    "cantidad": 50,
-    "tipo": "rechazo",
-    "codigo_recurso": "R004"
+    "tipo": "asignacion",
+    "codigo_recurso": "R007",
+    "cantidad": 30,
+    "detalle": "Asignado a 21E54F8CAB28719E",
+    "usuario": "laura.restrepo",
+    "fecha": "2026-11-10T15:20:00.000000Z"
   },
   {
     "id": "MV011",
+    "tipo": "entrada",
+    "codigo_recurso": "R011",
+    "cantidad": 1000,
+    "detalle": "Registro en Centro de acopio Coliseo del Sur",
     "usuario": "Ruzten",
-    "fecha": "2026-11-14T22:42:16.016000Z",
-    "detalle": "centro_prueba a albergue_prueba",
-    "cantidad": 5,
-    "tipo": "transferencia",
-    "codigo_recurso": "R004"
+    "fecha": "2026-11-10T13:50:00.000000Z"
   },
   {
     "id": "MV010",
+    "tipo": "entrada",
+    "codigo_recurso": "R010",
+    "cantidad": 300,
+    "detalle": "Registro en Centro de acopio Coliseo del Sur",
     "usuario": "Ruzten",
-    "fecha": "2026-11-14T22:42:08.450000Z",
-    "detalle": "Entrega sector 3",
-    "cantidad": 15,
-    "tipo": "salida",
-    "codigo_recurso": "R004"
+    "fecha": "2026-11-10T13:38:00.000000Z"
   },
   {
     "id": "MV009",
-    "usuario": "Ruzten",
-    "fecha": "2026-11-14T22:42:05.931000Z",
-    "detalle": "Entrega; quedaban 60",
+    "tipo": "entrada",
+    "codigo_recurso": "R009",
     "cantidad": 500,
-    "tipo": "rechazo",
-    "codigo_recurso": "R004"
+    "detalle": "Registro en Cruz Roja Seccional Quindío",
+    "usuario": "Ruzten",
+    "fecha": "2026-11-10T13:26:00.000000Z"
   },
   {
     "id": "MV008",
-    "usuario": "Ruzten",
-    "fecha": "2026-11-14T22:42:03.413000Z",
-    "detalle": "Entrada de inventario",
-    "cantidad": 10,
     "tipo": "entrada",
-    "codigo_recurso": "R004"
+    "codigo_recurso": "R008",
+    "cantidad": 50,
+    "detalle": "Registro en Bodega Defensa Civil Occidente",
+    "usuario": "Ruzten",
+    "fecha": "2026-11-10T13:14:00.000000Z"
   },
   {
     "id": "MV007",
-    "usuario": "Ruzten",
-    "fecha": "2026-11-14T22:41:52.880000Z",
-    "detalle": "Registro en centro_prueba",
-    "cantidad": 50,
     "tipo": "entrada",
-    "codigo_recurso": "R004"
+    "codigo_recurso": "R007",
+    "cantidad": 80,
+    "detalle": "Registro en Centro de acopio Bomberos Armenia",
+    "usuario": "Ruzten",
+    "fecha": "2026-11-10T13:02:00.000000Z"
   },
   {
     "id": "MV006",
+    "tipo": "entrada",
+    "codigo_recurso": "R006",
+    "cantidad": 60,
+    "detalle": "Registro en Hospital San Juan de Dios",
     "usuario": "Ruzten",
-    "fecha": "2026-11-14T22:37:04.017000Z",
-    "detalle": "Asignado a 14303074600328A5",
-    "cantidad": 10,
-    "tipo": "asignacion",
-    "codigo_recurso": "R003"
+    "fecha": "2026-11-10T12:50:00.000000Z"
   },
   {
     "id": "MV005",
-    "usuario": "Ruzten",
-    "fecha": "2026-11-13T22:30:00.946000Z",
-    "detalle": "Registro en Centro_acopio_10",
-    "cantidad": 50,
     "tipo": "entrada",
-    "codigo_recurso": "R003"
+    "codigo_recurso": "R005",
+    "cantidad": 120,
+    "detalle": "Registro en Hospital San Juan de Dios",
+    "usuario": "Ruzten",
+    "fecha": "2026-11-10T12:38:00.000000Z"
   },
   {
     "id": "MV004",
+    "tipo": "entrada",
+    "codigo_recurso": "R004",
+    "cantidad": 600,
+    "detalle": "Registro en Centro de acopio Coliseo del Sur",
     "usuario": "Ruzten",
-    "fecha": "2026-11-13T22:28:01.103000Z",
-    "detalle": "centro_acopio_1 a albergue_norte",
-    "cantidad": 5,
-    "tipo": "transferencia",
-    "codigo_recurso": "R001"
+    "fecha": "2026-11-10T12:26:00.000000Z"
   },
   {
     "id": "MV003",
+    "tipo": "entrada",
+    "codigo_recurso": "R003",
+    "cantidad": 400,
+    "detalle": "Registro en Cruz Roja Seccional Quindío",
     "usuario": "Ruzten",
-    "fecha": "2026-11-13T22:27:59.775000Z",
-    "detalle": "Entrega albergue",
-    "cantidad": 30,
-    "tipo": "salida",
-    "codigo_recurso": "R001"
+    "fecha": "2026-11-10T12:14:00.000000Z"
   },
   {
     "id": "MV002",
+    "tipo": "entrada",
+    "codigo_recurso": "R002",
+    "cantidad": 800,
+    "detalle": "Registro en Coliseo del Café",
     "usuario": "Ruzten",
-    "fecha": "2026-11-13T22:27:58.959000Z",
-    "detalle": "Entrega albergue; quedaban 50",
-    "cantidad": 70,
-    "tipo": "rechazo",
-    "codigo_recurso": "R001"
+    "fecha": "2026-11-10T12:02:00.000000Z"
   },
   {
     "id": "MV001",
-    "usuario": "Ruzten",
-    "fecha": "2026-11-13T22:27:53.619000Z",
-    "detalle": "Registro en centro_acopio_1",
-    "cantidad": 50,
     "tipo": "entrada",
-    "codigo_recurso": "R001"
+    "codigo_recurso": "R001",
+    "cantidad": 2000,
+    "detalle": "Registro en Centro de acopio Bomberos Armenia",
+    "usuario": "Ruzten",
+    "fecha": "2026-11-10T11:50:00.000000Z"
   }
 ]

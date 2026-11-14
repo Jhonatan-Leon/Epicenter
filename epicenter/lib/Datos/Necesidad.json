@@ -1,53 +1,181 @@
 [
   {
-    "id": "01EEB6CAF5D6381E",
-    "cantidad": 5,
-    "prioridad": "alta",
-    "tipo": "medicamentos",
-    "descripcion": "Ciudadano prueba",
-    "estado": "asignada",
+    "id": "F59A58C2180361A5",
     "codigo_zona": "A1F03C9E7B2D4410",
+    "reportado_por": "laura.restrepo",
+    "tipo": "agua",
+    "descripcion": "Familias del Centro Histórico sin acueducto",
+    "cantidad": 900,
+    "prioridad": "critica",
+    "estado": "en_atencion",
+    "destino": null,
     "asignaciones": [
       {
-        "cantidad": 5,
-        "recurso": "R007"
+        "recurso": "R001",
+        "cantidad": 900
       }
-    ],
-    "destino": null,
-    "reportado_por": "ciud_prueba"
+    ]
   },
   {
-    "id": "39B0397F8530736A",
+    "id": "21E54F8CAB28719E",
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "reportado_por": "carlos.mejia",
+    "tipo": "primeros_auxilios",
+    "descripcion": "Heridos leves en la Plaza de Bolívar",
     "cantidad": 30,
     "prioridad": "critica",
-    "tipo": "agua",
-    "descripcion": "Prueba UI sector 3",
     "estado": "atendida",
-    "codigo_zona": "A1F03C9E7B2D4410",
+    "destino": null,
     "asignaciones": [
       {
-        "cantidad": 30,
-        "recurso": "R004"
+        "recurso": "R007",
+        "cantidad": 30
       }
-    ],
-    "destino": null,
-    "reportado_por": "Ruzten"
+    ]
   },
   {
-    "id": "14303074600328A5",
-    "cantidad": 20,
-    "prioridad": "alta",
+    "id": "A31A54F295C41AE8",
+    "codigo_zona": "C58E13A6B0F94D72",
+    "reportado_por": "valentina.ospina",
     "tipo": "alimentos",
-    "descripcion": "Punto de atencion 10",
+    "descripcion": "Raciones para el albergue Estadio Centenario",
+    "cantidad": 350,
+    "prioridad": "alta",
     "estado": "asignada",
-    "codigo_zona": "B7D24E901FA3C665",
+    "destino": null,
     "asignaciones": [
       {
-        "cantidad": 10,
-        "recurso": "R003"
+        "recurso": "R004",
+        "cantidad": 250
       }
-    ],
+    ]
+  },
+  {
+    "id": "948B4705E59F6F0E",
+    "codigo_zona": "C58E13A6B0F94D72",
+    "reportado_por": "jorge.castano",
+    "tipo": "agua",
+    "descripcion": "Barrio Brasilia sin servicio de agua",
+    "cantidad": 600,
+    "prioridad": "critica",
+    "estado": "asignada",
     "destino": null,
-    "reportado_por": "Ruzten"
+    "asignaciones": [
+      {
+        "recurso": "R011",
+        "cantidad": 600
+      }
+    ]
+  },
+  {
+    "id": "8C3DDE2DF5C7A4D4",
+    "codigo_zona": "B7D24E901FA3C665",
+    "reportado_por": "julian.cardona",
+    "tipo": "medicamentos",
+    "descripcion": "Adultos mayores del Coliseo del Café con tratamientos",
+    "cantidad": 70,
+    "prioridad": "alta",
+    "estado": "asignada",
+    "destino": null,
+    "asignaciones": [
+      {
+        "recurso": "R005",
+        "cantidad": 70
+      }
+    ]
+  },
+  {
+    "id": "957B5E0954212D63",
+    "codigo_zona": "B7D24E901FA3C665",
+    "reportado_por": "andres.giraldo",
+    "tipo": "medicamentos",
+    "descripcion": "Insulina para pacientes diabéticos en Laureles",
+    "cantidad": 40,
+    "prioridad": "critica",
+    "estado": "asignada",
+    "destino": null,
+    "asignaciones": [
+      {
+        "recurso": "R006",
+        "cantidad": 40
+      }
+    ]
+  },
+  {
+    "id": "77C6173B8F09B797",
+    "codigo_zona": "D06A7F2C9E31B845",
+    "reportado_por": "sofia.henao",
+    "tipo": "refugio",
+    "descripcion": "Carpas para familias de La Clarita",
+    "cantidad": 45,
+    "prioridad": "alta",
+    "estado": "asignada",
+    "destino": null,
+    "asignaciones": [
+      {
+        "recurso": "R008",
+        "cantidad": 45
+      }
+    ]
+  },
+  {
+    "id": "B0CB077E83EF26C3",
+    "codigo_zona": "B7D24E901FA3C665",
+    "reportado_por": "diego.salazar",
+    "tipo": "abrigo",
+    "descripcion": "Cobijas para la noche en el Coliseo del Café",
+    "cantidad": 300,
+    "prioridad": "media",
+    "estado": "pendiente",
+    "destino": null,
+    "asignaciones": []
+  },
+  {
+    "id": "33D8CCDD53EE2A1D",
+    "codigo_zona": "C58E13A6B0F94D72",
+    "reportado_por": "paula.osorio",
+    "tipo": "higiene",
+    "descripcion": "Kits de aseo para el Polideportivo La Patria",
+    "cantidad": 150,
+    "prioridad": "media",
+    "estado": "pendiente",
+    "destino": null,
+    "asignaciones": []
+  },
+  {
+    "id": "63F8BDE03064FB9A",
+    "codigo_zona": "E39C5B8D02A6F714",
+    "reportado_por": "natalia.ramirez",
+    "tipo": "transporte",
+    "descripcion": "Traslado de adultos mayores de Corbones al hospital",
+    "cantidad": 4,
+    "prioridad": "alta",
+    "estado": "pendiente",
+    "destino": null,
+    "asignaciones": []
+  },
+  {
+    "id": "600B802BCBA9C386",
+    "codigo_zona": "D06A7F2C9E31B845",
+    "reportado_por": "luisa.franco",
+    "tipo": "rescate",
+    "descripcion": "Vivienda colapsada en Puerto Espejo, posible persona atrapada",
+    "cantidad": 1,
+    "prioridad": "critica",
+    "estado": "en_atencion",
+    "destino": null,
+    "asignaciones": []
+  },
+  {
+    "id": "85796830BB0075DA",
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "reportado_por": "maria.lopez",
+    "tipo": "alimentos",
+    "descripcion": "Mercados para familias del Barrio Uribe",
+    "cantidad": 80,
+    "prioridad": "baja",
+    "estado": "cancelada",
+    "destino": null,
+    "asignaciones": []
   }
 ]

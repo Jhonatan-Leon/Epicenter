@@ -1,72 +1,112 @@
 [
   {
-    "nombre": "Botiquín Prueba",
-    "codigo": "R007",
-    "minimo": 2,
-    "ubicacion": "centro_prueba",
-    "codigo_zona": "A1F03C9E7B2D4410",
-    "cantidad_disponible": 3,
-    "categoria": "medicamentos",
-    "unidad_medida": "kits"
-  },
-  {
-    "nombre": "Mantas Voluntario",
-    "codigo": "R006",
-    "minimo": 5,
-    "ubicacion": "centro_prueba",
-    "codigo_zona": "B7D24E901FA3C665",
-    "cantidad_disponible": 20,
-    "categoria": "abrigo",
-    "unidad_medida": "unidades"
-  },
-  {
-    "nombre": "Agua Prueba UI",
-    "codigo": "R005",
-    "minimo": 40,
-    "ubicacion": "albergue_prueba",
-    "codigo_zona": "C58E13A6B0F94D72",
-    "cantidad_disponible": 5,
-    "categoria": "agua",
-    "unidad_medida": "litros"
-  },
-  {
-    "nombre": "Agua Prueba UI",
-    "codigo": "R004",
-    "minimo": 40,
-    "ubicacion": "centro_prueba",
-    "codigo_zona": "A1F03C9E7B2D4410",
-    "cantidad_disponible": 15,
-    "categoria": "agua",
-    "unidad_medida": "litros"
-  },
-  {
-    "nombre": "Arroz",
-    "codigo": "R003",
-    "minimo": 15,
-    "ubicacion": "Centro_acopio_10",
-    "codigo_zona": "A1F03C9E7B2D4410",
-    "cantidad_disponible": 40,
-    "categoria": "alimentos",
-    "unidad_medida": "libras"
-  },
-  {
-    "nombre": "Agua potable",
-    "codigo": "R002",
-    "minimo": 40,
-    "ubicacion": "albergue_norte",
-    "codigo_zona": "A1F03C9E7B2D4410",
-    "cantidad_disponible": 5,
-    "categoria": "agua",
-    "unidad_medida": "litros"
-  },
-  {
-    "nombre": "Agua potable",
     "codigo": "R001",
-    "minimo": 40,
-    "ubicacion": "centro_acopio_1",
-    "codigo_zona": "A1F03C9E7B2D4410",
-    "cantidad_disponible": 15,
+    "nombre": "Agua potable",
     "categoria": "agua",
-    "unidad_medida": "litros"
+    "unidad_medida": "litros",
+    "cantidad_disponible": 2200,
+    "minimo": 500,
+    "ubicacion": "Centro de acopio Bomberos Armenia",
+    "codigo_zona": "A1F03C9E7B2D4410"
+  },
+  {
+    "codigo": "R002",
+    "nombre": "Agua potable",
+    "categoria": "agua",
+    "unidad_medida": "litros",
+    "cantidad_disponible": 250,
+    "minimo": 300,
+    "ubicacion": "Coliseo del Café",
+    "codigo_zona": "B7D24E901FA3C665"
+  },
+  {
+    "codigo": "R003",
+    "nombre": "Mercados familiares",
+    "categoria": "alimentos",
+    "unidad_medida": "mercados",
+    "cantidad_disponible": 400,
+    "minimo": 100,
+    "ubicacion": "Cruz Roja Seccional Quindío",
+    "codigo_zona": "B7D24E901FA3C665"
+  },
+  {
+    "codigo": "R004",
+    "nombre": "Raciones calientes",
+    "categoria": "alimentos",
+    "unidad_medida": "raciones",
+    "cantidad_disponible": 230,
+    "minimo": 200,
+    "ubicacion": "Centro de acopio Coliseo del Sur",
+    "codigo_zona": "C58E13A6B0F94D72"
+  },
+  {
+    "codigo": "R005",
+    "nombre": "Kits de medicamentos",
+    "categoria": "medicamentos",
+    "unidad_medida": "kits",
+    "cantidad_disponible": 50,
+    "minimo": 40,
+    "ubicacion": "Hospital San Juan de Dios",
+    "codigo_zona": "B7D24E901FA3C665"
+  },
+  {
+    "codigo": "R006",
+    "nombre": "Insulina",
+    "categoria": "medicamentos",
+    "unidad_medida": "dosis",
+    "cantidad_disponible": 20,
+    "minimo": 30,
+    "ubicacion": "Hospital San Juan de Dios",
+    "codigo_zona": "B7D24E901FA3C665"
+  },
+  {
+    "codigo": "R007",
+    "nombre": "Botiquines",
+    "categoria": "primeros_auxilios",
+    "unidad_medida": "botiquines",
+    "cantidad_disponible": 15,
+    "minimo": 25,
+    "ubicacion": "Centro de acopio Bomberos Armenia",
+    "codigo_zona": "A1F03C9E7B2D4410"
+  },
+  {
+    "codigo": "R008",
+    "nombre": "Carpas familiares",
+    "categoria": "refugio",
+    "unidad_medida": "carpas",
+    "cantidad_disponible": 5,
+    "minimo": 15,
+    "ubicacion": "Bodega Defensa Civil Occidente",
+    "codigo_zona": "D06A7F2C9E31B845"
+  },
+  {
+    "codigo": "R009",
+    "nombre": "Cobijas",
+    "categoria": "abrigo",
+    "unidad_medida": "cobijas",
+    "cantidad_disponible": 220,
+    "minimo": 150,
+    "ubicacion": "Cruz Roja Seccional Quindío",
+    "codigo_zona": "B7D24E901FA3C665"
+  },
+  {
+    "codigo": "R010",
+    "nombre": "Kits de aseo",
+    "categoria": "higiene",
+    "unidad_medida": "kits",
+    "cantidad_disponible": 70,
+    "minimo": 80,
+    "ubicacion": "Centro de acopio Coliseo del Sur",
+    "codigo_zona": "C58E13A6B0F94D72"
+  },
+  {
+    "codigo": "R011",
+    "nombre": "Agua potable",
+    "categoria": "agua",
+    "unidad_medida": "litros",
+    "cantidad_disponible": 400,
+    "minimo": 300,
+    "ubicacion": "Centro de acopio Coliseo del Sur",
+    "codigo_zona": "C58E13A6B0F94D72"
   }
 ]

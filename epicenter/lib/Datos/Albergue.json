@@ -1,22 +1,84 @@
 [
   {
-    "nombre": "Albergue Prueba UI",
-    "capacidad": 1,
-    "codigo": "1FB6CB6676653295",
-    "necesidades": [],
-    "recursos": [],
-    "codigo_zona": "A1F03C9E7B2D4410",
-    "ocupantes": []
+    "codigo": "7C403ADF4E7A7767",
+    "nombre": "Coliseo del Café",
+    "codigo_zona": "B7D24E901FA3C665",
+    "capacidad": 300,
+    "ocupantes": [
+      "24578310"
+    ],
+    "recursos": [
+      "R002"
+    ],
+    "necesidades": []
   },
   {
-    "nombre": "Uniquindio",
-    "capacidad": 200,
-    "codigo": "D568C8B79834BBE3",
-    "necesidades": [],
-    "recursos": [],
-    "codigo_zona": "B7D24E901FA3C665",
+    "codigo": "F52259BF2E06BA36",
+    "nombre": "Estadio Centenario",
+    "codigo_zona": "C58E13A6B0F94D72",
+    "capacidad": 400,
     "ocupantes": [
-      "109236483"
-    ]
+      "41922004",
+      "1095001122"
+    ],
+    "recursos": [],
+    "necesidades": []
+  },
+  {
+    "codigo": "DAC5591C3178D250",
+    "nombre": "Coliseo Universidad del Quindío",
+    "codigo_zona": "B7D24E901FA3C665",
+    "capacidad": 200,
+    "ocupantes": [
+      "7550231"
+    ],
+    "recursos": [],
+    "necesidades": []
+  },
+  {
+    "codigo": "E9C35ED6790F7708",
+    "nombre": "Polideportivo La Patria",
+    "codigo_zona": "C58E13A6B0F94D72",
+    "capacidad": 150,
+    "ocupantes": [
+      "7543210"
+    ],
+    "recursos": [],
+    "necesidades": []
+  },
+  {
+    "codigo": "FF3A9BCAF2170754",
+    "nombre": "Colegio Rufino José Cuervo",
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "capacidad": 120,
+    "ocupantes": [
+      "1094887123",
+      "1094955671"
+    ],
+    "recursos": [],
+    "necesidades": []
+  },
+  {
+    "codigo": "22E6B3E1578BDC50",
+    "nombre": "Carpas Parque La Clarita",
+    "codigo_zona": "D06A7F2C9E31B845",
+    "capacidad": 80,
+    "ocupantes": [
+      "9732145"
+    ],
+    "recursos": [],
+    "necesidades": []
+  },
+  {
+    "codigo": "5C5D5AEA4CB75D4D",
+    "nombre": "Salón comunal El Bosque",
+    "codigo_zona": "E39C5B8D02A6F714",
+    "capacidad": 6,
+    "ocupantes": [
+      "7521098",
+      "24512345"
+    ],
+    "recursos": [],
+    "necesidades": []
   }
 ]

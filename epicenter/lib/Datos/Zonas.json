@@ -1,194 +1,200 @@
 [
   {
-    "nombre": "Zona Prueba UI",
-    "nivel": "medio",
-    "codigo": "4868C1FFF794312F",
-    "sectores": [
-      {
-        "nombre": "Sector Prueba",
-        "afectadas": 40,
-        "nivel": "alto",
-        "codigo": "842F5F67541C1F6C",
-        "puntos": [
-          {
-            "nombre": "Punto Prueba",
-            "codigo": "39169BF100BC2ED8"
-          }
-        ]
-      }
-    ]
-  },
-  {
+    "codigo": "A1F03C9E7B2D4410",
     "nombre": "Centro",
     "nivel": "critico",
-    "codigo": "A1F03C9E7B2D4410",
     "sectores": [
       {
-        "nombre": "Centro Histórico",
-        "afectadas": 850,
-        "nivel": "critico",
         "codigo": "C3E19A07F5B26D81",
+        "nombre": "Centro Histórico",
+        "nivel": "critico",
+        "afectadas": 850,
         "puntos": [
           {
-            "nombre": "Plaza de Bolívar",
-            "codigo": "E7A2D41C90B3F658"
+            "codigo": "E7A2D41C90B3F658",
+            "nombre": "Plaza de Bolívar"
           },
           {
-            "nombre": "Parque Sucre",
-            "codigo": "F09B36E2A71C4D25"
+            "codigo": "F09B36E2A71C4D25",
+            "nombre": "Parque Sucre"
           }
         ]
       },
       {
-        "nombre": "Barrio Uribe",
-        "afectadas": 420,
-        "nivel": "alto",
         "codigo": "D84C2B71E06A9F33",
+        "nombre": "Barrio Uribe",
+        "nivel": "alto",
+        "afectadas": 420,
         "puntos": [
           {
-            "nombre": "Parque Uribe",
-            "codigo": "B52E8D0F3C61A947"
+            "codigo": "B52E8D0F3C61A947",
+            "nombre": "Parque Uribe"
           }
         ]
       },
       {
-        "nombre": "Barrio Granada",
-        "afectadas": 310,
-        "nivel": "alto",
         "codigo": "9A6F1E44C2D07B58",
-        "puntos": []
-      },
-      {
-        "nombre": "Sector Coord Centro",
-        "afectadas": 3,
-        "nivel": "bajo",
-        "codigo": "B823F627D8921BDE",
-        "puntos": []
+        "nombre": "Barrio Granada",
+        "nivel": "medio",
+        "afectadas": 310,
+        "puntos": [
+          {
+            "codigo": "42A4F092DC553FED",
+            "nombre": "Salón comunal Granada"
+          }
+        ]
       }
     ]
   },
   {
+    "codigo": "B7D24E901FA3C665",
     "nombre": "Norte",
     "nivel": "medio",
-    "codigo": "B7D24E901FA3C665",
     "sectores": [
       {
-        "nombre": "Laureles",
-        "afectadas": 260,
-        "nivel": "medio",
         "codigo": "4E0B9C73A1D6F282",
+        "nombre": "Laureles",
+        "nivel": "medio",
+        "afectadas": 260,
         "puntos": [
           {
-            "nombre": "Parque de los Fundadores",
-            "codigo": "7C3A5F18D9E20B46"
+            "codigo": "7C3A5F18D9E20B46",
+            "nombre": "Parque de los Fundadores"
           }
         ]
       },
       {
-        "nombre": "La Castellana",
-        "afectadas": 90,
-        "nivel": "bajo",
         "codigo": "6D21F8B04E9A3C17",
-        "puntos": []
+        "nombre": "La Castellana",
+        "nivel": "bajo",
+        "afectadas": 90,
+        "puntos": [
+          {
+            "codigo": "7E9C6CFA012174CE",
+            "nombre": "Salón comunal La Castellana"
+          }
+        ]
+      },
+      {
+        "codigo": "172B477755F64622",
+        "nombre": "Universidad del Quindío",
+        "nivel": "medio",
+        "afectadas": 140,
+        "puntos": [
+          {
+            "codigo": "B9DCCBF3742CEC30",
+            "nombre": "Coliseo Universidad del Quindío"
+          }
+        ]
       }
     ]
   },
   {
+    "codigo": "C58E13A6B0F94D72",
     "nombre": "Sur",
     "nivel": "alto",
-    "codigo": "C58E13A6B0F94D72",
     "sectores": [
       {
-        "nombre": "La Patria",
-        "afectadas": 540,
-        "nivel": "alto",
         "codigo": "2F7A90D4C1B6E853",
+        "nombre": "La Patria",
+        "nivel": "alto",
+        "afectadas": 540,
         "puntos": [
           {
-            "nombre": "Polideportivo La Patria",
-            "codigo": "8B14E6C2F0A93D57"
+            "codigo": "8B14E6C2F0A93D57",
+            "nombre": "Polideportivo La Patria"
           },
           {
-            "nombre": "Estadio Centenario",
-            "codigo": "A3D9071B5E2C4F86"
+            "codigo": "A3D9071B5E2C4F86",
+            "nombre": "Estadio Centenario"
           }
         ]
       },
       {
-        "nombre": "Brasilia",
-        "afectadas": 690,
-        "nivel": "critico",
         "codigo": "5C8B2E17F4A09D61",
+        "nombre": "Brasilia",
+        "nivel": "critico",
+        "afectadas": 690,
         "puntos": [
           {
-            "nombre": "Escuela Brasilia",
-            "codigo": "1E6F4A8C3B0D7295"
+            "codigo": "1E6F4A8C3B0D7295",
+            "nombre": "Escuela Brasilia"
           }
         ]
       },
       {
-        "nombre": "Los Quindos",
-        "afectadas": 230,
-        "nivel": "medio",
         "codigo": "3B90C5E2D17F4A68",
-        "puntos": []
+        "nombre": "Los Quindos",
+        "nivel": "medio",
+        "afectadas": 230,
+        "puntos": [
+          {
+            "codigo": "343394367F1BA340",
+            "nombre": "Iglesia Los Quindos"
+          }
+        ]
       }
     ]
   },
   {
+    "codigo": "D06A7F2C9E31B845",
     "nombre": "Occidente",
     "nivel": "alto",
-    "codigo": "D06A7F2C9E31B845",
     "sectores": [
       {
-        "nombre": "La Clarita",
-        "afectadas": 380,
-        "nivel": "alto",
         "codigo": "8E5D1A3F07C2B946",
+        "nombre": "La Clarita",
+        "nivel": "alto",
+        "afectadas": 380,
         "puntos": [
           {
-            "nombre": "Parque La Clarita",
-            "codigo": "0D7C2E9B41F6A538"
+            "codigo": "0D7C2E9B41F6A538",
+            "nombre": "Parque La Clarita"
           }
         ]
       },
       {
-        "nombre": "Puerto Espejo",
-        "afectadas": 270,
-        "nivel": "medio",
         "codigo": "F2A47B0E6D93C158",
+        "nombre": "Puerto Espejo",
+        "nivel": "medio",
+        "afectadas": 270,
         "puntos": [
           {
-            "nombre": "Escuela Puerto Espejo",
-            "codigo": "6A0E3D5C82B1F947"
+            "codigo": "6A0E3D5C82B1F947",
+            "nombre": "Escuela Puerto Espejo"
           }
         ]
       }
     ]
   },
   {
+    "codigo": "E39C5B8D02A6F714",
     "nombre": "Oriente",
     "nivel": "bajo",
-    "codigo": "E39C5B8D02A6F714",
     "sectores": [
       {
-        "nombre": "El Bosque",
-        "afectadas": 120,
-        "nivel": "bajo",
         "codigo": "7F1D6C0A93E5B248",
+        "nombre": "El Bosque",
+        "nivel": "bajo",
+        "afectadas": 120,
         "puntos": [
           {
-            "nombre": "Salón Comunal El Bosque",
-            "codigo": "C9B4F27E1D0A6385"
+            "codigo": "B60F8D64B39FE221",
+            "nombre": "Salón comunal El Bosque"
           }
         ]
       },
       {
-        "nombre": "Corbones",
-        "afectadas": 75,
-        "nivel": "bajo",
         "codigo": "0A8E4F6B2C71D953",
-        "puntos": []
+        "nombre": "Corbones",
+        "nivel": "bajo",
+        "afectadas": 75,
+        "puntos": [
+          {
+            "codigo": "D413CF78F63A8BDD",
+            "nombre": "Polideportivo Corbones"
+          }
+        ]
       }
     ]
   }
