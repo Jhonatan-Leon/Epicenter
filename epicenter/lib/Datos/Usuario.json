@@ -1,6 +1,20 @@
 [
   {
     "rol": "voluntario",
+    "contrasena": "prueba123",
+    "nombre_completo": "Voluntario Prueba",
+    "nombre_usuario": "volu_prueba",
+    "zona_principal": "Centro"
+  },
+  {
+    "rol": "ciudadano",
+    "contrasena": "prueba123",
+    "nombre_completo": "Ciudadano Prueba",
+    "nombre_usuario": "ciud_prueba",
+    "zona_principal": "Centro"
+  },
+  {
+    "rol": "voluntario",
     "contrasena": "asuyugdaiuhwsdasubd",
     "nombre_completo": "asnoijdsa oisajdioasjd",
     "nombre_usuario": "t6rfxasyiudgiuasgdb",
@@ -47,5 +61,12 @@
     "nombre_completo": null,
     "nombre_usuario": "ANA",
     "zona_principal": null
+  },
+  {
+    "nombre_usuario": "coord_prueba",
+    "contrasena": "prueba123",
+    "rol": "coordinar",
+    "nombre_completo": "Coordinador Prueba",
+    "zona_principal": "Centro"
   }
 ]

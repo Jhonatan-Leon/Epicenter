@@ -1,32 +1,72 @@
 [
   {
+    "nombre": "Botiquín Prueba",
+    "codigo": "R007",
+    "minimo": 2,
+    "ubicacion": "centro_prueba",
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "cantidad_disponible": 3,
+    "categoria": "medicamentos",
+    "unidad_medida": "kits"
+  },
+  {
+    "nombre": "Mantas Voluntario",
+    "codigo": "R006",
+    "minimo": 5,
+    "ubicacion": "centro_prueba",
+    "codigo_zona": "B7D24E901FA3C665",
+    "cantidad_disponible": 20,
+    "categoria": "abrigo",
+    "unidad_medida": "unidades"
+  },
+  {
+    "nombre": "Agua Prueba UI",
+    "codigo": "R005",
+    "minimo": 40,
+    "ubicacion": "albergue_prueba",
+    "codigo_zona": "C58E13A6B0F94D72",
+    "cantidad_disponible": 5,
+    "categoria": "agua",
+    "unidad_medida": "litros"
+  },
+  {
+    "nombre": "Agua Prueba UI",
+    "codigo": "R004",
+    "minimo": 40,
+    "ubicacion": "centro_prueba",
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "cantidad_disponible": 15,
+    "categoria": "agua",
+    "unidad_medida": "litros"
+  },
+  {
     "nombre": "Arroz",
-    "codigo_zona": "A1F03C9E7B2D4410",
     "codigo": "R003",
-    "categoria": "alimentos",
-    "ubicacion": "Centro_acopio_10",
-    "unidad_medida": "libras",
     "minimo": 15,
-    "cantidad_disponible": 50
+    "ubicacion": "Centro_acopio_10",
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "cantidad_disponible": 40,
+    "categoria": "alimentos",
+    "unidad_medida": "libras"
   },
   {
     "nombre": "Agua potable",
-    "codigo_zona": "A1F03C9E7B2D4410",
     "codigo": "R002",
-    "categoria": "agua",
-    "ubicacion": "albergue_norte",
-    "unidad_medida": "litros",
     "minimo": 40,
-    "cantidad_disponible": 5
+    "ubicacion": "albergue_norte",
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "cantidad_disponible": 5,
+    "categoria": "agua",
+    "unidad_medida": "litros"
   },
   {
     "nombre": "Agua potable",
-    "codigo_zona": "A1F03C9E7B2D4410",
     "codigo": "R001",
-    "categoria": "agua",
-    "ubicacion": "centro_acopio_1",
-    "unidad_medida": "litros",
     "minimo": 40,
-    "cantidad_disponible": 15
+    "ubicacion": "centro_acopio_1",
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "cantidad_disponible": 15,
+    "categoria": "agua",
+    "unidad_medida": "litros"
   }
 ]

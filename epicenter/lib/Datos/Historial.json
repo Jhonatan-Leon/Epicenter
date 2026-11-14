@@ -1,47 +1,155 @@
 [
   {
+    "id": "MV017",
+    "usuario": "coord_prueba",
+    "fecha": "2026-11-14T22:47:13.549000Z",
+    "detalle": "Asignado a 01EEB6CAF5D6381E",
+    "cantidad": 5,
+    "tipo": "asignacion",
+    "codigo_recurso": "R007"
+  },
+  {
+    "id": "MV016",
+    "usuario": "coord_prueba",
+    "fecha": "2026-11-14T22:47:01.392000Z",
+    "detalle": "Registro en centro_prueba",
+    "cantidad": 8,
+    "tipo": "entrada",
+    "codigo_recurso": "R007"
+  },
+  {
+    "id": "MV015",
+    "usuario": "volu_prueba",
+    "fecha": "2026-11-14T22:45:28.598000Z",
+    "detalle": "Registro en centro_prueba",
+    "cantidad": 20,
+    "tipo": "entrada",
+    "codigo_recurso": "R006"
+  },
+  {
+    "id": "MV014",
+    "usuario": "volu_prueba",
+    "fecha": "2026-11-14T22:45:26.091000Z",
+    "detalle": "Entrada de inventario",
+    "cantidad": 5,
+    "tipo": "entrada",
+    "codigo_recurso": "R004"
+  },
+  {
+    "id": "MV013",
+    "usuario": "Ruzten",
+    "fecha": "2026-11-14T22:42:40.418000Z",
+    "detalle": "Asignado a 39B0397F8530736A",
+    "cantidad": 30,
+    "tipo": "asignacion",
+    "codigo_recurso": "R004"
+  },
+  {
+    "id": "MV012",
+    "usuario": "Ruzten",
+    "fecha": "2026-11-14T22:42:39.202000Z",
+    "detalle": "39B0397F8530736A pidió 50; quedaban 40",
+    "cantidad": 50,
+    "tipo": "rechazo",
+    "codigo_recurso": "R004"
+  },
+  {
+    "id": "MV011",
+    "usuario": "Ruzten",
+    "fecha": "2026-11-14T22:42:16.016000Z",
+    "detalle": "centro_prueba a albergue_prueba",
+    "cantidad": 5,
+    "tipo": "transferencia",
+    "codigo_recurso": "R004"
+  },
+  {
+    "id": "MV010",
+    "usuario": "Ruzten",
+    "fecha": "2026-11-14T22:42:08.450000Z",
+    "detalle": "Entrega sector 3",
+    "cantidad": 15,
+    "tipo": "salida",
+    "codigo_recurso": "R004"
+  },
+  {
+    "id": "MV009",
+    "usuario": "Ruzten",
+    "fecha": "2026-11-14T22:42:05.931000Z",
+    "detalle": "Entrega; quedaban 60",
+    "cantidad": 500,
+    "tipo": "rechazo",
+    "codigo_recurso": "R004"
+  },
+  {
+    "id": "MV008",
+    "usuario": "Ruzten",
+    "fecha": "2026-11-14T22:42:03.413000Z",
+    "detalle": "Entrada de inventario",
+    "cantidad": 10,
+    "tipo": "entrada",
+    "codigo_recurso": "R004"
+  },
+  {
+    "id": "MV007",
+    "usuario": "Ruzten",
+    "fecha": "2026-11-14T22:41:52.880000Z",
+    "detalle": "Registro en centro_prueba",
+    "cantidad": 50,
+    "tipo": "entrada",
+    "codigo_recurso": "R004"
+  },
+  {
+    "id": "MV006",
+    "usuario": "Ruzten",
+    "fecha": "2026-11-14T22:37:04.017000Z",
+    "detalle": "Asignado a 14303074600328A5",
+    "cantidad": 10,
+    "tipo": "asignacion",
+    "codigo_recurso": "R003"
+  },
+  {
     "id": "MV005",
     "usuario": "Ruzten",
-    "tipo": "entrada",
-    "cantidad": 50,
     "fecha": "2026-11-13T22:30:00.946000Z",
-    "codigo_recurso": "R003",
-    "detalle": "Registro en Centro_acopio_10"
+    "detalle": "Registro en Centro_acopio_10",
+    "cantidad": 50,
+    "tipo": "entrada",
+    "codigo_recurso": "R003"
   },
   {
     "id": "MV004",
     "usuario": "Ruzten",
-    "tipo": "transferencia",
-    "cantidad": 5,
     "fecha": "2026-11-13T22:28:01.103000Z",
-    "codigo_recurso": "R001",
-    "detalle": "centro_acopio_1 a albergue_norte"
+    "detalle": "centro_acopio_1 a albergue_norte",
+    "cantidad": 5,
+    "tipo": "transferencia",
+    "codigo_recurso": "R001"
   },
   {
     "id": "MV003",
     "usuario": "Ruzten",
-    "tipo": "salida",
-    "cantidad": 30,
     "fecha": "2026-11-13T22:27:59.775000Z",
-    "codigo_recurso": "R001",
-    "detalle": "Entrega albergue"
+    "detalle": "Entrega albergue",
+    "cantidad": 30,
+    "tipo": "salida",
+    "codigo_recurso": "R001"
   },
   {
     "id": "MV002",
     "usuario": "Ruzten",
-    "tipo": "rechazo",
-    "cantidad": 70,
     "fecha": "2026-11-13T22:27:58.959000Z",
-    "codigo_recurso": "R001",
-    "detalle": "Entrega albergue; quedaban 50"
+    "detalle": "Entrega albergue; quedaban 50",
+    "cantidad": 70,
+    "tipo": "rechazo",
+    "codigo_recurso": "R001"
   },
   {
     "id": "MV001",
     "usuario": "Ruzten",
-    "tipo": "entrada",
-    "cantidad": 50,
     "fecha": "2026-11-13T22:27:53.619000Z",
-    "codigo_recurso": "R001",
-    "detalle": "Registro en centro_acopio_1"
+    "detalle": "Registro en centro_acopio_1",
+    "cantidad": 50,
+    "tipo": "entrada",
+    "codigo_recurso": "R001"
   }
 ]

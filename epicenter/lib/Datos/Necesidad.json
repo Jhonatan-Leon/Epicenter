@@ -1,1 +1,53 @@
-[]
+[
+  {
+    "id": "01EEB6CAF5D6381E",
+    "cantidad": 5,
+    "prioridad": "alta",
+    "tipo": "medicamentos",
+    "descripcion": "Ciudadano prueba",
+    "estado": "asignada",
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "asignaciones": [
+      {
+        "cantidad": 5,
+        "recurso": "R007"
+      }
+    ],
+    "destino": null,
+    "reportado_por": "ciud_prueba"
+  },
+  {
+    "id": "39B0397F8530736A",
+    "cantidad": 30,
+    "prioridad": "critica",
+    "tipo": "agua",
+    "descripcion": "Prueba UI sector 3",
+    "estado": "atendida",
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "asignaciones": [
+      {
+        "cantidad": 30,
+        "recurso": "R004"
+      }
+    ],
+    "destino": null,
+    "reportado_por": "Ruzten"
+  },
+  {
+    "id": "14303074600328A5",
+    "cantidad": 20,
+    "prioridad": "alta",
+    "tipo": "alimentos",
+    "descripcion": "Punto de atencion 10",
+    "estado": "asignada",
+    "codigo_zona": "B7D24E901FA3C665",
+    "asignaciones": [
+      {
+        "cantidad": 10,
+        "recurso": "R003"
+      }
+    ],
+    "destino": null,
+    "reportado_por": "Ruzten"
+  }
+]

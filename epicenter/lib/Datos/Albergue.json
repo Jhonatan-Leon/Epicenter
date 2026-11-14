@@ -1,13 +1,22 @@
 [
   {
+    "nombre": "Albergue Prueba UI",
+    "capacidad": 1,
+    "codigo": "1FB6CB6676653295",
+    "necesidades": [],
+    "recursos": [],
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "ocupantes": []
+  },
+  {
     "nombre": "Uniquindio",
     "capacidad": 200,
     "codigo": "D568C8B79834BBE3",
-    "codigo_zona": "B7D24E901FA3C665",
     "necesidades": [],
+    "recursos": [],
+    "codigo_zona": "B7D24E901FA3C665",
     "ocupantes": [
       "109236483"
-    ],
-    "recursos": []
+    ]
   }
 ]

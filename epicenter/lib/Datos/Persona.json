@@ -1,51 +1,78 @@
 [
   {
-    "id": "A023144D4E67AFC6",
-    "nombre": "Henry Stickman",
-    "codigo_zona": "C58E13A6B0F94D72",
-    "estado": "en_albergue",
-    "codigo_albergue": null,
-    "documento": "109236483",
-    "edad": 12,
+    "id": "F816B1D305B04782",
+    "nombre": "Persona Prueba UI",
     "historial": [
       {
+        "fecha": "2026-11-14T22:41:05.033000Z",
         "estado": "reportada",
-        "fecha": "2026-11-12T16:37:04.635000Z",
         "por": "Ruzten"
       },
       {
+        "fecha": "2026-11-14T22:43:35.955000Z",
         "estado": "en_albergue",
-        "fecha": "2026-11-13T19:50:33.672000Z",
         "por": "Ruzten"
       }
     ],
+    "estado": "en_albergue",
+    "codigo_zona": "A1F03C9E7B2D4410",
+    "codigo_albergue": null,
+    "documento": "900100200",
+    "edad": 34,
+    "tipo_documento": null
+  },
+  {
+    "id": "A023144D4E67AFC6",
+    "nombre": "Henry Stickman",
+    "historial": [
+      {
+        "fecha": "2026-11-12T16:37:04.635000Z",
+        "estado": "reportada",
+        "por": "Ruzten"
+      },
+      {
+        "fecha": "2026-11-13T19:50:33.672000Z",
+        "estado": "en_albergue",
+        "por": "Ruzten"
+      },
+      {
+        "fecha": "2026-11-14T22:40:57.183000Z",
+        "estado": "trasladada",
+        "por": "Ruzten"
+      }
+    ],
+    "estado": "trasladada",
+    "codigo_zona": "C58E13A6B0F94D72",
+    "codigo_albergue": null,
+    "documento": "109236483",
+    "edad": 12,
     "tipo_documento": null
   },
   {
     "id": "572B8F8A58603DDB",
     "nombre": "Ruben Sanchez",
-    "codigo_zona": "B7D24E901FA3C665",
-    "estado": "en_albergue",
-    "codigo_albergue": null,
-    "documento": "1092458430",
-    "edad": 18,
     "historial": [
       {
-        "estado": "sin_informacion",
         "fecha": "2026-11-12T16:24:34.025000Z",
+        "estado": "sin_informacion",
         "por": "Ruzten"
       },
       {
-        "estado": "localizada",
         "fecha": "2026-11-12T16:38:28.474000Z",
+        "estado": "localizada",
         "por": "Ruzten"
       },
       {
-        "estado": "en_albergue",
         "fecha": "2026-11-13T19:50:36.648000Z",
+        "estado": "en_albergue",
         "por": "Ruzten"
       }
     ],
+    "estado": "en_albergue",
+    "codigo_zona": "B7D24E901FA3C665",
+    "codigo_albergue": null,
+    "documento": "1092458430",
+    "edad": 18,
     "tipo_documento": null
   }
 ]

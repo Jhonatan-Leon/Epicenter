@@ -1,67 +1,82 @@
 [
   {
+    "codigo": "D3CA053ECE29708A",
+    "estado": "pendiente",
+    "contenido": "Hola, soy ciudadano de prueba",
+    "destinatario": "900100200",
+    "fecha_envio": "2026-11-14T22:44:53.193000Z",
+    "remitente": "Ciudadano Prueba"
+  },
+  {
+    "codigo": "FF5032F24F72E914",
+    "estado": "entregado",
+    "contenido": "Prueba de mensaje desde la interfaz",
+    "destinatario": "109236483",
+    "fecha_envio": "2026-11-14T22:40:37.989000Z",
+    "remitente": "Steven Sanchez"
+  },
+  {
     "codigo": "018B7E8F970F2917",
     "estado": "pendiente",
-    "fecha_envio": "2026-11-12T16:49:43.686000Z",
-    "remitente": "hola hola",
+    "contenido": "jhvouyi7uggiubiuñ",
     "destinatario": "109236483",
-    "contenido": "jhvouyi7uggiubiuñ"
+    "fecha_envio": "2026-11-12T16:49:43.686000Z",
+    "remitente": "hola hola"
   },
   {
     "codigo": "C280423C34ADA7F7",
     "estado": "pendiente",
-    "fecha_envio": "2026-11-12T16:48:01.473000Z",
-    "remitente": "hola hola",
+    "contenido": "Hola Steven, soy tu pero en la multicuenta probando xdd",
     "destinatario": "1092458430",
-    "contenido": "Hola Steven, soy tu pero en la multicuenta probando xdd"
+    "fecha_envio": "2026-11-12T16:48:01.473000Z",
+    "remitente": "hola hola"
   },
   {
     "codigo": "363DF49183233BDB",
     "estado": "pendiente",
-    "fecha_envio": "2026-11-12T16:47:35.958000Z",
-    "remitente": "hola hola",
+    "contenido": "donde estas",
     "destinatario": "109236483",
-    "contenido": "donde estas"
+    "fecha_envio": "2026-11-12T16:47:35.958000Z",
+    "remitente": "hola hola"
   },
   {
     "codigo": "33B5C7EF4D6DF89E",
     "estado": "pendiente",
-    "fecha_envio": "2026-11-12T16:47:31.088000Z",
-    "remitente": "hola hola",
+    "contenido": "Hola Henry, te extrañamos",
     "destinatario": "109236483",
-    "contenido": "Hola Henry, te extrañamos"
+    "fecha_envio": "2026-11-12T16:47:31.088000Z",
+    "remitente": "hola hola"
   },
   {
     "codigo": "9D67BC4F80ADCF5F",
     "estado": "pendiente",
-    "fecha_envio": "2026-11-12T16:38:55.085000Z",
-    "remitente": "Steven Sanchez",
+    "contenido": "wujuuuuuuuuuu",
     "destinatario": "109236483",
-    "contenido": "wujuuuuuuuuuu"
+    "fecha_envio": "2026-11-12T16:38:55.085000Z",
+    "remitente": "Steven Sanchez"
   },
   {
     "codigo": "009AC99A35316626",
     "estado": "pendiente",
-    "fecha_envio": "2026-11-12T16:38:48.204000Z",
-    "remitente": "Steven Sanchez",
+    "contenido": "Hola Henry",
     "destinatario": "109236483",
-    "contenido": "Hola Henry"
+    "fecha_envio": "2026-11-12T16:38:48.204000Z",
+    "remitente": "Steven Sanchez"
   },
   {
     "codigo": "528AC973E2DCA6FC",
     "estado": "pendiente",
-    "fecha_envio": "2026-11-12T16:36:31.658000Z",
-    "remitente": "Steven Sanchez",
+    "contenido": "Como estas",
     "destinatario": "1092458430",
-    "contenido": "Como estas"
+    "fecha_envio": "2026-11-12T16:36:31.658000Z",
+    "remitente": "Steven Sanchez"
   },
   {
     "codigo": "CFD4DF04324CEA46",
     "estado": "pendiente",
-    "fecha_envio": "2026-11-12T16:36:25.340000Z",
-    "remitente": "Steven Sanchez",
+    "contenido": "hola",
     "destinatario": "1092458430",
-    "contenido": "hola"
+    "fecha_envio": "2026-11-12T16:36:25.340000Z",
+    "remitente": "Steven Sanchez"
   }
 ]
-[]
