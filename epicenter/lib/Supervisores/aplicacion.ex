@@ -9,6 +9,7 @@ defmodule Epicenter.Aplicacion do
   def start(_tipo, _argumentos) do
     hijos = [
       {Epicenter.Genserver, []},
+      {Epicenter.GenserverActividad, []},
       {Epicenter.GenserverPersona, []},
       {Epicenter.GenserverZona, []},
       {Epicenter.GenserverNecesidad, []},

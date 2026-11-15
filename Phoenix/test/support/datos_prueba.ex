@@ -15,7 +15,7 @@ defmodule InterfazWeb.DatosPrueba do
   def preparar(archivos, usuarios \\ []) do
     respaldar(["Usuario.json" | archivos])
 
-    for archivo <- archivos, do: File.write!(ruta(archivo), "[]")
+    for archivo <- archivos, do: File.write!(ruta(archivo), vacio(archivo))
     agregar_usuarios(usuarios)
     :ok
   end
@@ -32,7 +32,14 @@ defmodule InterfazWeb.DatosPrueba do
   end
 
   defp respaldar(archivos) do
-    originales = for archivo <- archivos, do: {archivo, File.read!(ruta(archivo))}
+    # Un archivo que todavía no existe (como Actividad.log) se restaura vacío.
+    originales =
+      for archivo <- archivos do
+        case File.read(ruta(archivo)) do
+          {:ok, contenido} -> {archivo, contenido}
+          {:error, _motivo} -> {archivo, vacio(archivo)}
+        end
+      end
 
     on_exit(fn ->
       for {archivo, contenido} <- originales, do: File.write!(ruta(archivo), contenido)
@@ -52,6 +59,9 @@ defmodule InterfazWeb.DatosPrueba do
 
     File.write!(ruta("Usuario.json"), Jason.encode!(usuarios ++ existentes))
   end
+
+  # Los JSON vacíos son una lista; el .log de actividad, un archivo en blanco.
+  defp vacio(archivo), do: if(Path.extname(archivo) == ".log", do: "", else: "[]")
 
   defp ruta(archivo), do: Epicenter.Persistencia.ruta_datos(archivo)
 end

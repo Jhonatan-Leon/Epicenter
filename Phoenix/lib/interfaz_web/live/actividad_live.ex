@@ -15,12 +15,8 @@ defmodule InterfazWeb.ActividadLive do
   end
 
   def handle_event("filtrar", %{"usuario" => usuario}, socket) do
-    actividad =
-      if usuario == "",
-        do: Actividad.actividad(),
-        else: Enum.filter(Actividad.actividad(), &(&1.usuario == usuario))
-
-    {:noreply, socket |> assign(:filtro, usuario) |> assign(:actividad, actividad)}
+    {:noreply,
+     socket |> assign(:filtro, usuario) |> assign(:actividad, Actividad.actividad(usuario))}
   end
 
   def render(assigns) do

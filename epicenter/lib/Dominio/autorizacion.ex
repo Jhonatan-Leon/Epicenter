@@ -131,10 +131,29 @@ defmodule Epicenter.Autorizacion do
   """
   def ejecutar(nombre_usuario, accion, codigo_zona, funcion)
       when is_function(funcion, 1) do
-    with {:ok, usuario} <- autorizar(nombre_usuario, accion, codigo_zona) do
-      funcion.(usuario)
-    end
+    resultado =
+      with {:ok, usuario} <- autorizar(nombre_usuario, accion, codigo_zona) do
+        funcion.(usuario)
+      end
+
+    # Toda operación queda en Actividad.log, también las rechazadas por permisos.
+    Epicenter.GenserverActividad.registrar(
+      nombre_usuario,
+      accion,
+      texto_resultado(resultado),
+      texto_detalle(resultado)
+    )
+
+    resultado
   end
+
+  defp texto_resultado({:error, _motivo}), do: "error"
+  defp texto_resultado(_exito), do: "ok"
+
+  defp texto_detalle({:ok, mensaje}) when is_binary(mensaje), do: mensaje
+  defp texto_detalle({:error, motivo}) when is_binary(motivo), do: motivo
+  defp texto_detalle({:error, motivo}), do: inspect(motivo)
+  defp texto_detalle(_otro), do: ""
 
   defp verificar_zona(usuario, accion, codigo_zona) do
     case normalizar_rol(usuario.rol) do

@@ -12,7 +12,7 @@ defmodule Interfaz.Fuente do
     * `Interfaz.Fuente.Mascotas`    mascotas y coincidencias
     * `Interfaz.Fuente.Albergues`   albergues, ingresos y salidas
     * `Interfaz.Fuente.Resumen`     cifras que juntan varias gestiones
-    * `Interfaz.Fuente.Actividad`   usuarios y actividad (datos de muestra)
+    * `Interfaz.Fuente.Actividad`   usuarios conectados y registro de actividad
     * `Interfaz.Fuente.Catalogos`   valores para los `<select>`
     * `Interfaz.Fuente.Comun`       validaciones, fechas y mensajes de error
 

@@ -70,7 +70,10 @@ defmodule Interfaz.Fuente.Sesion do
   def sesion_valida?(_sesion), do: false
 
   @doc "Comando `disconnect`."
-  def desconectar(_usuario), do: :ok
+  def desconectar(%{usuario: usuario}) when is_binary(usuario),
+    do: Epicenter.Genserver.desconectar(usuario)
+
+  def desconectar(_sesion), do: :ok
 
   defp usuario_existe?(usuario),
     do: match?({:ok, _usuario}, Epicenter.Genserver.obtener(usuario))

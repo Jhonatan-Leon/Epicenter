@@ -25,6 +25,10 @@ defmodule Epicenter.Genserver do
   def eliminar(nombre_usuario),
     do: GenServer.call(__MODULE__, {:eliminar, nombre_usuario})
 
+  @doc "Comando `disconnect`: deja el registro en Actividad.log."
+  def desconectar(nombre_usuario),
+    do: GenServer.call(__MODULE__, {:desconectar, nombre_usuario})
+
   @impl true
   def init(_opts), do: {:ok, nil}
 
@@ -33,8 +37,18 @@ defmodule Epicenter.Genserver do
     {:reply, Epicenter.GestorUsuario.listar(), state}
   end
 
+  # Comando `connect`: cada intento queda en Actividad.log.
   def handle_call({:login, nombre_usuario, contrasena}, _from, state) do
     resultado = Epicenter.GestorUsuario.login(nombre_usuario, contrasena, [])
+
+    case resultado do
+      {:ok, usuario} ->
+        Epicenter.GenserverActividad.registrar(nombre_usuario, "connect", "ok", usuario.zona_principal)
+
+      {:error, motivo} ->
+        Epicenter.GenserverActividad.registrar(nombre_usuario, "connect", "error", motivo)
+    end
+
     {:reply, resultado, state}
   end
 
@@ -42,8 +56,14 @@ defmodule Epicenter.Genserver do
     {:reply, Epicenter.GestorUsuario.obtener(nombre_usuario), state}
   end
 
+  # Un usuario nuevo queda conectado apenas se registra.
   def handle_call({:crear, nombre_usuario, contrasena}, _from, state) do
-    {:reply, Epicenter.GestorUsuario.registro([], nombre_usuario, contrasena), state}
+    resultado = Epicenter.GestorUsuario.registro([], nombre_usuario, contrasena)
+
+    if match?({:ok, _usuario}, resultado),
+      do: Epicenter.GenserverActividad.registrar(nombre_usuario, "connect", "ok", "registro nuevo")
+
+    {:reply, resultado, state}
   end
 
   def handle_call({:actualizar, nombre_usuario, usuario}, _from, state) do
@@ -52,5 +72,10 @@ defmodule Epicenter.Genserver do
 
   def handle_call({:eliminar, nombre_usuario}, _from, state) do
     {:reply, Epicenter.GestorUsuario.eliminar(nombre_usuario), state}
+  end
+
+  def handle_call({:desconectar, nombre_usuario}, _from, state) do
+    Epicenter.GenserverActividad.registrar(nombre_usuario, "disconnect", "ok")
+    {:reply, :ok, state}
   end
 end
