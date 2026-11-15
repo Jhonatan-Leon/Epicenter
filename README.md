@@ -39,22 +39,42 @@ Permitir que ciudadanos, voluntarios, coordinadores y administradores registren 
 
 ## Ejecución
 
-Compilar:
+### Iniciar el sistema web
 
-```bash
-mix compile
+Desde la carpeta raíz del repositorio, la primera vez ejecuta:
+
+```powershell
+cd Phoenix
+mix.bat setup
+mix.bat phx.server
 ```
 
-Ejecutar las pruebas:
+`mix.bat setup` descarga las dependencias de Elixir y prepara/compila los assets de
+Phoenix. Cuando el servidor esté listo, abre <http://localhost:4000>. Para detenerlo,
+usa `Ctrl+C` en la terminal.
 
-```bash
-mix test
+En los siguientes arranques, basta con:
+
+```powershell
+cd Phoenix
+mix.bat phx.server
 ```
 
-Abrir el sistema en una consola interactiva:
+### Compilar y ejecutar pruebas
 
-```bash
-iex -S mix
+Cada aplicación Mix se ejecuta desde su propia carpeta. Para la lógica:
+
+```powershell
+cd epicenter
+mix.bat compile
+mix.bat test
+```
+
+Para la interfaz Phoenix:
+
+```powershell
+cd Phoenix
+mix.bat test
 ```
 
 ## Estructura
